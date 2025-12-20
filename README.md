@@ -1,4 +1,4 @@
-# req-run
+# ReqRun
 
 ![Build](https://github.com/AidarKhusainov/req-run/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
@@ -18,18 +18,16 @@
 - [ ] Configure the [CODECOV_TOKEN](https://docs.codecov.com/docs/quick-start) secret for automated test coverage reports on PRs
 
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+ReqRun adds a lightweight HTTP request runner to IntelliJ IDEA Community. Write `METHOD URL` blocks in `.http` files, press `Ctrl+Alt+R`, and see the response with status, headers, and body in the ReqRun tool window.
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
-
-To keep everything working, do not remove `<!-- ... -->` sections. 
+To keep everything working, do not remove `<!-- ... -->` sections.
 <!-- Plugin description end -->
 
 ## Installation
 
 - Using the IDE built-in plugin system:
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "req-run"</kbd> >
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "ReqRun"</kbd> >
   <kbd>Install</kbd>
 
 - Using JetBrains Marketplace:

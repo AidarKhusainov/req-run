@@ -1,15 +1,31 @@
-<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.aidarkhusainov.reqrun</id>
-    <name>req-run</name>
-    <vendor>aidarkhusainov</vendor>
+    <name>ReqRun</name>
+    <vendor email="aidar.khusainov.dev@gmail.com">Aidar Khusainov</vendor>
+
+    <description>Lightweight HTTP request runner for IntelliJ IDEA Community.</description>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.aidarkhusainov.reqrun.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.aidarkhusainov.reqrun.startup.MyProjectActivity" />
+        <fileType name="ReqRun HTTP" language="ReqRunHTTP" extensions="http"
+                  implementationClass="com.github.aidarkhusainov.reqrun.lang.ReqRunFileType"/>
+        <notificationGroup id="ReqRun Notifications" displayType="BALLOON"/>
+        <codeInsight.lineMarkerProvider language="ReqRunHTTP"
+                                        implementationClass="com.github.aidarkhusainov.reqrun.markers.ReqRunLineMarkerProvider"/>
+        <lang.parserDefinition language="ReqRunHTTP"
+                               implementationClass="com.github.aidarkhusainov.reqrun.lang.ReqRunParserDefinition"/>
+        <serviceViewContributor implementation="com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor"/>
     </extensions>
+
+    <actions>
+        <action id="com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction"
+                class="com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction"
+                text="Run HTTP Request"
+                description="Send HTTP request from the current selection or request block">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt R"/>
+        </action>
+    </actions>
 </idea-plugin>

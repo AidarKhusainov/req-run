@@ -1,7 +1,12 @@
 .DS_Store
+.crush
+.run
 .gradle
+-.gradle
 .idea
 .intellijPlatform
 .kotlin
 .qodana
 build
+out
+req-run.iml
