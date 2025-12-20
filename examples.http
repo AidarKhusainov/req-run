@@ -1,0 +1,92 @@
+GET https://httpbin.org/get?foo=bar&limit=3
+Accept: application/json
+
+###
+GET https://httpbin.org/anything/headers
+Accept: application/json
+X-Test-Header: ReqRun-Test
+User-Agent: ReqRun/1.0
+
+###
+POST https://httpbin.org/post
+Accept: application/json
+Content-Type: application/json
+
+{
+  "message": "Hello from ReqRun",
+  "count": 3
+}
+
+###
+POST https://postman-echo.com/post
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+foo=bar&number=42
+
+###
+PUT https://httpbin.org/put
+Accept: application/json
+Content-Type: application/json
+
+{"update": true}
+
+###
+DELETE https://httpbin.org/delete
+Accept: application/json
+
+###
+HEAD https://httpbin.org/get
+Accept: application/json
+
+###
+POST https://countries.trevorblades.com/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "query": "query { countries { code name emoji } }"
+}
+
+###
+POST https://httpbin.org/post
+Accept: application/json
+Content-Type: text/xml
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <ping>ReqRun</ping>
+  </soapenv:Body>
+</soapenv:Envelope>
+
+###
+POST https://httpbin.org/post
+Accept: application/json
+Content-Type: multipart/form-data; boundary=ReqRunBoundary
+
+--ReqRunBoundary
+Content-Disposition: form-data; name="title"
+
+ReqRun Multipart
+--ReqRunBoundary
+Content-Disposition: form-data; name="file"; filename="note.txt"
+Content-Type: text/plain
+
+Hello from ReqRun multipart.
+--ReqRunBoundary--
+
+###
+POST https://httpbin.org/post
+Accept: application/json
+Content-Type: application/octet-stream
+
+Raw binary bytes: 00 01 02 03 04
+
+###
+GET https://httpbin.org/stream/5
+Accept: application/x-ndjson
+
+###
+GET https://api.github.com/rate_limit
+Accept: application/vnd.github.v3+json
+User-Agent: ReqRun-Test

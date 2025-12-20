@@ -42,7 +42,7 @@ class ResponseViewer(
 
     private fun buildComponent(): JComponent {
         val combined = buildCombinedText()
-        val combinedField = ReadOnlyEditorField(combined.text, PlainTextFileType.INSTANCE, combined.folds, foldState)
+        val combinedField = ReadOnlyEditorField(project, combined.text, PlainTextFileType.INSTANCE, combined.folds, foldState)
         installPopup(combinedField) { combinedField.text }
         return JBScrollPane(combinedField)
     }
@@ -71,6 +71,7 @@ class ResponseViewer(
         val requestHeadersText = execution.request.headers.entries
             .joinToString("\n") { (k, v) -> "$k: $v" }
         val body = response?.body?.takeIf { it.isNotEmpty() } ?: (error ?: "")
+        val requestBody = execution.request.body?.takeIf { it.isNotBlank() } ?: ""
         val status = statusText(response, error)
         val bodyBytes = body.toByteArray(StandardCharsets.UTF_8).size
         val code = response?.statusLine?.split(" ")?.getOrNull(1)
@@ -90,6 +91,17 @@ class ResponseViewer(
             sb.append(requestHeadersText)
             val reqEnd = sb.length
             folds.add(FoldSection(reqStart, reqEnd, "Request headers (${requestHeadersText.count { it == '\n' } + 1} lines)"))
+        }
+        if (requestBody.isNotBlank()) {
+            if (requestHeadersText.isNotBlank()) {
+                sb.append("\n\n")
+            } else {
+                sb.append('\n')
+            }
+            val reqBodyStart = sb.length
+            sb.append(requestBody)
+            val reqBodyEnd = sb.length
+            folds.add(FoldSection(reqBodyStart, reqBodyEnd, "Request body (${requestBody.length} chars)"))
         }
         sb.append("\n\n")
         sb.append(status).append('\n')
@@ -113,12 +125,12 @@ class ResponseViewer(
     }
 
     private class ReadOnlyEditorField(
+        project: Project?,
         text: String,
         fileType: FileType,
         private val folds: List<FoldSection> = emptyList(),
         private val foldState: MutableMap<Int, Boolean> = mutableMapOf()
-    ) : EditorTextField(null, null, fileType, false, false) {
-
+    ) : EditorTextField(null, project, fileType, false, false) {
         init {
             setOneLineMode(false)
             val normalized = text.replace("\r\n", "\n")
@@ -137,23 +149,12 @@ class ResponseViewer(
             val scrollPane = editor.scrollPane
             scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
             scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
-            if (folds.isNotEmpty()) {
-                ApplicationManager.getApplication().runReadAction {
-                    editor.foldingModel.runBatchFoldingOperation {
-                        folds.forEach { section ->
-                            if (section.end > section.start) {
-                                val region = editor.foldingModel.addFoldRegion(section.start, section.end, section.placeholder)
-                                region?.isExpanded = foldState[section.start] ?: section.defaultExpanded
-                            }
-                        }
-                    }
-                }
-                SwingUtilities.invokeLater {
-                    scrollPane.viewport.revalidate()
-                    scrollPane.viewport.repaint()
-                    scrollPane.revalidate()
-                    scrollPane.repaint()
-                }
+            applyFolds(editor, folds)
+            SwingUtilities.invokeLater {
+                scrollPane.viewport.revalidate()
+                scrollPane.viewport.repaint()
+                scrollPane.revalidate()
+                scrollPane.repaint()
             }
             return editor
         }
@@ -163,6 +164,21 @@ class ResponseViewer(
                 foldState[region.startOffset] = region.isExpanded
             }
             super.removeNotify()
+        }
+
+        private fun applyFolds(editor: EditorEx, sections: List<FoldSection>) {
+            ApplicationManager.getApplication().runReadAction {
+                editor.foldingModel.runBatchFoldingOperation {
+                    editor.foldingModel.allFoldRegions.forEach { editor.foldingModel.removeFoldRegion(it) }
+                    if (sections.isEmpty()) return@runBatchFoldingOperation
+                    sections.forEach { section ->
+                        if (section.end > section.start) {
+                            val region = editor.foldingModel.addFoldRegion(section.start, section.end, section.placeholder)
+                            region?.isExpanded = foldState[section.start] ?: section.defaultExpanded
+                        }
+                    }
+                }
+            }
         }
     }
 
