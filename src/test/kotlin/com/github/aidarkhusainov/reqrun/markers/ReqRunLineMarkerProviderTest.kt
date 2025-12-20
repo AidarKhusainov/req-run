@@ -21,7 +21,7 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
 
         assertNotNull(markerAtLine(provider, file, doc, 0))
         assertNull(markerAtLine(provider, file, doc, 1))
-        assertNotNull(markerAtLine(provider, file, doc, 3))
+        assertNull(markerAtLine(provider, file, doc, 3))
         assertNull(markerAtLine(provider, file, doc, 4))
         assertNotNull(markerAtLine(provider, file, doc, 5))
     }
