@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.util.net.JdkProxyProvider
 import com.intellij.util.net.ssl.CertificateManager
@@ -80,7 +81,9 @@ class ReqRunExecutor(private val project: Project) {
     }
 
     private fun getClient(): HttpClient {
-        val sdkHome = ProjectRootManager.getInstance(project).projectSdk?.homePath
+        val sdkHome = ReadAction.compute<String?, RuntimeException> {
+            if (project.isDisposed) null else ProjectRootManager.getInstance(project).projectSdk?.homePath
+        }
         val cached = cachedClient
         if (cached != null && cachedSdkHome == sdkHome) return cached
         synchronized(this) {

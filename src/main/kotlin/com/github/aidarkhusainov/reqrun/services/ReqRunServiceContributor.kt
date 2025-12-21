@@ -1,6 +1,5 @@
 package com.github.aidarkhusainov.reqrun.services
 
-import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
 import com.github.aidarkhusainov.reqrun.icons.ReqRunIcons
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
 import com.github.aidarkhusainov.reqrun.ui.ResponseViewer
@@ -14,6 +13,8 @@ import com.intellij.navigation.ItemPresentation
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
@@ -32,7 +33,8 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
         )
 
         private val caches = java.util.WeakHashMap<Project, ProjectCache>()
-        private val popupActions: DefaultActionGroup = DefaultActionGroup(createRerunAction())
+        private val popupActions: DefaultActionGroup =
+            DefaultActionGroup(createRerunAction(), createClearHistoryAction())
 
         private fun cacheFor(project: Project): ProjectCache =
             synchronized(caches) {
@@ -57,34 +59,76 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
                     ProgressManager.getInstance()
                         .run(object : Task.Backgroundable(project, "Re-running HTTP request", true) {
                             override fun run(indicator: com.intellij.openapi.progress.ProgressIndicator) {
+                                val runner = project.getService(ReqRunRunner::class.java)
                                 try {
-                                    val response =
-                                        project.getService(ReqRunExecutor::class.java).execute(spec, indicator)
-                                    val exec = project.getService(ReqRunExecutionService::class.java)
-                                        .addExecution(spec, response, null, execution.source)
-                                    ServiceViewManager.getInstance(project)
-                                        .select(exec, ReqRunServiceContributor::class.java, true, true)
+                                    val result = runner.run(spec, execution.source, indicator)
+                                    runOnUi(project) {
+                                        ServiceViewManager.getInstance(project)
+                                            .select(result.execution, ReqRunServiceContributor::class.java, true, true)
+                                        if (result.status == ReqRunRunner.Status.ERROR) {
+                                            ReqRunNotifier.error(
+                                                project,
+                                                "Request failed: ${result.execution.error ?: "unknown error"}"
+                                            )
+                                        }
+                                    }
                                 } catch (t: ProcessCanceledException) {
-                                    val exec = project.getService(ReqRunExecutionService::class.java)
-                                        .addExecution(spec, null, "Cancelled by user", execution.source)
-                                    ReqRunNotifier.info(project, "Request cancelled")
-                                    ServiceViewManager.getInstance(project)
-                                        .select(exec, ReqRunServiceContributor::class.java, true, true)
+                                    val exec = runner.addCancelledExecution(spec, execution.source)
+                                    runOnUi(project) {
+                                        ReqRunNotifier.info(project, "Request cancelled")
+                                        ServiceViewManager.getInstance(project)
+                                            .select(exec, ReqRunServiceContributor::class.java, true, true)
+                                    }
                                     throw t
-                                } catch (t: Throwable) {
-                                    val exec = project.getService(ReqRunExecutionService::class.java)
-                                        .addExecution(spec, null, t.message, execution.source)
-                                    ReqRunNotifier.error(project, "Request failed: ${t.message ?: "unknown error"}")
-                                    ServiceViewManager.getInstance(project)
-                                        .select(exec, ReqRunServiceContributor::class.java, true, true)
                                 }
                             }
                         })
                 }
             }
 
+        private fun createClearHistoryAction(): AnAction =
+            object : DumbAwareAction("Clear History", "Remove all request executions", AllIcons.Actions.GC) {
+                override fun update(e: AnActionEvent) {
+                    val project = e.project ?: return
+                    val hasItems = project.getService(ReqRunExecutionService::class.java).list().isNotEmpty()
+                    e.presentation.isEnabled = hasItems
+                }
+
+                override fun actionPerformed(e: AnActionEvent) {
+                    val project = e.project ?: return
+                    val removed = project.getService(ReqRunExecutionService::class.java).clearAll()
+                    if (removed > 0) {
+                        clearCache(project)
+                        ReqRunNotifier.info(project, "Cleared $removed request(s)")
+                    }
+                }
+            }
+
         private fun selectedExecution(e: AnActionEvent): ReqRunExecution? =
             ServiceViewActionUtils.getTarget(e, ReqRunExecution::class.java)
+
+        private fun clearCache(project: Project) {
+            synchronized(caches) {
+                caches.remove(project)
+            }
+        }
+
+        fun evict(project: Project, ids: Collection<UUID>) {
+            synchronized(caches) {
+                val cache = caches[project] ?: return
+                ids.forEach {
+                    cache.viewers.remove(it)
+                    cache.descriptors.remove(it)
+                }
+            }
+        }
+
+        private fun runOnUi(project: Project, action: () -> Unit) {
+            ApplicationManager.getApplication().invokeLater({
+                if (project.isDisposed) return@invokeLater
+                action()
+            }, ModalityState.any())
+        }
     }
 
     override fun getViewDescriptor(project: Project): ServiceViewDescriptor =

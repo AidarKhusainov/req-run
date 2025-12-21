@@ -2,6 +2,8 @@ package com.github.aidarkhusainov.reqrun.markers
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.psi.util.PsiElementFilter
+import com.intellij.psi.util.PsiTreeUtil
 
 class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
     fun testMarkersOnlyForRequestLines() {
@@ -18,12 +20,13 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
 
         val doc = myFixture.editor.document
         val file = myFixture.file
+        val markers = collectMarkers(provider, file)
 
-        assertNotNull(markerAtLine(provider, file, doc, 0))
-        assertNull(markerAtLine(provider, file, doc, 1))
-        assertNull(markerAtLine(provider, file, doc, 3))
-        assertNull(markerAtLine(provider, file, doc, 4))
-        assertNotNull(markerAtLine(provider, file, doc, 5))
+        assertNotNull(markerAtLine(markers, doc, 0))
+        assertNull(markerAtLine(markers, doc, 1))
+        assertNull(markerAtLine(markers, doc, 3))
+        assertNull(markerAtLine(markers, doc, 4))
+        assertNotNull(markerAtLine(markers, doc, 5))
     }
 
     fun testNoMarkersInNonReqRunFile() {
@@ -32,18 +35,26 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
 
         val doc = myFixture.editor.document
         val file = myFixture.file
+        val markers = collectMarkers(provider, file)
 
-        assertNull(markerAtLine(provider, file, doc, 0))
+        assertNull(markerAtLine(markers, doc, 0))
+    }
+
+    private fun collectMarkers(
+        provider: ReqRunLineMarkerProvider,
+        file: com.intellij.psi.PsiFile
+    ): List<LineMarkerInfo<*>> {
+        val elements = PsiTreeUtil.collectElements(file, PsiElementFilter { true }).toMutableList()
+        val result = mutableListOf<LineMarkerInfo<*>>()
+        provider.collectSlowLineMarkers(elements, result)
+        return result
     }
 
     private fun markerAtLine(
-        provider: ReqRunLineMarkerProvider,
-        file: com.intellij.psi.PsiFile,
+        markers: List<LineMarkerInfo<*>>,
         doc: com.intellij.openapi.editor.Document,
         line: Int
     ): LineMarkerInfo<*>? {
-        val lineStart = doc.getLineStartOffset(line)
-        val element = file.findElementAt(lineStart) ?: return null
-        return provider.getLineMarkerInfo(element)
+        return markers.firstOrNull { doc.getLineNumber(it.startOffset) == line }
     }
 }

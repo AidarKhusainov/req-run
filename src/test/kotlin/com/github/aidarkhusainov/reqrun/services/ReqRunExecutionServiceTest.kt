@@ -4,6 +4,11 @@ import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
 class ReqRunExecutionServiceTest : BasePlatformTestCase() {
+    override fun setUp() {
+        super.setUp()
+        project.getService(ReqRunExecutionService::class.java).clearAll()
+    }
+
     fun testAddListRemoveExecution() {
         val service = project.getService(ReqRunExecutionService::class.java)
         assertEquals(0, service.list().size)
@@ -26,5 +31,42 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
 
         val removedMissing = service.removeExecution(exec.id)
         assertFalse(removedMissing)
+    }
+
+    fun testClearAll() {
+        val service = project.getService(ReqRunExecutionService::class.java)
+        val request = HttpRequestSpec(
+            method = "GET",
+            url = "https://example.com",
+            headers = emptyMap(),
+            body = null
+        )
+
+        repeat(3) {
+            service.addExecution(request, null, "boom")
+        }
+        assertEquals(3, service.list().size)
+
+        val removed = service.clearAll()
+        assertEquals(3, removed)
+        assertEquals(0, service.list().size)
+    }
+
+    fun testHistoryLimit() {
+        val service = project.getService(ReqRunExecutionService::class.java)
+        val request = HttpRequestSpec(
+            method = "GET",
+            url = "https://example.com",
+            headers = emptyMap(),
+            body = null
+        )
+
+        val first = service.addExecution(request, null, "first")
+        repeat(205) {
+            service.addExecution(request, null, "item-$it")
+        }
+        val list = service.list()
+        assertEquals(200, list.size)
+        assertFalse(list.any { it.id == first.id })
     }
 }

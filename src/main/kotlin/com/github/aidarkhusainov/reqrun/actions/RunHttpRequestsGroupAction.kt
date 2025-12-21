@@ -1,12 +1,11 @@
 package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
-import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
 import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
-import com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService
 import com.github.aidarkhusainov.reqrun.services.ReqRunRequestSource
+import com.github.aidarkhusainov.reqrun.services.ReqRunRunner
 import com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor
 import com.intellij.execution.services.ServiceViewManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -74,14 +73,14 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
 
                 if (blocks.isEmpty()) {
                     ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
                         ReqRunNotifier.warn(project, "No HTTP requests found to run.")
                     }
                     return
                 }
 
                 indicator.isIndeterminate = false
-                val executor = project.getService(ReqRunExecutor::class.java)
-                val execService = project.getService(ReqRunExecutionService::class.java)
+                val runner = project.getService(ReqRunRunner::class.java)
                 var parseErrors = 0
                 var execErrors = 0
                 var cancelled = false
@@ -105,42 +104,50 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
 
                     val source = block.sourceOffset?.let { ReqRunRequestSource(block.file, it) }
                     try {
-                        val response = executor.execute(spec, indicator)
-                        val exec = execService.addExecution(spec, response, null, source)
+                        val result = runner.run(spec, source, indicator)
+                        if (result.status == ReqRunRunner.Status.ERROR) {
+                            execErrors += 1
+                            log.warn(
+                                "ReqRun: failed ${spec.method} ${spec.url}: ${result.execution.error ?: "unknown error"}"
+                            )
+                        }
                         ApplicationManager.getApplication().invokeLater({
+                            if (project.isDisposed) return@invokeLater
                             ServiceViewManager.getInstance(project)
-                                .select(exec, ReqRunServiceContributor::class.java, true, true)
+                                .select(result.execution, ReqRunServiceContributor::class.java, true, true)
                         }, ModalityState.any())
                     } catch (t: ProcessCanceledException) {
                         cancelled = true
+                        val exec = runner.addCancelledExecution(spec, source)
                         log.info("ReqRun: cancelled ${spec.method} ${spec.url}")
-                        val exec = execService.addExecution(spec, null, "Cancelled by user", source)
                         ApplicationManager.getApplication().invokeLater({
+                            if (project.isDisposed) return@invokeLater
                             ServiceViewManager.getInstance(project)
                                 .select(exec, ReqRunServiceContributor::class.java, true, true)
                         }, ModalityState.any())
                         throw t
-                    } catch (t: Throwable) {
-                        execErrors += 1
-                        log.warn("ReqRun: failed ${spec.method} ${spec.url}: ${t.message ?: "unknown error"}", t)
-                        val exec = execService.addExecution(spec, null, t.message, source)
-                        ApplicationManager.getApplication().invokeLater({
-                            ServiceViewManager.getInstance(project)
-                                .select(exec, ReqRunServiceContributor::class.java, true, true)
-                        }, ModalityState.any())
                     }
                     if (cancelled) break
                 }
 
                 if (cancelled) {
-                    ReqRunNotifier.info(project, "Request execution cancelled")
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        ReqRunNotifier.info(project, "Request execution cancelled")
+                    }
                     return
                 }
                 if (parseErrors > 0) {
-                    ReqRunNotifier.warn(project, "Skipped $parseErrors request(s) due to parse errors.")
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        ReqRunNotifier.warn(project, "Skipped $parseErrors request(s) due to parse errors.")
+                    }
                 }
                 if (execErrors > 0) {
-                    ReqRunNotifier.error(project, "Completed with errors: $execErrors/$total request(s).")
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        ReqRunNotifier.error(project, "Completed with errors: $execErrors/$total request(s).")
+                    }
                 }
             }
         })

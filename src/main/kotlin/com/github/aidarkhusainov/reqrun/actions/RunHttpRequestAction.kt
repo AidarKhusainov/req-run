@@ -1,12 +1,11 @@
 package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
-import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
 import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
-import com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService
 import com.github.aidarkhusainov.reqrun.services.ReqRunRequestSource
+import com.github.aidarkhusainov.reqrun.services.ReqRunRunner
 import com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor
 import com.intellij.execution.services.ServiceViewManager
 import com.intellij.openapi.actionSystem.AnAction
@@ -58,35 +57,35 @@ class RunHttpRequestAction : AnAction(), DumbAware {
         log.info("ReqRun: executing ${spec.method} ${spec.url}")
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Executing HTTP request", true) {
             override fun run(indicator: com.intellij.openapi.progress.ProgressIndicator) {
+                val runner = project.getService(ReqRunRunner::class.java)
                 try {
-                    val executor = project.getService(ReqRunExecutor::class.java)
-                    val response = executor.execute(spec, indicator)
-                    log.info("ReqRun: completed ${spec.method} ${spec.url} -> ${response.statusLine} (${response.durationMillis}ms)")
-                    val exec = project.getService(ReqRunExecutionService::class.java)
-                        .addExecution(spec, response, null, source)
+                    val result = runner.run(spec, source, indicator)
+                    when (result.status) {
+                        ReqRunRunner.Status.SUCCESS -> log.info(
+                            "ReqRun: completed ${spec.method} ${spec.url} -> ${result.execution.response?.statusLine}"
+                        )
+                        ReqRunRunner.Status.ERROR -> log.warn(
+                            "ReqRun: failed ${spec.method} ${spec.url}: ${result.execution.error ?: "unknown error"}"
+                        )
+                    }
                     ApplicationManager.getApplication().invokeLater({
+                        if (project.isDisposed) return@invokeLater
                         ServiceViewManager.getInstance(project)
-                            .select(exec, ReqRunServiceContributor::class.java, true, true)
+                            .select(result.execution, ReqRunServiceContributor::class.java, true, true)
+                        if (result.status == ReqRunRunner.Status.ERROR) {
+                            ReqRunNotifier.error(project, "Request failed: ${result.execution.error ?: "unknown error"}")
+                        }
                     }, ModalityState.any())
                 } catch (t: ProcessCanceledException) {
+                    val exec = runner.addCancelledExecution(spec, source)
                     log.info("ReqRun: cancelled ${spec.method} ${spec.url}")
-                    val exec = project.getService(ReqRunExecutionService::class.java)
-                        .addExecution(spec, null, "Cancelled by user", source)
                     ApplicationManager.getApplication().invokeLater({
+                        if (project.isDisposed) return@invokeLater
                         ServiceViewManager.getInstance(project)
                             .select(exec, ReqRunServiceContributor::class.java, true, true)
+                        ReqRunNotifier.info(project, "Request cancelled")
                     }, ModalityState.any())
-                    ReqRunNotifier.info(project, "Request cancelled")
                     throw t
-                } catch (t: Throwable) {
-                    log.warn("ReqRun: failed ${spec.method} ${spec.url}: ${t.message ?: "unknown error"}", t)
-                    val exec = project.getService(ReqRunExecutionService::class.java)
-                        .addExecution(spec, null, t.message, source)
-                    ApplicationManager.getApplication().invokeLater({
-                        ServiceViewManager.getInstance(project)
-                            .select(exec, ReqRunServiceContributor::class.java, true, true)
-                    }, ModalityState.any())
-                    ReqRunNotifier.error(project, "Request failed: ${t.message ?: "unknown error"}")
                 }
             }
         })

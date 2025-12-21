@@ -31,48 +31,48 @@ class ReqRunLineMarkerProvider : LineMarkerProviderDescriptor(), DumbAware {
     override fun getIcon(): javax.swing.Icon = AllIcons.Actions.Execute
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
-        val file = element.containingFile ?: return null
-        if (!isReqRunFile(file)) return null
-        val project = file.project
-        val document = PsiDocumentManager.getInstance(project).getDocument(file) ?: return null
-
-        val offset = element.textRange.startOffset
-        val line = document.getLineNumber(offset)
-        val lineStart = document.getLineStartOffset(line)
-
-        // Only process the first leaf on the line to avoid duplicate markers.
-        val firstLeafOnLine = file.findElementAt(lineStart) ?: return null
-        if (element != firstLeafOnLine) return null
-
-        if (!isFirstInBlock(document, line)) return null
-
-        val lineText = document.getText(TextRange(lineStart, document.getLineEndOffset(line)))
-        val match = methodPattern.find(lineText) ?: return null
-
-        val methodStart = lineStart + match.range.first
-        val methodEnd = lineStart + match.range.last + 1
-        val handler = GutterIconNavigationHandler<PsiElement> { _, _ ->
-            ApplicationManager.getApplication().invokeLater {
-                invokeRunAction(project, file.virtualFile, methodStart)
-            }
-        }
-
-        return LineMarkerInfo(
-            element,
-            TextRange(methodStart, methodEnd),
-            AllIcons.Actions.Execute,
-            FunctionUtil.constant("Run HTTP request"),
-            handler,
-            com.intellij.openapi.editor.markup.GutterIconRenderer.Alignment.LEFT,
-            { "Run HTTP request" }
-        )
+        // Use collectSlowLineMarkers to compute markers once per file.
+        return null
     }
 
     override fun collectSlowLineMarkers(
         elements: MutableList<out PsiElement>,
         result: MutableCollection<in LineMarkerInfo<*>>
     ) {
-        // no-op to avoid duplicate passes; all logic in getLineMarkerInfo
+        if (elements.isEmpty()) return
+        val file = elements.first().containingFile ?: return
+        if (!isReqRunFile(file)) return
+        val project = file.project
+        val document = PsiDocumentManager.getInstance(project).getDocument(file) ?: return
+        val allowed = elements.toHashSet()
+        val lineCount = document.lineCount
+        for (line in 0 until lineCount) {
+            val lineStart = document.getLineStartOffset(line)
+            val lineEnd = document.getLineEndOffset(line)
+            val lineText = document.getText(TextRange(lineStart, lineEnd))
+            val match = methodPattern.find(lineText) ?: continue
+            if (!isFirstInBlock(document, line)) continue
+            val anchor = file.findElementAt(lineStart) ?: continue
+            if (anchor !in allowed) continue
+            val methodStart = lineStart + match.range.first
+            val methodEnd = lineStart + match.range.last + 1
+            val handler = GutterIconNavigationHandler<PsiElement> { _, _ ->
+                ApplicationManager.getApplication().invokeLater {
+                    invokeRunAction(project, file.virtualFile, methodStart)
+                }
+            }
+            result.add(
+                LineMarkerInfo(
+                    anchor,
+                    TextRange(methodStart, methodEnd),
+                    AllIcons.Actions.Execute,
+                    FunctionUtil.constant("Run HTTP request"),
+                    handler,
+                    com.intellij.openapi.editor.markup.GutterIconRenderer.Alignment.LEFT,
+                    { "Run HTTP request" }
+                )
+            )
+        }
     }
 
     private fun isReqRunFile(file: PsiFile): Boolean =
