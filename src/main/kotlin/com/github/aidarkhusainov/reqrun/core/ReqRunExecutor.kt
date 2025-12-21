@@ -3,19 +3,32 @@ package com.github.aidarkhusainov.reqrun.core
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.util.net.JdkProxyProvider
+import com.intellij.util.net.ssl.CertificateManager
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.security.KeyStore
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
 
 @Service(Service.Level.PROJECT)
-class ReqRunExecutor {
-    private val client: HttpClient = HttpClient.newBuilder()
-        .followRedirects(HttpClient.Redirect.NORMAL)
-        .build()
+class ReqRunExecutor(private val project: Project) {
+    private val log = logger<ReqRunExecutor>()
+    @Volatile
+    private var cachedSdkHome: String? = null
+    @Volatile
+    private var cachedClient: HttpClient? = null
 
     fun execute(request: HttpRequestSpec): HttpResponsePayload {
+        val client = getClient()
         val startedAt = System.nanoTime()
         val bodyPublisher = request.body?.let { HttpRequest.BodyPublishers.ofString(it, StandardCharsets.UTF_8) }
             ?: HttpRequest.BodyPublishers.noBody()
@@ -36,6 +49,46 @@ class ReqRunExecutor {
             body = response.body(),
             durationMillis = duration,
         )
+    }
+
+    private fun getClient(): HttpClient {
+        val sdkHome = ProjectRootManager.getInstance(project).projectSdk?.homePath
+        val cached = cachedClient
+        if (cached != null && cachedSdkHome == sdkHome) return cached
+        synchronized(this) {
+            val recheck = cachedClient
+            if (recheck != null && cachedSdkHome == sdkHome) return recheck
+            val newClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .proxy(JdkProxyProvider.getInstance().proxySelector)
+                .authenticator(JdkProxyProvider.getInstance().authenticator)
+                .sslContext(resolveSslContext(sdkHome))
+                .build()
+            cachedSdkHome = sdkHome
+            cachedClient = newClient
+            return newClient
+        }
+    }
+
+    private fun resolveSslContext(sdkHome: String?): SSLContext {
+        val fallback = CertificateManager.getInstance().sslContext
+        if (sdkHome.isNullOrBlank()) return fallback
+        val cacertsPath = Path.of(sdkHome, "lib", "security", "cacerts")
+        if (!Files.isRegularFile(cacertsPath)) return fallback
+        return try {
+            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+            Files.newInputStream(cacertsPath).use { input ->
+                keyStore.load(input, "changeit".toCharArray())
+            }
+            val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            tmf.init(keyStore)
+            val context = SSLContext.getInstance("TLS")
+            context.init(null, tmf.trustManagers, null)
+            context
+        } catch (t: Throwable) {
+            log.warn("ReqRun: failed to load project SDK truststore from $cacertsPath, using IDE SSL context", t)
+            fallback
+        }
     }
 
     private fun formatVersion(version: HttpClient.Version): String =

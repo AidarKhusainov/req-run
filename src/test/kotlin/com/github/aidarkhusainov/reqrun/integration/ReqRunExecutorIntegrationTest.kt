@@ -2,33 +2,30 @@ package com.github.aidarkhusainov.reqrun.integration
 
 import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
 
-class ReqRunExecutorIntegrationTest {
+class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
     private lateinit var server: MockWebServer
     private lateinit var executor: ReqRunExecutor
 
-    @Before
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         server = MockWebServer()
         server.start()
-        executor = ReqRunExecutor()
+        executor = project.getService(ReqRunExecutor::class.java)
     }
 
-    @After
-    fun tearDown() {
-        server.shutdown()
+    override fun tearDown() {
+        try {
+            server.shutdown()
+        } finally {
+            super.tearDown()
+        }
     }
 
-    @Test
-    fun `execute sends GET without body`() {
+    fun `test execute sends GET without body`() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
@@ -56,8 +53,7 @@ class ReqRunExecutorIntegrationTest {
         assertTrue(response.durationMillis >= 0)
     }
 
-    @Test
-    fun `execute sends POST with body and headers`() {
+    fun `test execute sends POST with body and headers`() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(201)
@@ -82,8 +78,7 @@ class ReqRunExecutorIntegrationTest {
         assertEquals("created", response.body)
     }
 
-    @Test
-    fun `execute follows redirects`() {
+    fun `test execute follows redirects`() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(302)
@@ -109,8 +104,7 @@ class ReqRunExecutorIntegrationTest {
         assertEquals(2, server.requestCount)
     }
 
-    @Test
-    fun `execute keeps unknown reason phrase empty`() {
+    fun `test execute keeps unknown reason phrase empty`() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(418)
@@ -130,8 +124,7 @@ class ReqRunExecutorIntegrationTest {
         assertEquals("teapot", response.body)
     }
 
-    @Test
-    fun `execute handles empty body response`() {
+    fun `test execute handles empty body response`() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(204)

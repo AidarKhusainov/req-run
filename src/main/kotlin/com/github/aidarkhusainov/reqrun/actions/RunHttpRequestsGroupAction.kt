@@ -15,6 +15,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -57,19 +58,26 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
         val files = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
 
-        val blocks = when {
+        val editorBlocks = when {
             editor != null && file?.isHttpFile() == true -> blocksFromEditor(file, editor)
-            files != null -> blocksFromFiles(files)
-            else -> emptyList()
-        }
-
-        if (blocks.isEmpty()) {
-            ReqRunNotifier.warn(project, "No HTTP requests found to run.")
-            return
+            else -> null
         }
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Executing HTTP requests", false) {
             override fun run(indicator: ProgressIndicator) {
+                val blocks = when {
+                    editorBlocks != null -> editorBlocks
+                    files != null -> ReadAction.compute<List<Block>, Throwable> { blocksFromFiles(files, indicator) }
+                    else -> emptyList()
+                }
+
+                if (blocks.isEmpty()) {
+                    ApplicationManager.getApplication().invokeLater {
+                        ReqRunNotifier.warn(project, "No HTTP requests found to run.")
+                    }
+                    return
+                }
+
                 indicator.isIndeterminate = false
                 val executor = project.getService(ReqRunExecutor::class.java)
                 val execService = project.getService(ReqRunExecutionService::class.java)
@@ -129,13 +137,14 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         }
     }
 
-    private fun blocksFromFiles(files: Array<VirtualFile>): List<Block> {
+    private fun blocksFromFiles(files: Array<VirtualFile>, indicator: ProgressIndicator?): List<Block> {
         val result = mutableListOf<Block>()
         val httpFiles = files
-            .flatMap { collectHttpFiles(it) }
+            .flatMap { collectHttpFiles(it, indicator) }
             .distinctBy { it.path }
             .sortedBy { it.path }
         for (httpFile in httpFiles) {
+            if (indicator?.isCanceled == true) return result
             val text = VfsUtilCore.loadText(httpFile)
             val blocks = RequestExtractor.extractAllFromText(text)
             blocks.forEach { block ->
@@ -146,13 +155,14 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         return result
     }
 
-    private fun collectHttpFiles(file: VirtualFile): List<VirtualFile> {
+    private fun collectHttpFiles(file: VirtualFile, indicator: ProgressIndicator?): List<VirtualFile> {
         if (!file.isValid) return emptyList()
         if (!file.isDirectory) {
             return if (file.isHttpFile()) listOf(file) else emptyList()
         }
         val result = mutableListOf<VirtualFile>()
         VfsUtilCore.iterateChildrenRecursively(file, null) {
+            if (indicator?.isCanceled == true) return@iterateChildrenRecursively false
             if (it.isHttpFile()) {
                 result.add(it)
             }
