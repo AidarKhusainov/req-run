@@ -11,6 +11,7 @@ Fast to run, easy to read.
 <h2>Features</h2>
 <ul>
   <li>Run request blocks with gutter markers or <code>Ctrl+Alt+R</code>.</li>
+  <li>Run all requests in the current selection or file.</li>
   <li>Full response viewer: status, headers, body, and quick compare.</li>
   <li>Service tool window with history and one-click re-run.</li>
   <li>Convert to cURL or paste cURL as a request.</li>
@@ -47,6 +48,7 @@ Place the caret inside a request block and press <code>Ctrl+Alt+R</code>.
 ## Actions
 
 - **Run HTTP Request**: run the request block at the caret with `Ctrl+Alt+R`.
+- **Run Selected Requests**: run all requests from selection or file.
 - **Convert to cURL and Copy**: copy the current request block as a cURL command.
 - **Paste cURL as HTTP**: insert a cURL command as a `.http` request.
 

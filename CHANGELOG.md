@@ -3,6 +3,8 @@
 # req-run Changelog
 
 ## [Unreleased]
+### Added
+- Run all requests in the current selection or file via "Run Selected Requests".
 
 ## [1.0.0] - 2025-12-20
 ### Added

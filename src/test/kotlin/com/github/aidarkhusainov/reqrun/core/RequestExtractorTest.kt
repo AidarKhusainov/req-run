@@ -124,6 +124,40 @@ class RequestExtractorTest : BasePlatformTestCase() {
         assertEquals("GET https://example.com\nHeader: v", extracted)
     }
 
+    fun testExtractAllFromTextSplitsBySeparator() {
+        val text = """
+            GET https://a
+            ###
+            POST https://b
+        """.trimIndent()
+
+        val blocks = RequestExtractor.extractAllFromText(text)
+
+        assertEquals(2, blocks.size)
+        assertEquals("GET https://a", blocks[0].text)
+        assertEquals(0, blocks[0].startOffset)
+        assertEquals("POST https://b", blocks[1].text)
+        assertEquals(text.indexOf("POST"), blocks[1].startOffset)
+    }
+
+    fun testExtractAllUsesSelectionOffsets() {
+        val text = """
+            GET https://a
+            ###
+            POST https://b
+        """.trimIndent()
+        myFixture.configureByText("test.http", text)
+        val editor = myFixture.editor
+        val selectionStart = text.indexOf("POST")
+        editor.selectionModel.setSelection(selectionStart, text.length)
+
+        val blocks = RequestExtractor.extractAll(editor)
+
+        assertEquals(1, blocks.size)
+        assertEquals("POST https://b", blocks[0].text)
+        assertEquals(selectionStart, blocks[0].startOffset)
+    }
+
     private fun moveCaretTo(editor: com.intellij.openapi.editor.Editor, token: String) {
         val offset = editor.document.text.indexOf(token)
         require(offset >= 0) { "Token not found in document: $token" }

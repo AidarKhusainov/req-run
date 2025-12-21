@@ -4,6 +4,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 
 object RequestExtractor {
+    data class RequestBlock(val text: String, val startOffset: Int)
+
     fun extract(editor: Editor): String? {
         val document = editor.document
         val selection = editor.selectionModel
@@ -40,6 +42,35 @@ object RequestExtractor {
             .joinToString("\n")
             .takeIf { it.isNotBlank() }
         return block
+    }
+
+    fun extractAll(editor: Editor): List<RequestBlock> {
+        val selection = editor.selectionModel
+        val text = if (selection.hasSelection()) selection.selectedText else editor.document.text
+        val baseOffset = if (selection.hasSelection()) selection.selectionStart else 0
+        if (text.isNullOrBlank()) return emptyList()
+        return extractAllFromText(text, baseOffset)
+    }
+
+    fun extractAllFromText(text: String, baseOffset: Int = 0): List<RequestBlock> {
+        if (text.isBlank()) return emptyList()
+        val blocks = mutableListOf<RequestBlock>()
+        val separatorRegex = Regex("(?m)^\\s*###\\s*$")
+        var cursor = 0
+        for (match in separatorRegex.findAll(text)) {
+            val blockText = text.substring(cursor, match.range.first)
+            addBlock(blocks, blockText, baseOffset + cursor)
+            var nextStart = match.range.last + 1
+            if (nextStart < text.length && text[nextStart] == '\n') {
+                nextStart++
+            }
+            cursor = nextStart
+        }
+        if (cursor <= text.length) {
+            val blockText = text.substring(cursor)
+            addBlock(blocks, blockText, baseOffset + cursor)
+        }
+        return blocks
     }
 
     fun extractFull(editor: Editor): String? {
@@ -137,5 +168,12 @@ object RequestExtractor {
         val trimmed = line.trim()
         if (trimmed.isEmpty()) return false
         return trimmed.matches(Regex("^[A-Za-z]+\\s+\\S+.*$"))
+    }
+
+    private fun addBlock(target: MutableList<RequestBlock>, blockText: String, startOffset: Int) {
+        val trimmed = blockText.trimEnd('\n', '\r')
+        if (trimmed.isNotBlank()) {
+            target.add(RequestBlock(trimmed, startOffset))
+        }
     }
 }
