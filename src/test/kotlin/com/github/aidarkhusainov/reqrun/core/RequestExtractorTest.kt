@@ -80,6 +80,21 @@ class RequestExtractorTest : BasePlatformTestCase() {
         assertEquals("POST https://example.com\nH1: v1", extracted)
     }
 
+    fun testExtractFullReturnsHeadersAndBody() {
+        val text = """
+            POST https://example.com
+            H1: v1
+
+            body line
+        """.trimIndent()
+        myFixture.configureByText("test.http", text)
+        val editor = myFixture.editor
+        moveCaretTo(editor, "H1")
+
+        val extracted = RequestExtractor.extractFull(editor)
+        assertEquals("POST https://example.com\nH1: v1\n\nbody line", extracted)
+    }
+
     fun testExtractReturnsNullWhenCaretIsOnSeparator() {
         val text = """
             GET https://a

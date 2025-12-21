@@ -27,5 +27,19 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt R"/>
         </action>
+        <action id="com.github.aidarkhusainov.reqrun.actions.CopyCurlAction"
+                class="com.github.aidarkhusainov.reqrun.actions.CopyCurlAction"
+                text="Convert to cURL and Copy"
+                description="Copy HTTP request as cURL">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action id="com.github.aidarkhusainov.reqrun.actions.PasteCurlAction"
+                class="com.github.aidarkhusainov.reqrun.actions.PasteCurlAction"
+                text="Paste cURL as HTTP"
+                description="Insert HTTP request from a cURL command">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
     </actions>
 </idea-plugin>

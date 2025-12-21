@@ -31,6 +31,11 @@ Place the caret inside a request block and press `Ctrl+Alt+R`, or right-click an
 
 More examples live in [examples.http](examples.http).
 
+## cURL
+
+- **Convert to cURL and Copy**: copy the current request block as a cURL command.
+- **Paste cURL as HTTP**: insert a cURL command as a `.http` request.
+
 ## Installation
 
 - Using the IDE built-in plugin system:

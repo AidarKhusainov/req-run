@@ -37,7 +37,7 @@ class RunHttpRequestAction : AnAction(), DumbAware {
             return
         }
 
-        val rawRequest = RequestExtractor.extract(editor)
+        val rawRequest = RequestExtractor.extractFull(editor)
         if (rawRequest.isNullOrBlank()) {
             ReqRunNotifier.warn(project, "Place the caret inside a request block or select text to run.")
             return

@@ -42,6 +42,34 @@ object RequestExtractor {
         return block
     }
 
+    fun extractFull(editor: Editor): String? {
+        val document = editor.document
+        val selection = editor.selectionModel
+        if (selection.hasSelection()) {
+            val text = selection.selectedText?.takeIf { it.isNotBlank() }
+            return text
+        }
+
+        val lineCount = document.lineCount
+        if (lineCount == 0) {
+            return null
+        }
+
+        val caretLine = editor.caretModel.logicalPosition.line
+        val requestLine = findRequestLine(document, caretLine) ?: return null
+        val endLine = (findNextSeparator(document, requestLine + 1) ?: document.lineCount) - 1
+        val startOffset = document.getLineStartOffset(requestLine)
+        val endOffset = document.getLineEndOffset(endLine.coerceAtLeast(requestLine))
+        val range = TextRange(startOffset, endOffset)
+        val raw = document.getText(range)
+        val block = raw
+            .lineSequence()
+            .filterNot { isSeparator(it) }
+            .joinToString("\n")
+            .takeIf { it.isNotBlank() }
+        return block
+    }
+
     private fun findBoundary(document: com.intellij.openapi.editor.Document, from: Int, direction: Int): Int {
         var line = from
         while (line in 0 until document.lineCount) {
