@@ -1,22 +1,23 @@
 package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
-import com.github.aidarkhusainov.reqrun.core.RequestExtractor
 import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
+import com.github.aidarkhusainov.reqrun.core.RequestExtractor
 import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
 import com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService
 import com.github.aidarkhusainov.reqrun.services.ReqRunRequestSource
 import com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor
 import com.intellij.execution.services.ServiceViewManager
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
@@ -63,7 +64,7 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
             else -> null
         }
 
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Executing HTTP requests", false) {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Executing HTTP requests", true) {
             override fun run(indicator: ProgressIndicator) {
                 val blocks = when {
                     editorBlocks != null -> editorBlocks
@@ -83,9 +84,15 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                 val execService = project.getService(ReqRunExecutionService::class.java)
                 var parseErrors = 0
                 var execErrors = 0
+                var cancelled = false
                 val total = blocks.size
 
-                blocks.forEachIndexed { index, block ->
+                for (index in blocks.indices) {
+                    val block = blocks[index]
+                    if (indicator.isCanceled) {
+                        cancelled = true
+                        break
+                    }
                     indicator.fraction = ((index + 1).toDouble() / total.toDouble()).coerceIn(0.0, 1.0)
                     indicator.text = "Executing ${index + 1}/$total"
 
@@ -93,17 +100,26 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                     if (spec == null) {
                         parseErrors += 1
                         log.warn("ReqRun: failed to parse request block (length=${block.text.length})")
-                        return@forEachIndexed
+                        continue
                     }
 
                     val source = block.sourceOffset?.let { ReqRunRequestSource(block.file, it) }
                     try {
-                        val response = executor.execute(spec)
+                        val response = executor.execute(spec, indicator)
                         val exec = execService.addExecution(spec, response, null, source)
                         ApplicationManager.getApplication().invokeLater({
                             ServiceViewManager.getInstance(project)
                                 .select(exec, ReqRunServiceContributor::class.java, true, true)
                         }, ModalityState.any())
+                    } catch (t: ProcessCanceledException) {
+                        cancelled = true
+                        log.info("ReqRun: cancelled ${spec.method} ${spec.url}")
+                        val exec = execService.addExecution(spec, null, "Cancelled by user", source)
+                        ApplicationManager.getApplication().invokeLater({
+                            ServiceViewManager.getInstance(project)
+                                .select(exec, ReqRunServiceContributor::class.java, true, true)
+                        }, ModalityState.any())
+                        throw t
                     } catch (t: Throwable) {
                         execErrors += 1
                         log.warn("ReqRun: failed ${spec.method} ${spec.url}: ${t.message ?: "unknown error"}", t)
@@ -113,8 +129,13 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                                 .select(exec, ReqRunServiceContributor::class.java, true, true)
                         }, ModalityState.any())
                     }
+                    if (cancelled) break
                 }
 
+                if (cancelled) {
+                    ReqRunNotifier.info(project, "Request execution cancelled")
+                    return
+                }
                 if (parseErrors > 0) {
                     ReqRunNotifier.warn(project, "Skipped $parseErrors request(s) due to parse errors.")
                 }

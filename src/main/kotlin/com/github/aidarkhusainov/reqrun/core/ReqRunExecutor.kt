@@ -4,6 +4,8 @@ import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.util.net.JdkProxyProvider
@@ -16,18 +18,24 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.KeyStore
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 
 @Service(Service.Level.PROJECT)
 class ReqRunExecutor(private val project: Project) {
     private val log = logger<ReqRunExecutor>()
+
     @Volatile
     private var cachedSdkHome: String? = null
+
     @Volatile
     private var cachedClient: HttpClient? = null
 
-    fun execute(request: HttpRequestSpec): HttpResponsePayload {
+    fun execute(request: HttpRequestSpec, indicator: ProgressIndicator? = null): HttpResponsePayload {
         val client = getClient()
         val startedAt = System.nanoTime()
         val bodyPublisher = request.body?.let { HttpRequest.BodyPublishers.ofString(it, StandardCharsets.UTF_8) }
@@ -40,15 +48,35 @@ class ReqRunExecutor(private val project: Project) {
         request.headers.forEach { (name, value) ->
             builder.header(name, value)
         }
-        val response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
-        val duration = (System.nanoTime() - startedAt) / 1_000_000
-        val status = "${formatVersion(response.version())} ${response.statusCode()} ${reasonPhrase(response.statusCode())}"
-        return HttpResponsePayload(
-            statusLine = status,
-            headers = response.headers().map(),
-            body = response.body(),
-            durationMillis = duration,
-        )
+        val future = client.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+        while (true) {
+            if (indicator?.isCanceled == true) {
+                future.cancel(true)
+                throw ProcessCanceledException()
+            }
+            try {
+                val response = future.get(200, TimeUnit.MILLISECONDS)
+                val duration = (System.nanoTime() - startedAt) / 1_000_000
+                val status =
+                    "${formatVersion(response.version())} ${response.statusCode()} ${reasonPhrase(response.statusCode())}"
+                return HttpResponsePayload(
+                    statusLine = status,
+                    headers = response.headers().map(),
+                    body = response.body(),
+                    durationMillis = duration,
+                )
+            } catch (e: TimeoutException) {
+                continue
+            } catch (e: CancellationException) {
+                throw ProcessCanceledException()
+            } catch (e: InterruptedException) {
+                future.cancel(true)
+                Thread.currentThread().interrupt()
+                throw ProcessCanceledException()
+            } catch (e: ExecutionException) {
+                throw e.cause ?: e
+            }
+        }
     }
 
     private fun getClient(): HttpClient {
