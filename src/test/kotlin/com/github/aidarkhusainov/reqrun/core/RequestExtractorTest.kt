@@ -109,6 +109,21 @@ class RequestExtractorTest : BasePlatformTestCase() {
         assertEquals("GET https://a\nPOST https://b", extracted)
     }
 
+    fun testExtractIgnoresCommentLines() {
+        val text = """
+            # request comment
+            GET https://example.com
+            # header comment
+            Header: v
+        """.trimIndent()
+        myFixture.configureByText("test.http", text)
+        val editor = myFixture.editor
+        moveCaretTo(editor, "Header")
+
+        val extracted = RequestExtractor.extract(editor)
+        assertEquals("GET https://example.com\nHeader: v", extracted)
+    }
+
     private fun moveCaretTo(editor: com.intellij.openapi.editor.Editor, token: String) {
         val offset = editor.document.text.indexOf(token)
         require(offset >= 0) { "Token not found in document: $token" }

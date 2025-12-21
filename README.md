@@ -5,34 +5,48 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
 <!-- Plugin description -->
-ReqRun adds a lightweight HTTP request runner to IntelliJ IDEA Community. Write `METHOD URL` blocks in `.http` files, press `Ctrl+Alt+R`, and see the response with status, headers, and body in the ReqRun tool window.
+ReqRun is a minimal HTTP client for IntelliJ IDEA Community that lives in `.http` files.
+Fast to run, easy to read.
 
-To keep everything working, do not remove `<!-- ... -->` sections.
+<h2>Features</h2>
+<ul>
+  <li>Run request blocks with gutter markers or <code>Ctrl+Alt+R</code>.</li>
+  <li>Full response viewer: status, headers, body, and quick compare.</li>
+  <li>Service tool window with history and one-click re-run.</li>
+  <li>Convert to cURL or paste cURL as a request.</li>
+  <li>Line comments with <code>#</code>.</li>
+</ul>
+
+<h2>Request format</h2>
+<pre>
+# request line
+POST https://httpbin.org/post
+# headers
+Content-Type: application/json
+X-Trace: demo
+
+# blank line separates body
+{"ok": true}
+</pre>
+Place the caret inside a request block and press <code>Ctrl+Alt+R</code>.
+
+<b>Notes</b>
+<ul>
+  <li><code>#</code> starts a line comment. Comments are ignored by parser and runner.</li>
+  <li>A blank line or a comment line separates headers and body.</li>
+  <li>Use <code>###</code> on its own line to separate request blocks.</li>
+  <li>More examples: <a href="https://github.com/AidarKhusainov/req-run/blob/main/examples.http">examples.http</a></li>
+</ul>
+
+<h2>Feedback</h2>
+<ul>
+  <li>Suggestions and bug reports: <a href="https://github.com/AidarKhusainov/req-run">github.com/AidarKhusainov/req-run</a></li>
+</ul>
 <!-- Plugin description end -->
 
-## Features
+## Actions
 
-- Run ad-hoc HTTP requests from `.http` files.
-- One shortcut (`Ctrl+Alt+R`) from editor or context menu.
-- Response viewer with status, headers, body, and quick compare.
-- Service tool window with request history and re-run action.
-
-## Usage
-
-Create a `.http` file and write requests like:
-
-```http
-GET https://httpbin.org/get
-Accept: application/json
-
-```
-
-Place the caret inside a request block and press `Ctrl+Alt+R`, or right-click and choose **Run HTTP Request**.
-
-More examples live in [examples.http](examples.http).
-
-## cURL
-
+- **Run HTTP Request**: run the request block at the caret with `Ctrl+Alt+R`.
 - **Convert to cURL and Copy**: copy the current request block as a cURL command.
 - **Paste cURL as HTTP**: insert a cURL command as a `.http` request.
 

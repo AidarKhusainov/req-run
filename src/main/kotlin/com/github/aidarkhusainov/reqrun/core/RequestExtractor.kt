@@ -36,7 +36,7 @@ object RequestExtractor {
         val raw = document.getText(range)
         val block = raw
             .lineSequence()
-            .filterNot { isSeparator(it) }
+            .filterNot { isSeparator(it) || isComment(it) }
             .joinToString("\n")
             .takeIf { it.isNotBlank() }
         return block
@@ -130,6 +130,8 @@ object RequestExtractor {
     }
 
     private fun isSeparator(line: String): Boolean = line.trim() == "###"
+
+    private fun isComment(line: String): Boolean = line.trimStart().startsWith("#")
 
     private fun looksLikeRequestLine(line: String): Boolean {
         val trimmed = line.trim()

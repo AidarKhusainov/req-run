@@ -98,10 +98,13 @@ class HttpRequestParserTest {
         val raw = """
             POST https://example.com
 
+            X-Test: ok
+
             Header: not-a-header
         """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
+        assertEquals("ok", spec?.headers?.get("X-Test"))
         assertEquals("Header: not-a-header", spec?.body)
     }
 
@@ -118,5 +121,85 @@ class HttpRequestParserTest {
         val spec = HttpRequestParser.parse(raw)
         assertEquals("line1\n\nline3", spec?.body)
         assertTrue(spec?.body?.contains("\n\n") == true)
+    }
+
+    @Test
+    fun `parse ignores comment lines`() {
+        val raw = """
+            # top comment
+            POST https://example.com/api
+            # header comment
+            Content-Type: application/json
+            # another header comment
+            X-Test: ok
+
+            # body comment
+            line1
+            # line2 comment
+            line2
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+        assertEquals("POST", spec?.method)
+        assertEquals("https://example.com/api", spec?.url)
+        assertEquals("application/json", spec?.headers?.get("Content-Type"))
+        assertEquals("ok", spec?.headers?.get("X-Test"))
+        assertEquals("line1\nline2", spec?.body)
+    }
+
+    @Test
+    fun `parse allows blank lines before headers`() {
+        val raw = """
+            POST https://httpbin.org/post
+
+
+            Accept: application/json
+            Content-Type: application/json
+
+            {"message":"Hello"}
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+        assertEquals("POST", spec?.method)
+        assertEquals("application/json", spec?.headers?.get("Accept"))
+        assertEquals("application/json", spec?.headers?.get("Content-Type"))
+        assertEquals("{\"message\":\"Hello\"}", spec?.body)
+    }
+
+    @Test
+    fun `parse allows multiple blank lines before body`() {
+        val raw = """
+            POST https://httpbin.org/post
+            Accept: application/json
+
+
+            {"message":"Hello"}
+
+            line2
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+        assertEquals("POST", spec?.method)
+        assertEquals("application/json", spec?.headers?.get("Accept"))
+        assertEquals("{\"message\":\"Hello\"}\n\nline2", spec?.body)
+    }
+
+    @Test
+    fun `parse allows comment separator before body`() {
+        val raw = """
+            POST https://countries.trevorblades.com/
+            Accept: application/json
+            Content-Type: application/json
+            #
+            {
+              "query": "query { countries { code name emoji } }"
+            }
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+        assertEquals("POST", spec?.method)
+        assertEquals("application/json", spec?.headers?.get("Accept"))
+        assertEquals("application/json", spec?.headers?.get("Content-Type"))
+        assertEquals("{\n  \"query\": \"query { countries { code name emoji } }\"\n}", spec?.body)
     }
 }

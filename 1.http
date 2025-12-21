@@ -1,0 +1,16 @@
+GET https://jsonplaceholder.typicode.com/todos/2
+Accept: application/json
+
+###
+GET https://jsonplaceholder.typicode.com/todos/2
+Accept: application/yaml1
+###
+
+POST https://httpbin.org/post
+Accept: application/json
+Content-Type: application/json
+
+{
+    "message": "Hello from ReqRun",
+    "count": 3
+}

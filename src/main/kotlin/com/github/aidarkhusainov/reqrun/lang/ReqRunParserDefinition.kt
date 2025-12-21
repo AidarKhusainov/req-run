@@ -28,7 +28,7 @@ class ReqRunParserDefinition : ParserDefinition {
 
     override fun getWhitespaceTokens(): TokenSet = TokenSet.create(TokenType.WHITE_SPACE)
 
-    override fun getCommentTokens(): TokenSet = TokenSet.EMPTY
+    override fun getCommentTokens(): TokenSet = TokenSet.create(ReqRunTypes.COMMENT)
 
     override fun getStringLiteralElements(): TokenSet = TokenSet.EMPTY
 

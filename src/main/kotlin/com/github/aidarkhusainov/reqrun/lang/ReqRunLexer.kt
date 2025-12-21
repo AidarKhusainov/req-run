@@ -6,6 +6,7 @@ import com.intellij.psi.tree.IElementType
 class ReqRunLexer : LexerBase() {
     private val methodPattern =
         Regex("^\\s*(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\\s+\\S+", RegexOption.IGNORE_CASE)
+    private val commentPattern = Regex("^\\s*#.*")
 
     private var buffer: CharSequence = ""
     private var startOffset: Int = 0
@@ -46,7 +47,11 @@ class ReqRunLexer : LexerBase() {
         }
         val lineText = buffer.subSequence(tokenStart, lineEnd).toString()
 
-        tokenType = if (methodPattern.containsMatchIn(lineText)) ReqRunTypes.METHOD else ReqRunTypes.TEXT
+        tokenType = when {
+            commentPattern.matches(lineText) -> ReqRunTypes.COMMENT
+            methodPattern.containsMatchIn(lineText) -> ReqRunTypes.METHOD
+            else -> ReqRunTypes.TEXT
+        }
         tokenEnd = lineEnd
     }
 
