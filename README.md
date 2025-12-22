@@ -23,7 +23,10 @@ Fast to run, easy to read.
 POST https://httpbin.org/post
 Content-Type: application/json
 X-Trace: demo
- 
+</pre>
+<pre>
+</pre>
+<pre>
 {"ok": true}
 </pre>
 Place the caret inside a request block and press <code>Ctrl+Alt+R</code>.
