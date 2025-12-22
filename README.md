@@ -20,13 +20,10 @@ Fast to run, easy to read.
 
 <h2>Request format</h2>
 <pre>
-# request line
 POST https://httpbin.org/post
-# headers
 Content-Type: application/json
 X-Trace: demo
 
-# blank line separates body
 {"ok": true}
 </pre>
 Place the caret inside a request block and press <code>Ctrl+Alt+R</code>.
