@@ -9,8 +9,9 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.roots.ProjectRootManager
-import com.intellij.util.net.JdkProxyProvider
 import com.intellij.util.net.ssl.CertificateManager
+import java.net.Authenticator
+import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -89,15 +90,28 @@ class ReqRunExecutor(private val project: Project) {
         synchronized(this) {
             val recheck = cachedClient
             if (recheck != null && cachedSdkHome == sdkHome) return recheck
-            val newClient = HttpClient.newBuilder()
+            val newClient = applyProxySettings(HttpClient.newBuilder())
                 .followRedirects(HttpClient.Redirect.NORMAL)
-                .proxy(JdkProxyProvider.getInstance().proxySelector)
-                .authenticator(JdkProxyProvider.getInstance().authenticator)
                 .sslContext(resolveSslContext(sdkHome))
                 .build()
             cachedSdkHome = sdkHome
             cachedClient = newClient
             return newClient
+        }
+    }
+
+    private fun applyProxySettings(builder: HttpClient.Builder): HttpClient.Builder {
+        return try {
+            val providerClass = Class.forName("com.intellij.util.net.JdkProxyProvider")
+            val instance = providerClass.getMethod("getInstance").invoke(null)
+            val proxySelector = providerClass.getMethod("getProxySelector").invoke(instance) as? ProxySelector
+            val authenticator = providerClass.getMethod("getAuthenticator").invoke(instance) as? Authenticator
+            if (proxySelector != null) builder.proxy(proxySelector)
+            if (authenticator != null) builder.authenticator(authenticator)
+            builder
+        } catch (t: Throwable) {
+            log.debug("ReqRun: proxy settings unavailable, using defaults", t)
+            builder
         }
     }
 
@@ -126,7 +140,6 @@ class ReqRunExecutor(private val project: Project) {
         when (version) {
             HttpClient.Version.HTTP_1_1 -> "HTTP/1.1"
             HttpClient.Version.HTTP_2 -> "HTTP/2"
-            else -> version.name
         }
 
     // Minimal reason map for common codes; rest left empty to avoid misleading text.

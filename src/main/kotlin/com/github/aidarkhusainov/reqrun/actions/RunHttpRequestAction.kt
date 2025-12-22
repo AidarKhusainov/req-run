@@ -10,6 +10,7 @@ import com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor
 import com.intellij.execution.services.ServiceViewManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -21,6 +22,9 @@ import com.intellij.openapi.project.DumbAware
 
 class RunHttpRequestAction : AnAction(), DumbAware {
     private val log = logger<RunHttpRequestAction>()
+
+    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
     override fun update(e: AnActionEvent) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)

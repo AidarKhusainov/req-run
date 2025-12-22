@@ -6,9 +6,6 @@ import com.intellij.codeInsight.daemon.LineMarkerProviderDescriptor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionPlaces
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -107,12 +104,7 @@ class ReqRunLineMarkerProvider : LineMarkerProviderDescriptor(), DumbAware {
 
         val action = ActionManager.getInstance()
             .getAction("com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction") ?: return
-        val dataContext = SimpleDataContext.builder()
-            .add(CommonDataKeys.PROJECT, project)
-            .add(CommonDataKeys.EDITOR, editor)
-            .add(CommonDataKeys.VIRTUAL_FILE, file)
-            .build()
-        val event = AnActionEvent.createFromAnAction(action, null, ActionPlaces.UNKNOWN, dataContext)
-        action.actionPerformed(event)
+        ActionManager.getInstance()
+            .tryToExecute(action, null, editor.contentComponent, ActionPlaces.UNKNOWN, true)
     }
 }

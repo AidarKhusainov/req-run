@@ -5,6 +5,7 @@ import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
 import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -13,6 +14,8 @@ import com.intellij.openapi.project.DumbAware
 import java.awt.datatransfer.StringSelection
 
 class CopyCurlAction : AnAction(), DumbAware {
+    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
     override fun update(e: AnActionEvent) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)

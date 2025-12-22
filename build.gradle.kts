@@ -16,7 +16,7 @@ version = providers.gradleProperty("pluginVersion").get()
 
 // Set the JVM language level used to build the project.
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }
 
 // Configure project's dependencies
@@ -37,7 +37,7 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        intellijIdea(providers.gradleProperty("platformVersion"))
+        intellijIdeaCommunity(providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
         bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
@@ -105,7 +105,11 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            create("IC", "2024.1") { useInstaller = true }
+            create("IC", "2024.2") { useInstaller = true }
+            create("IC", "2024.3") { useInstaller = true }
+            create("IC", "2025.1") { useInstaller = true }
+            create("IC", "2025.2") { useInstaller = true }
         }
     }
 }
