@@ -202,4 +202,67 @@ class HttpRequestParserTest {
         assertEquals("application/json", spec?.headers?.get("Content-Type"))
         assertEquals("{\n  \"query\": \"query { countries { code name emoji } }\"\n}", spec?.body)
     }
+
+    @Test
+    fun `parse accepts tabs and multiple spaces in request line`() {
+        val raw = " \tGET\t  https://example.com/api?q=1#frag  "
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com/api?q=1#frag", spec?.url)
+    }
+
+    @Test
+    fun `parse ignores body without blank line separator`() {
+        val raw = """
+            POST https://example.com
+            some body line
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertNull(spec?.body)
+    }
+
+    @Test
+    fun `parse uses last header value for duplicates`() {
+        val raw = """
+            GET https://example.com
+            X-Test: one
+            X-Test: two
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals(1, spec?.headers?.size)
+        assertEquals("two", spec?.headers?.get("X-Test"))
+    }
+
+    @Test
+    fun `parse strips comments inside body`() {
+        val raw = """
+            POST https://example.com
+
+            line1
+            # comment
+            line2
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("line1\nline2", spec?.body)
+    }
+
+    @Test
+    fun `parse trims header names and values around colon`() {
+        val raw = """
+            GET https://example.com
+            X-Test   :    value
+        """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("value", spec?.headers?.get("X-Test"))
+    }
 }

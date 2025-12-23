@@ -1,7 +1,10 @@
 package com.github.aidarkhusainov.reqrun.services
 
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.intellij.execution.services.ServiceEventListener
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import java.util.concurrent.atomic.AtomicInteger
 
 class ReqRunExecutionServiceTest : BasePlatformTestCase() {
     override fun setUp() {
@@ -68,5 +71,42 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
         val list = service.list()
         assertEquals(200, list.size)
         assertFalse(list.any { it.id == first.id })
+    }
+
+    fun testServiceEventsAreDispatched() {
+        val service = project.getService(ReqRunExecutionService::class.java)
+        val eventCount = AtomicInteger(0)
+        project.messageBus.connect(testRootDisposable).subscribe(
+            ServiceEventListener.TOPIC,
+            ServiceEventListener { eventCount.incrementAndGet() }
+        )
+
+        val request = HttpRequestSpec(
+            method = "GET",
+            url = "https://example.com",
+            headers = emptyMap(),
+            body = null
+        )
+        val exec = service.addExecution(request, null, "boom")
+        waitForEventCount(eventCount, 1)
+
+        val removed = service.removeExecution(exec.id)
+        assertTrue(removed)
+        waitForEventCount(eventCount, 2)
+
+        service.addExecution(request, null, "boom")
+        waitForEventCount(eventCount, 3)
+        service.clearAll()
+        waitForEventCount(eventCount, 4)
+    }
+
+    private fun waitForEventCount(counter: AtomicInteger, expected: Int) {
+        val deadline = System.currentTimeMillis() + 2_000
+        while (System.currentTimeMillis() < deadline) {
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+            if (counter.get() >= expected) return
+            Thread.sleep(25)
+        }
+        assertEquals(expected, counter.get())
     }
 }

@@ -40,6 +40,43 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
         assertNull(markerAtLine(markers, doc, 0))
     }
 
+    fun testOnlyFirstRequestLineInBlockGetsMarker() {
+        val text = """
+            GET https://a
+            POST https://b
+        """.trimIndent()
+        myFixture.configureByText("test.http", text)
+        val provider = ReqRunLineMarkerProvider()
+
+        val doc = myFixture.editor.document
+        val markers = collectMarkers(provider, myFixture.file)
+
+        assertNotNull(markerAtLine(markers, doc, 0))
+        assertNull(markerAtLine(markers, doc, 1))
+    }
+
+    fun testNoMarkersForUnsupportedMethods() {
+        val text = "CONNECT https://example.com"
+        myFixture.configureByText("test.http", text)
+        val provider = ReqRunLineMarkerProvider()
+
+        val doc = myFixture.editor.document
+        val markers = collectMarkers(provider, myFixture.file)
+
+        assertNull(markerAtLine(markers, doc, 0))
+    }
+
+    fun testMarkerRangeStartsAtMethodToken() {
+        val text = "   GET https://example.com"
+        myFixture.configureByText("test.http", text)
+        val provider = ReqRunLineMarkerProvider()
+
+        val markers = collectMarkers(provider, myFixture.file)
+        val marker = markers.singleOrNull()
+
+        assertNotNull(marker)
+    }
+
     private fun collectMarkers(
         provider: ReqRunLineMarkerProvider,
         file: com.intellij.psi.PsiFile

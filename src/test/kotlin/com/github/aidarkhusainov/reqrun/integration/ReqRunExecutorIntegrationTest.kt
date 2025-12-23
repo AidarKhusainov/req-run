@@ -2,6 +2,8 @@ package com.github.aidarkhusainov.reqrun.integration
 
 import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.progress.util.ProgressIndicatorBase
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -122,6 +124,47 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
 
         assertEquals("HTTP/1.1 418 ", response.statusLine)
         assertEquals("teapot", response.body)
+    }
+
+    fun `test execute uses mapped reason phrase`() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(404)
+                .setBody("missing")
+        )
+
+        val request = HttpRequestSpec(
+            method = "GET",
+            url = server.url("/missing").toString(),
+            headers = emptyMap(),
+            body = null
+        )
+
+        val response = executor.execute(request)
+
+        assertEquals("HTTP/1.1 404 Not Found", response.statusLine)
+        assertEquals("missing", response.body)
+    }
+
+    fun `test execute respects cancellation`() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("ok")
+        )
+
+        val request = HttpRequestSpec(
+            method = "GET",
+            url = server.url("/slow").toString(),
+            headers = emptyMap(),
+            body = null
+        )
+        val indicator = ProgressIndicatorBase()
+        indicator.cancel()
+
+        assertThrows(ProcessCanceledException::class.java) {
+            executor.execute(request, indicator)
+        }
     }
 
     fun `test execute handles empty body response`() {
