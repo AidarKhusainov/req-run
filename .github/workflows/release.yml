@@ -1,5 +1,4 @@
 # GitHub Actions Workflow created for tag-based GitHub releases.
-
 name: Release
 on:
   push:
