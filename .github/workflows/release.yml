@@ -54,7 +54,7 @@ jobs:
           VERSION="${{ github.ref_name }}"
           RELEASE_NOTE="./build/tmp/release_note.txt"
           mkdir -p "$(dirname "$RELEASE_NOTE")"
-          ./gradlew getChangelog --release-note=$VERSION --no-header --quiet --console=plain --output-file=$RELEASE_NOTE
+          ./gradlew getChangelog --version=$VERSION --no-header --quiet --console=plain --output-file=$RELEASE_NOTE
 
       # Update the Unreleased section with the current release note
       - name: Patch Changelog
