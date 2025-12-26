@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-12-26
+### Added
+- Inline editor toolbar for `.http` files with templates, import/export, run-all, and environment selector.
+- Environment file helpers: create/open `http-client.env.json` and `http-client.private.env.json`, add variable actions.
+- Global/project settings for shared and private environment file paths.
+- New plugin icons and refreshed documentation.
+- Additional test coverage across actions, core, and services.
+
+### Changed
+- Editor popup actions grouped with a separator and shown only for `.http` files.
+
 ## [2.0.0] - 2025-12-22
 ### Added
 - Run all requests in the current selection or file via "Run Selected Requests".
@@ -31,6 +42,7 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.0.0...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.1.0...HEAD
+[2.1.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.0
 [2.0.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.0.0
 [1.0.0]: https://github.com/AidarKhusainov/req-run/releases/tag/1.0.0
