@@ -106,11 +106,7 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            create("IC", "2024.1") { useInstaller = true }
-            create("IC", "2024.2") { useInstaller = true }
-            create("IC", "2024.3") { useInstaller = true }
-            create("IC", "2025.1") { useInstaller = true }
-            create("IC", "2025.2") { useInstaller = true }
+            recommended()
         }
     }
 }
@@ -139,6 +135,29 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
+    }
+
+    register<DefaultTask>("writeReleaseNotes") {
+        val versionProvider = providers.gradleProperty("changelogVersion")
+        val outputProvider = providers.gradleProperty("changelogOutput")
+        notCompatibleWithConfigurationCache("Uses changelog extension at execution time")
+        doLast {
+            val version = versionProvider.orNull ?: project.version.toString()
+            val outputFile = outputProvider.orNull
+                ?: throw GradleException("Missing -PchangelogOutput for writeReleaseNotes")
+            val releaseNotes = with(project.changelog) {
+                renderItem(
+                    (getOrNull(version) ?: getUnreleased())
+                        .withHeader(false)
+                        .withEmptySections(false),
+                    Changelog.OutputType.MARKDOWN,
+                )
+            }
+            file(outputFile).apply {
+                parentFile.mkdirs()
+                writeText(releaseNotes)
+            }
+        }
     }
 }
 
