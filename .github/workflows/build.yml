@@ -67,6 +67,10 @@ jobs:
           tool-cache: false
           large-packages: false
 
+      # Fetch sources to access local actions
+      - name: Fetch Sources
+        uses: actions/checkout@v5
+
       # Check out the current repository
       - name: Setup Environment
         uses: ./.github/actions/setup-env
@@ -108,6 +112,10 @@ jobs:
         with:
           tool-cache: false
           large-packages: false
+
+      # Fetch sources to access local actions
+      - name: Fetch Sources
+        uses: actions/checkout@v5
 
       # Check out the current repository
       - name: Setup Environment
@@ -154,6 +162,10 @@ jobs:
           tool-cache: false
           large-packages: false
 
+      # Fetch sources to access local actions
+      - name: Fetch Sources
+        uses: actions/checkout@v5
+
       # Check out the current repository
       - name: Setup Environment
         uses: ./.github/actions/setup-env
@@ -181,6 +193,10 @@ jobs:
         with:
           tool-cache: false
           large-packages: false
+
+      # Fetch sources to access local actions
+      - name: Fetch Sources
+        uses: actions/checkout@v5
 
       # Check out the current repository
       - name: Setup Environment
@@ -213,6 +229,10 @@ jobs:
         with:
           tool-cache: false
           large-packages: false
+
+      # Fetch sources to access local actions
+      - name: Fetch Sources
+        uses: actions/checkout@v5
 
       # Check out the current repository and set up Java/Gradle
       - name: Setup Environment

@@ -18,6 +18,10 @@ jobs:
           tool-cache: false
           large-packages: false
 
+      # Fetch sources to access local actions
+      - name: Fetch Sources (for local actions)
+        uses: actions/checkout@v5
+
       - name: Fetch Sources
         uses: ./.github/actions/setup-env
         with:
