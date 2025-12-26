@@ -9,8 +9,6 @@
 # The workflow is triggered on push and pull_request events.
 #
 # GitHub Actions reference: https://help.github.com/en/actions
-#
-## JBIJPPTPL
 
 name: Build
 on:
@@ -51,7 +49,7 @@ jobs:
 
       # Validate Gradle Wrapper checksum to prevent supply-chain attacks
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v3
+        uses: gradle/actions/wrapper-validation@v5
 
   # Prepare the environment and build the plugin
   build:
