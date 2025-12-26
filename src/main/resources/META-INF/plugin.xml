@@ -1,9 +1,45 @@
 <idea-plugin>
     <id>com.github.aidarkhusainov.reqrun</id>
     <name>ReqRun</name>
-    <vendor email="aidar.khusainov.dev@gmail.com">Aidar Khusainov</vendor>
+    <vendor email="khusainov19978@gmail.com">Aidar Khusainov</vendor>
 
-    <description>Lightweight .http runner for IntelliJ IDEA Community.</description>
+    <description><![CDATA[
+        <p><b>ReqRun</b> is a minimal HTTP client for IntelliJ IDEA Community Edition.</p>
+
+        <p>
+          Run requests from plain <code>.http</code> files — fast, readable, shareable, and version-controlled.
+        </p>
+
+        <p><b>Highlights</b></p>
+        <ul>
+          <li>Run request blocks with gutter markers or <code>Ctrl+Alt+R</code></li>
+          <li>Run requests from selection, file, or folder</li>
+          <li>Inline toolbar: templates, import/export (cURL), run-all, environment selector</li>
+          <li>Environments: <code>http-client.env.json</code> + <code>http-client.private.env.json</code> (private overrides shared)</li>
+          <li>Variables: <code>@name = value</code>, <code>{{var}}</code>, built-ins <code>{{$timestamp}}</code>, <code>{{$uuid}}</code>, <code>{{$randomInt}}</code></li>
+          <li>Response viewer (status / headers / body) + history tool window</li>
+        </ul>
+
+        <p><b>Request example</b></p>
+        <p>
+          <code>POST https://httpbin.org/post</code><br/>
+          <code>@token = demo</code><br/>
+          <code>Content-Type: application/json</code><br/><br/>
+          <code>{"ok": true, "token": "{{token}}", "requestId": "{{$uuid}}"}</code>
+        </p>
+
+        <p><b>Notes</b></p>
+        <ul>
+          <li><code>#</code> starts a line comment (ignored by parser and runner)</li>
+          <li>A blank line (or a comment line) separates headers and body</li>
+          <li>Use <code>###</code> on its own line to separate request blocks</li>
+        </ul>
+
+        <p>
+          Feedback and bug reports:
+          <a href="https://github.com/AidarKhusainov/req-run">github.com/AidarKhusainov/req-run</a>
+        </p>
+    ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
 
@@ -18,14 +54,23 @@
         <lang.commenter language="ReqRunHTTP"
                         implementationClass="com.github.aidarkhusainov.reqrun.lang.ReqRunCommenter"/>
         <serviceViewContributor implementation="com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor"/>
+        <projectConfigurable groupId="tools"
+                             displayName="ReqRun"
+                             instance="com.github.aidarkhusainov.reqrun.settings.ReqRunEnvPathConfigurable"/>
+        <editorNotificationProvider implementation="com.github.aidarkhusainov.reqrun.ui.ReqRunToolbarNotificationProvider"/>
     </extensions>
 
     <actions>
+        <group id="com.github.aidarkhusainov.reqrun.actions.ReqRunEditorPopupGroup"
+               class="com.github.aidarkhusainov.reqrun.actions.ReqRunEditorPopupGroup"
+               text="ReqRun"
+               popup="false">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </group>
         <action id="com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction"
                 class="com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction"
                 text="Run HTTP Request"
                 description="Send HTTP request from the current selection or request block">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt R"/>
         </action>
@@ -33,7 +78,6 @@
                 class="com.github.aidarkhusainov.reqrun.actions.RunHttpRequestsGroupAction"
                 text="Run HTTP Requests (Group)"
                 description="Run HTTP requests from selection, file, or folder">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
@@ -41,14 +85,12 @@
                 class="com.github.aidarkhusainov.reqrun.actions.CopyCurlAction"
                 text="Convert to cURL and Copy"
                 description="Copy HTTP request as cURL">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
         <action id="com.github.aidarkhusainov.reqrun.actions.PasteCurlAction"
                 class="com.github.aidarkhusainov.reqrun.actions.PasteCurlAction"
                 text="Paste cURL as HTTP"
                 description="Insert HTTP request from a cURL command">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

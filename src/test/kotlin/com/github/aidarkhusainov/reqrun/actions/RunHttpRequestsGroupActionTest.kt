@@ -68,6 +68,19 @@ class RunHttpRequestsGroupActionTest : BasePlatformTestCase() {
         assertEquals("Completed with errors: 1/1 request(s).", notification.content)
     }
 
+    fun testWarnsOnUnresolvedVariables() {
+        myFixture.configureByText("test.http", "GET {{missing}}/v1")
+        val action = RunHttpRequestsGroupAction()
+        val event = createActionEvent(project, myFixture.editor, myFixture.file.virtualFile)
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(event)
+
+        val notification = waitForNotification()
+        assertEquals(NotificationType.WARNING, notification.type)
+        assertEquals("Skipped 1 request(s) due to unresolved variables.", notification.content)
+    }
+
     private fun waitForNotification(): com.intellij.notification.Notification {
         val deadline = System.currentTimeMillis() + 2_000
         while (System.currentTimeMillis() < deadline) {

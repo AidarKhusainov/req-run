@@ -70,6 +70,19 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         assertNull(execution.error)
     }
 
+    fun testWarnsOnUnresolvedVariables() {
+        myFixture.configureByText("test.http", "GET {{missing}}/v1")
+        val action = RunHttpRequestAction()
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(createActionEvent(project, myFixture.editor, myFixture.file.virtualFile))
+
+        val notifications = collectReqRunNotifications(project)
+        assertEquals(1, notifications.size)
+        assertEquals(NotificationType.WARNING, notifications.single().type)
+        assertEquals("Unresolved variables: missing", notifications.single().content)
+    }
+
     private fun waitForExecutionCount(service: ReqRunExecutionService, expected: Int) {
         val deadline = System.currentTimeMillis() + 2_000
         while (System.currentTimeMillis() < deadline) {

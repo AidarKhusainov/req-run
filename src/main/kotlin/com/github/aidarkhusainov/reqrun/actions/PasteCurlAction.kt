@@ -1,7 +1,6 @@
 package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.CurlConverter
-import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -12,13 +11,16 @@ import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.DumbAware
 import java.awt.datatransfer.DataFlavor
 
-class PasteCurlAction : AnAction(), DumbAware {
+class PasteCurlAction : AnAction("Paste cURL"), DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
     override fun update(e: AnActionEvent) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)
-        e.presentation.isEnabled = project != null && editor != null
+        val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val visible = project != null && editor != null && file.isReqRunHttpFile()
+        e.presentation.isVisible = visible
+        e.presentation.isEnabled = visible
     }
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -26,7 +28,7 @@ class PasteCurlAction : AnAction(), DumbAware {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
 
-        if (file?.extension?.equals("http", ignoreCase = true) != true && file?.fileType !is ReqRunFileType) {
+        if (!file.isReqRunHttpFile()) {
             ReqRunNotifier.warn(project, "ReqRun works with .http files")
             return
         }

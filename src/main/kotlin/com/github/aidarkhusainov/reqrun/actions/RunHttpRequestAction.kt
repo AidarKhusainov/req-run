@@ -2,8 +2,9 @@ package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
-import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
+import com.github.aidarkhusainov.reqrun.core.VariableResolver
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
+import com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService
 import com.github.aidarkhusainov.reqrun.services.ReqRunRequestSource
 import com.github.aidarkhusainov.reqrun.services.ReqRunRunner
 import com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor
@@ -28,7 +29,10 @@ class RunHttpRequestAction : AnAction(), DumbAware {
     override fun update(e: AnActionEvent) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)
-        e.presentation.isEnabled = project != null && editor != null
+        val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
+        val visible = project != null && editor != null && file.isReqRunHttpFile()
+        e.presentation.isVisible = visible
+        e.presentation.isEnabled = visible
     }
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -36,7 +40,7 @@ class RunHttpRequestAction : AnAction(), DumbAware {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
 
-        if (file?.extension?.equals("http", ignoreCase = true) != true && file?.fileType !is ReqRunFileType) {
+        if (!file.isReqRunHttpFile()) {
             ReqRunNotifier.warn(project, "ReqRun works with .http files")
             return
         }
@@ -47,7 +51,16 @@ class RunHttpRequestAction : AnAction(), DumbAware {
             return
         }
 
-        val spec = HttpRequestParser.parse(rawRequest)
+        val envVariables = project.getService(ReqRunEnvironmentService::class.java).loadVariablesForFile(file)
+        val fileVariables = VariableResolver.collectFileVariables(editor.document.text)
+        val resolvedRequest = VariableResolver.resolveRequest(rawRequest, fileVariables, envVariables)
+        val unresolved = VariableResolver.findUnresolvedPlaceholders(resolvedRequest)
+        if (unresolved.isNotEmpty()) {
+            val formatted = VariableResolver.formatUnresolved(unresolved)
+            ReqRunNotifier.warn(project, "Unresolved variables: $formatted")
+            return
+        }
+        val spec = HttpRequestParser.parse(resolvedRequest)
         if (spec == null) {
             log.warn("ReqRun: failed to parse request (length=${rawRequest.length})")
             ReqRunNotifier.error(

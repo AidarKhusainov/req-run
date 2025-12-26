@@ -2,8 +2,9 @@ package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
-import com.github.aidarkhusainov.reqrun.lang.ReqRunFileType
+import com.github.aidarkhusainov.reqrun.core.VariableResolver
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
+import com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService
 import com.github.aidarkhusainov.reqrun.services.ReqRunRequestSource
 import com.github.aidarkhusainov.reqrun.services.ReqRunRunner
 import com.github.aidarkhusainov.reqrun.services.ReqRunServiceContributor
@@ -35,8 +36,8 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
         val files = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
-        val hasEditorHttp = editor != null && file?.isHttpFile() == true
-        val hasFileSelection = files?.any { it.isHttpFile() } == true
+        val hasEditorHttp = editor != null && file.isReqRunHttpFile()
+        val hasFileSelection = files?.any { it.isReqRunHttpFile() } == true
         val visible = project != null && (hasEditorHttp || hasFileSelection)
         e.presentation.isVisible = visible
         e.presentation.isEnabled = visible
@@ -45,8 +46,8 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         val text = when {
             editor?.selectionModel?.hasSelection() == true -> "Run Selected Requests"
             files != null && files.size > 1 -> "Run Selected Files"
-            files != null && files.size == 1 && files[0].isHttpFile() -> "Run 'All in ${files[0].name}'"
-            file?.isHttpFile() == true -> "Run 'All in ${file.name}'"
+            files != null && files.size == 1 && files[0].isReqRunHttpFile() -> "Run 'All in ${files[0].name}'"
+            file.isReqRunHttpFile() -> "Run 'All in ${file?.name}'"
             else -> "Run Selected Requests"
         }
         e.presentation.text = text
@@ -57,9 +58,11 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         val editor = e.getData(CommonDataKeys.EDITOR)
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
         val files = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
+        val envService = project.getService(ReqRunEnvironmentService::class.java)
+        val envCache = mutableMapOf<String, Map<String, String>>()
 
         val editorBlocks = when {
-            editor != null && file?.isHttpFile() == true -> blocksFromEditor(file, editor)
+            editor != null && file != null && file.isReqRunHttpFile() -> blocksFromEditor(file, editor)
             else -> null
         }
 
@@ -83,6 +86,7 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                 val runner = project.getService(ReqRunRunner::class.java)
                 var parseErrors = 0
                 var execErrors = 0
+                var unresolvedErrors = 0
                 var cancelled = false
                 val total = blocks.size
 
@@ -95,7 +99,17 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                     indicator.fraction = ((index + 1).toDouble() / total.toDouble()).coerceIn(0.0, 1.0)
                     indicator.text = "Executing ${index + 1}/$total"
 
-                    val spec = HttpRequestParser.parse(block.text)
+                    val envVariables = envCache.getOrPut(block.file.path) {
+                        envService.loadVariablesForFile(block.file)
+                    }
+                    val resolvedRequest = VariableResolver.resolveRequest(block.text, block.variables, envVariables)
+                    val unresolved = VariableResolver.findUnresolvedPlaceholders(resolvedRequest)
+                    if (unresolved.isNotEmpty()) {
+                        unresolvedErrors += 1
+                        log.warn("ReqRun: unresolved variables for request: ${VariableResolver.formatUnresolved(unresolved)}")
+                        continue
+                    }
+                    val spec = HttpRequestParser.parse(resolvedRequest)
                     if (spec == null) {
                         parseErrors += 1
                         log.warn("ReqRun: failed to parse request block (length=${block.text.length})")
@@ -143,6 +157,12 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                         ReqRunNotifier.warn(project, "Skipped $parseErrors request(s) due to parse errors.")
                     }
                 }
+                if (unresolvedErrors > 0) {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        ReqRunNotifier.warn(project, "Skipped $unresolvedErrors request(s) due to unresolved variables.")
+                    }
+                }
                 if (execErrors > 0) {
                     ApplicationManager.getApplication().invokeLater {
                         if (project.isDisposed) return@invokeLater
@@ -154,13 +174,15 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
     }
 
     private fun blocksFromEditor(file: VirtualFile, editor: com.intellij.openapi.editor.Editor): List<Block> {
+        val fileVariables = VariableResolver.collectFileVariables(editor.document.text)
         val blocks = RequestExtractor.extractAll(editor)
         return blocks.mapNotNull { block ->
             val requestOffset = findRequestLineOffset(block.text) ?: return@mapNotNull null
             Block(
                 text = block.text,
                 file = file,
-                sourceOffset = block.startOffset + requestOffset
+                sourceOffset = block.startOffset + requestOffset,
+                variables = fileVariables
             )
         }
     }
@@ -174,10 +196,11 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         for (httpFile in httpFiles) {
             if (indicator?.isCanceled == true) return result
             val text = VfsUtilCore.loadText(httpFile)
+            val fileVariables = VariableResolver.collectFileVariables(text)
             val blocks = RequestExtractor.extractAllFromText(text)
             blocks.forEach { block ->
                 val requestOffset = findRequestLineOffset(block.text) ?: return@forEach
-                result.add(Block(block.text, httpFile, block.startOffset + requestOffset))
+                result.add(Block(block.text, httpFile, block.startOffset + requestOffset, fileVariables))
             }
         }
         return result
@@ -186,12 +209,12 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
     private fun collectHttpFiles(file: VirtualFile, indicator: ProgressIndicator?): List<VirtualFile> {
         if (!file.isValid) return emptyList()
         if (!file.isDirectory) {
-            return if (file.isHttpFile()) listOf(file) else emptyList()
+            return if (file.isReqRunHttpFile()) listOf(file) else emptyList()
         }
         val result = mutableListOf<VirtualFile>()
         VfsUtilCore.iterateChildrenRecursively(file, null) {
             if (indicator?.isCanceled == true) return@iterateChildrenRecursively false
-            if (it.isHttpFile()) {
+            if (it.isReqRunHttpFile()) {
                 result.add(it)
             }
             true
@@ -204,12 +227,10 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         return match.range.first
     }
 
-    private fun VirtualFile.isHttpFile(): Boolean =
-        extension.equals("http", ignoreCase = true) || fileType is ReqRunFileType
-
     private data class Block(
         val text: String,
         val file: VirtualFile,
         val sourceOffset: Int?,
+        val variables: Map<String, String>,
     )
 }

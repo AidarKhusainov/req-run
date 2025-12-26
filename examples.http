@@ -1,24 +1,31 @@
+# File variables
+@baseUrl = https://httpbin.org
+@token = demo
+
+###
 # Basic GET with query params
-GET https://httpbin.org/get?foo=bar&limit=3
+GET {{baseUrl}}/get?foo=bar&limit=3
 Accept: application/json
 
 ###
 # Custom headers
-GET https://httpbin.org/anything/headers
+GET {{baseUrl}}/anything/headers
 Accept: application/json
 X-Test-Header: ReqRun-Test
+X-Request-Id: {{$uuid}}
 User-Agent: ReqRun/1.0
 
 ###
 # Blank lines between request line and headers
-POST https://httpbin.org/post
+POST {{baseUrl}}/post
 
 Accept: application/json
 Content-Type: application/json
 
 {
   "message": "Hello from ReqRun",
-  "count": 3
+  "count": 3,
+  "token": "{{token}}"
 }
 
 ###
@@ -41,7 +48,7 @@ foo=bar&number=42
 
 ###
 # PUT with JSON body
-PUT https://httpbin.org/put
+PUT {{baseUrl}}/put
 Accept: application/json
 Content-Type: application/json
 
@@ -49,17 +56,17 @@ Content-Type: application/json
 
 ###
 # DELETE
-DELETE https://httpbin.org/delete
+DELETE {{baseUrl}}/delete
 Accept: application/json
 
 ###
 # HEAD
-HEAD https://httpbin.org/get
+HEAD {{baseUrl}}/get
 Accept: application/json
 
 ###
 # XML body
-POST https://httpbin.org/post
+POST {{baseUrl}}/post
 Accept: application/json
 Content-Type: text/xml
 
@@ -71,7 +78,7 @@ Content-Type: text/xml
 
 ###
 # Multipart form-data
-POST https://httpbin.org/post
+POST {{baseUrl}}/post
 Accept: application/json
 Content-Type: multipart/form-data; boundary=ReqRunBoundary
 
@@ -88,7 +95,7 @@ Hello from ReqRun multipart.
 
 ###
 # Raw body
-POST https://httpbin.org/post
+POST {{baseUrl}}/post
 Accept: application/json
 Content-Type: application/octet-stream
 
@@ -96,5 +103,5 @@ Raw binary bytes: 00 01 02 03 04
 
 ###
 # Streaming response
-GET https://httpbin.org/stream/5
+GET {{baseUrl}}/stream/5
 Accept: application/x-ndjson

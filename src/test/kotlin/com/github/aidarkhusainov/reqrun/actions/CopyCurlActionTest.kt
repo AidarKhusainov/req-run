@@ -64,4 +64,17 @@ class CopyCurlActionTest : BasePlatformTestCase() {
         assertEquals(NotificationType.INFORMATION, notifications.single().type)
         assertEquals("Copied request as cURL", notifications.single().content)
     }
+
+    fun testWarnsOnUnresolvedVariables() {
+        myFixture.configureByText("test.http", "GET {{missing}}/v1")
+        val action = CopyCurlAction()
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(createActionEvent(project, myFixture.editor, myFixture.file.virtualFile))
+
+        val notifications = collectReqRunNotifications(project)
+        assertEquals(1, notifications.size)
+        assertEquals(NotificationType.WARNING, notifications.single().type)
+        assertEquals("Unresolved variables: missing", notifications.single().content)
+    }
 }
