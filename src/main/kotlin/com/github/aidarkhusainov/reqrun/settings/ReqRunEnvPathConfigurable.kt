@@ -4,8 +4,9 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
+import com.intellij.openapi.ui.TextBrowseFolderListener
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
@@ -22,9 +23,14 @@ class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
 
     override fun createComponent(): JComponent {
         if (component == null) {
-            val descriptor = FileChooserDescriptorFactory.createSingleFileDescriptor()
-            sharedField.addBrowseFolderListener("Select shared env file", null, project, descriptor)
-            privateField.addBrowseFolderListener("Select private env file", null, project, descriptor)
+            val sharedDescriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor().apply {
+                title = "Select shared env file"
+            }
+            val privateDescriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor().apply {
+                title = "Select private env file"
+            }
+            sharedField.addBrowseFolderListener(TextBrowseFolderListener(sharedDescriptor, project))
+            privateField.addBrowseFolderListener(TextBrowseFolderListener(privateDescriptor, project))
             scopeBox.addActionListener { loadFields() }
             val form = FormBuilder.createFormBuilder()
                 .addLabeledComponent("Scope:", scopeBox)

@@ -1,17 +1,23 @@
-# GitHub Actions Workflow created for handling the release process based on the draft release prepared with the Build workflow.
-# Running the publishPlugin task requires all the following secrets to be provided: PUBLISH_TOKEN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD, CERTIFICATE_CHAIN.
-# See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
+# GitHub Actions Workflow created for tag-based GitHub releases.
 
 name: Release
 on:
-  release:
-    types: [prereleased, released]
+  push:
+    tags:
+      - "*.*.*"
 
 jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/build.yml
+    with:
+      pluginVersion: ${{ github.ref_name }}
+    secrets: inherit
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
   release:
-    name: Publish Plugin
+    name: Release Assets
+    needs: [ checks ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,58 +32,61 @@ jobs:
           large-packages: false
 
       # Check out the current repository
-      - name: Fetch Sources
-        uses: actions/checkout@v5
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
         with:
-          ref: ${{ github.event.release.tag_name }}
-
-      # Set up the Java environment for the next steps
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: zulu
-          java-version: 21
-
-      # Setup Gradle
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-        with:
+          ref: ${{ github.ref_name }}
           cache-read-only: true
+          plugin-version: ${{ github.ref_name }}
+
+      # Prepare release notes from CHANGELOG.md
+      - name: Prepare Release Notes
+        run: |
+          VERSION="${{ github.ref_name }}"
+          RELEASE_NOTE="./build/tmp/release_note.txt"
+          mkdir -p "$(dirname "$RELEASE_NOTE")"
+          ./gradlew getChangelog --release-note=$VERSION --no-header --quiet --console=plain --output-file=$RELEASE_NOTE
 
       # Update the Unreleased section with the current release note
       - name: Patch Changelog
-        if: ${{ github.event.release.body != '' }}
-        env:
-          CHANGELOG: ${{ github.event.release.body }}
+        id: changelog
         run: |
           RELEASE_NOTE="./build/tmp/release_note.txt"
-          mkdir -p "$(dirname "$RELEASE_NOTE")"
-          echo "$CHANGELOG" > $RELEASE_NOTE
-
           ./gradlew patchChangelog --release-note-file=$RELEASE_NOTE
 
-      # Publish the plugin to JetBrains Marketplace
-      - name: Publish Plugin
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-        run: ./gradlew publishPlugin
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      # Upload an artifact as a release asset
-      - name: Upload Release Asset
+      # Build the plugin to attach artifacts to the GitHub release
+      - name: Build Plugin
+        run: ./gradlew buildPlugin
+
+      # Create or update GitHub Release and upload artifacts
+      - name: Publish GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+        run: |
+          VERSION="${{ github.ref_name }}"
+          RELEASE_NOTE="./build/tmp/release_note.txt"
+
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release edit "$VERSION" --title "$VERSION" --notes-file "$RELEASE_NOTE"
+          else
+            gh release create "$VERSION" --title "$VERSION" --notes-file "$RELEASE_NOTE"
+          fi
+
+          gh release upload "$VERSION" ./build/distributions/* --clobber
 
       # Create a pull request
       - name: Create Pull Request
-        if: ${{ github.event.release.body != '' }}
+        if: ${{ steps.changelog.outputs.changed == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${{ github.ref_name }}"
           BRANCH="changelog-update-$VERSION"
           LABEL="release changelog"
 

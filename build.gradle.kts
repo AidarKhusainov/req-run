@@ -110,6 +110,7 @@ intellijPlatform {
             create("IC", "2024.3") { useInstaller = true }
             create("IC", "2025.1") { useInstaller = true }
             create("IC", "2025.2") { useInstaller = true }
+            create("IC", "2025.3") { useInstaller = true }
         }
     }
 }

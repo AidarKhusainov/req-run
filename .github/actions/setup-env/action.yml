@@ -1,0 +1,48 @@
+name: Setup Environment
+description: Checkout sources and prepare Java/Gradle for CI jobs.
+inputs:
+  ref:
+    description: Git ref to check out.
+    required: false
+    default: ""
+  fetch-depth:
+    description: Number of commits to fetch. Use 0 for full history.
+    required: false
+    default: "1"
+  java-version:
+    description: Java version to install.
+    required: false
+    default: "21"
+  distribution:
+    description: Java distribution to install.
+    required: false
+    default: "zulu"
+  cache-read-only:
+    description: Enable read-only Gradle cache.
+    required: false
+    default: "false"
+  plugin-version:
+    description: Plugin version to override in Gradle.
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch Sources
+      uses: actions/checkout@v5
+      with:
+        ref: ${{ inputs.ref }}
+        fetch-depth: ${{ inputs.fetch-depth }}
+    - name: Setup Java
+      uses: actions/setup-java@v5
+      with:
+        distribution: ${{ inputs.distribution }}
+        java-version: ${{ inputs.java-version }}
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v5
+      with:
+        cache-read-only: ${{ inputs.cache-read-only }}
+    - name: Set Plugin Version
+      if: ${{ inputs.plugin-version != '' }}
+      shell: bash
+      run: echo "ORG_GRADLE_PROJECT_pluginVersion=${{ inputs.plugin-version }}" >> $GITHUB_ENV
