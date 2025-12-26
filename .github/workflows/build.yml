@@ -58,6 +58,8 @@ jobs:
     name: Build
     needs: [ validateWrapper ]
     runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
 
       # Free GitHub Actions Environment Disk Space
@@ -130,8 +132,8 @@ jobs:
 
       # Upload the Kover report to CodeCov
       - name: Upload Code Coverage Report
+        if: ${{ env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
-        if: ${{ secrets.CODECOV_TOKEN != '' }}
         with:
           files: ${{ github.workspace }}/build/reports/kover/report.xml
           token: ${{ secrets.CODECOV_TOKEN }}
