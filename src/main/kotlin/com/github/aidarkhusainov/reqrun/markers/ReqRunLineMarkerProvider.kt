@@ -21,7 +21,7 @@ import com.intellij.util.FunctionUtil
 class ReqRunLineMarkerProvider : LineMarkerProviderDescriptor(), DumbAware {
     private val methodPattern =
         Regex("^\\s*(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\\s+\\S+", RegexOption.IGNORE_CASE)
-    private val separatorPattern = Regex("^\\s*###\\s*$")
+    private val separatorPattern = Regex("^\\s*###.*$")
 
     override fun getName(): String = "ReqRun Run Marker"
 

@@ -55,7 +55,7 @@ object RequestExtractor {
     fun extractAllFromText(text: String, baseOffset: Int = 0): List<RequestBlock> {
         if (text.isBlank()) return emptyList()
         val blocks = mutableListOf<RequestBlock>()
-        val separatorRegex = Regex("(?m)^\\s*###\\s*$")
+        val separatorRegex = Regex("(?m)^\\s*###.*$")
         var cursor = 0
         for (match in separatorRegex.findAll(text)) {
             val blockText = text.substring(cursor, match.range.first)
@@ -160,7 +160,7 @@ object RequestExtractor {
         return null
     }
 
-    private fun isSeparator(line: String): Boolean = line.trim() == "###"
+    private fun isSeparator(line: String): Boolean = line.trimStart().startsWith("###")
 
     private fun isComment(line: String): Boolean = line.trimStart().startsWith("#")
 

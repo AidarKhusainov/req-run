@@ -12,7 +12,7 @@ object VariableResolver {
         val vars = LinkedHashMap<String, String>()
         for (line in fileText.lineSequence()) {
             val trimmed = line.trim()
-            if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed == "###") continue
+            if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("###")) continue
             val match = variableDefinitionPattern.find(line) ?: continue
             val name = match.groupValues[1]
             val value = match.groupValues[2]

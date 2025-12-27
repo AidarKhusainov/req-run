@@ -12,7 +12,7 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
             Header: v
 
             POST https://b
-            ###
+            ### Case1
             PUT https://c
         """.trimIndent()
         myFixture.configureByText("test.http", text)

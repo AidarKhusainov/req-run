@@ -65,6 +65,21 @@ class RequestExtractorTest : BasePlatformTestCase() {
         assertTrue(extracted?.contains("###") == false)
     }
 
+    fun testExtractTreatsSeparatorWithTitleAndExcludesIt() {
+        val text = """
+            GET https://a
+            ### Case1
+            POST https://b
+        """.trimIndent()
+        myFixture.configureByText("test.http", text)
+        val editor = myFixture.editor
+        moveCaretTo(editor, "POST")
+
+        val extracted = RequestExtractor.extract(editor)
+        assertEquals("POST https://b", extracted)
+        assertTrue(extracted?.contains("###") == false)
+    }
+
     fun testExtractReturnsHeadersOnlyWhenBodySeparatedByBlankLine() {
         val text = """
             POST https://example.com
