@@ -8,8 +8,16 @@ import com.github.aidarkhusainov.reqrun.testutil.collectReqRunNotifications
 import com.github.aidarkhusainov.reqrun.testutil.createActionEvent
 import com.intellij.notification.NotificationType
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
 
 class RunHttpRequestActionTest : BasePlatformTestCase() {
+    override fun setUp() {
+        super.setUp()
+        project.getService(ReqRunExecutionService::class.java).clearAll()
+    }
+
     override fun tearDown() {
         try {
             project.getService(ReqRunRunner::class.java).setExecutorForTests(null)
@@ -81,6 +89,63 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         assertEquals(1, notifications.size)
         assertEquals(NotificationType.WARNING, notifications.single().type)
         assertEquals("Unresolved variables: missing", notifications.single().content)
+    }
+
+    fun testWarnsOnMissingAuthConfig() {
+        myFixture.configureByText(
+            "test.http",
+            """
+                GET https://example.com
+                Authorization: Bearer {{${'$'}auth.token("bearer")}}
+            """.trimIndent()
+        )
+        val action = RunHttpRequestAction()
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(createActionEvent(project, myFixture.editor, myFixture.file.virtualFile))
+
+        val notifications = collectReqRunNotifications(project)
+        assertEquals(1, notifications.size)
+        assertEquals(NotificationType.WARNING, notifications.single().type)
+        assertEquals("Missing auth config: bearer", notifications.single().content)
+    }
+
+    fun testWarnsOnIncompleteAuthConfig() {
+        val basePath = Path.of(project.basePath!!)
+        Files.createDirectories(basePath)
+        Files.writeString(
+            basePath.resolve("http-client.env.json"),
+            """
+                {
+                  "local": {
+                    "Security": {
+                      "Auth": {
+                        "basic": { "Type": "Static", "Scheme": "Basic", "Username": "user" }
+                      }
+                    }
+                  }
+                }
+            """.trimIndent(),
+            StandardCharsets.UTF_8
+        )
+        myFixture.configureByText(
+            "test.http",
+            """
+                GET https://example.com
+                Authorization: Basic {{${'$'}auth.token("basic")}}
+            """.trimIndent()
+        )
+        project.getService(com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService::class.java)
+            .setSelectedEnvironment("local")
+        val action = RunHttpRequestAction()
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(createActionEvent(project, myFixture.editor, myFixture.file.virtualFile))
+
+        val notifications = collectReqRunNotifications(project)
+        assertEquals(1, notifications.size)
+        assertEquals(NotificationType.WARNING, notifications.single().type)
+        assertEquals("Auth config 'basic' Password is missing.", notifications.single().content)
     }
 
     private fun waitForExecutionCount(service: ReqRunExecutionService, expected: Int) {

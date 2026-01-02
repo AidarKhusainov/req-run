@@ -17,3 +17,7 @@ Request block detection
 Error reporting
 - Rule: user-visible warnings/errors are shown via notifications; tool window shows execution results and history.
 - Rationale: keep execution UI focused while preserving feedback.
+
+Static auth configuration
+- Rule: static auth configs are defined under `Security.Auth` in env files and resolved via `{{$auth.token("id")}}` or `{{$auth.header("id")}}`; `Header` may use placeholders; private env overrides shared by id.
+- Rationale: keep auth setup close to environments without adding extra UI or heavy parsing.

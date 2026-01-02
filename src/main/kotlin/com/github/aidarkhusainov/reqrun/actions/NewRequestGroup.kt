@@ -14,5 +14,8 @@ class NewRequestGroup : DefaultActionGroup("Add to HTTP Client...", true) {
         addSeparator()
         add(AddEnvVariableAction(isPrivate = false))
         add(AddEnvVariableAction(isPrivate = true))
+        addSeparator()
+        add(AddAuthConfigAction(isPrivate = false))
+        add(AddAuthConfigAction(isPrivate = true))
     }
 }

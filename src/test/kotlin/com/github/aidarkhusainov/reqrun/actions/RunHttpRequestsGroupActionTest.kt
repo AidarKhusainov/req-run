@@ -81,6 +81,24 @@ class RunHttpRequestsGroupActionTest : BasePlatformTestCase() {
         assertEquals("Skipped 1 request(s) due to unresolved variables.", notification.content)
     }
 
+    fun testWarnsOnMissingAuthConfig() {
+        myFixture.configureByText(
+            "test.http",
+            """
+                GET https://example.com
+                Authorization: Bearer {{${'$'}auth.token("bearer")}}
+            """.trimIndent()
+        )
+        val action = RunHttpRequestsGroupAction()
+        val event = createActionEvent(project, myFixture.editor, myFixture.file.virtualFile)
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(event)
+
+        val notification = waitForNotificationContent("Missing auth config: bearer")
+        assertEquals(NotificationType.WARNING, notification.type)
+    }
+
     private fun waitForNotification(): com.intellij.notification.Notification {
         val deadline = System.currentTimeMillis() + 2_000
         while (System.currentTimeMillis() < deadline) {
@@ -92,5 +110,20 @@ class RunHttpRequestsGroupActionTest : BasePlatformTestCase() {
         val notifications = collectReqRunNotifications(project)
         assertTrue("Expected notification was not posted", notifications.isNotEmpty())
         return notifications.last()
+    }
+
+    private fun waitForNotificationContent(content: String): com.intellij.notification.Notification {
+        val deadline = System.currentTimeMillis() + 2_000
+        while (System.currentTimeMillis() < deadline) {
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+            val notifications = collectReqRunNotifications(project)
+            val match = notifications.firstOrNull { it.content == content }
+            if (match != null) return match
+            Thread.sleep(25)
+        }
+        val notifications = collectReqRunNotifications(project)
+        val match = notifications.firstOrNull { it.content == content }
+        assertNotNull("Expected notification '$content' was not posted", match)
+        return match!!
     }
 }

@@ -19,6 +19,7 @@ object CurlConverter {
     fun toHttp(spec: HttpRequestSpec): String {
         val sb = StringBuilder()
         sb.append(spec.method).append(' ').append(spec.url)
+        spec.version?.let { sb.append(' ').append(formatVersion(it)) }
         if (spec.headers.isNotEmpty()) {
             sb.append('\n')
             spec.headers.forEach { (name, value) ->
@@ -43,10 +44,19 @@ object CurlConverter {
         var url: String? = null
         val headers = linkedMapOf<String, String>()
         val bodyParts = mutableListOf<String>()
+        var version: java.net.http.HttpClient.Version? = null
 
         while (i < tokens.size) {
             val token = tokens[i]
             when {
+                token == "--http1.1" -> {
+                    version = java.net.http.HttpClient.Version.HTTP_1_1
+                    i += 1
+                }
+                token == "--http2" || token == "--http2-prior-knowledge" -> {
+                    version = java.net.http.HttpClient.Version.HTTP_2
+                    i += 1
+                }
                 token == "-X" || token == "--request" -> {
                     method = tokens.getOrNull(i + 1)
                     i += 2
@@ -115,7 +125,7 @@ object CurlConverter {
             method = if (bodyParts.isNotEmpty()) "POST" else "GET"
         }
         val body = bodyParts.joinToString("\n").ifBlank { null }
-        return HttpRequestSpec(method.uppercase(), url, headers, body)
+        return HttpRequestSpec(method.uppercase(), url, headers, body, version)
     }
 
     private fun addHeader(headers: MutableMap<String, String>, header: String) {
@@ -137,6 +147,12 @@ object CurlConverter {
         val escaped = value.replace("'", "'\"'\"'")
         return "'$escaped'"
     }
+
+    private fun formatVersion(version: java.net.http.HttpClient.Version): String =
+        when (version) {
+            java.net.http.HttpClient.Version.HTTP_1_1 -> "HTTP/1.1"
+            java.net.http.HttpClient.Version.HTTP_2 -> "HTTP/2"
+        }
 
     private fun tokenize(input: String): List<String> {
         val tokens = mutableListOf<String>()

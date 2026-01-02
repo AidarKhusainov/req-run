@@ -56,6 +56,8 @@ class EnvSelectorAction(
 
     private fun openEnvAction(text: String, isPrivate: Boolean): AnAction =
         object : AnAction(text) {
+            override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
             override fun actionPerformed(e: AnActionEvent) {
                 val path = envService.ensureEnvFile(file, isPrivate) ?: return
                 val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path) ?: return
@@ -66,6 +68,8 @@ class EnvSelectorAction(
 
     private fun envToggleAction(text: String, envName: String?): ToggleAction =
         object : ToggleAction(text) {
+            override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
             override fun isSelected(e: AnActionEvent): Boolean =
                 envService.getSelectedEnvironment() == envName
 

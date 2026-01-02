@@ -77,4 +77,23 @@ class CopyCurlActionTest : BasePlatformTestCase() {
         assertEquals(NotificationType.WARNING, notifications.single().type)
         assertEquals("Unresolved variables: missing", notifications.single().content)
     }
+
+    fun testWarnsOnMissingAuthConfig() {
+        myFixture.configureByText(
+            "test.http",
+            """
+                GET https://example.com
+                Authorization: Bearer {{${'$'}auth.token("bearer")}}
+            """.trimIndent()
+        )
+        val action = CopyCurlAction()
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(createActionEvent(project, myFixture.editor, myFixture.file.virtualFile))
+
+        val notifications = collectReqRunNotifications(project)
+        assertEquals(1, notifications.size)
+        assertEquals(NotificationType.WARNING, notifications.single().type)
+        assertEquals("Missing auth config: bearer", notifications.single().content)
+    }
 }

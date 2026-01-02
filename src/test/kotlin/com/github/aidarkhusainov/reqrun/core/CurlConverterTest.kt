@@ -5,6 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.net.http.HttpClient
 
 class CurlConverterTest {
     @Test
@@ -129,5 +130,65 @@ class CurlConverterTest {
         val http = CurlConverter.toHttp(spec)
 
         assertEquals("GET https://example.com", http)
+    }
+
+    @Test
+    fun `fromCurl captures http2 flag`() {
+        val curl = "curl --http2 https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals(HttpClient.Version.HTTP_2, spec?.version)
+    }
+
+    @Test
+    fun `fromCurl captures http2 prior knowledge flag`() {
+        val curl = "curl --http2-prior-knowledge https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals(HttpClient.Version.HTTP_2, spec?.version)
+    }
+
+    @Test
+    fun `fromCurl captures http1_1 flag`() {
+        val curl = "curl --http1.1 https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals(HttpClient.Version.HTTP_1_1, spec?.version)
+    }
+
+    @Test
+    fun `fromCurl last http flag wins`() {
+        val curl = "curl --http2 --http1.1 https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals(HttpClient.Version.HTTP_1_1, spec?.version)
+    }
+
+    @Test
+    fun `fromCurl ignores unknown http flag`() {
+        val curl = "curl --http3 https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals(null, spec?.version)
+    }
+
+    @Test
+    fun `toHttp includes version when provided`() {
+        val spec = HttpRequestSpec(
+            method = "GET",
+            url = "https://example.com",
+            headers = emptyMap(),
+            body = null,
+            version = HttpClient.Version.HTTP_2
+        )
+
+        val http = CurlConverter.toHttp(spec)
+
+        assertEquals("GET https://example.com HTTP/2", http)
     }
 }

@@ -3,6 +3,7 @@ package com.github.aidarkhusainov.reqrun.actions
 import com.github.aidarkhusainov.reqrun.core.CurlConverter
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
+import com.github.aidarkhusainov.reqrun.core.StaticAuthTokenResolver
 import com.github.aidarkhusainov.reqrun.core.VariableResolver
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
 import com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService
@@ -42,13 +43,45 @@ class CopyCurlAction : AnAction("Copy as cURL"), DumbAware {
             return
         }
 
-        val envVariables = project.getService(ReqRunEnvironmentService::class.java).loadVariablesForFile(file)
+        val envService = project.getService(ReqRunEnvironmentService::class.java)
+        val envVariables = envService.loadVariablesForFile(file)
+        val authConfigs = envService.loadAuthConfigsForFile(file)
         val fileVariables = VariableResolver.collectFileVariables(editor.document.text)
-        val resolvedRequest = VariableResolver.resolveRequest(rawRequest, fileVariables, envVariables)
+        val authResolver = StaticAuthTokenResolver.createResolver(authConfigs)
+        val resolvedRequest = VariableResolver.resolveRequest(rawRequest, fileVariables, envVariables, authResolver)
         val unresolved = VariableResolver.findUnresolvedPlaceholders(resolvedRequest)
         if (unresolved.isNotEmpty()) {
-            val formatted = VariableResolver.formatUnresolved(unresolved)
-            ReqRunNotifier.warn(project, "Unresolved variables: $formatted")
+            val authTokenIds = unresolved.mapNotNull { VariableResolver.extractAuthTokenId(it) }.toSet()
+            val authHeaderIds = unresolved.mapNotNull { VariableResolver.extractAuthHeaderId(it) }.toSet()
+            val authIds = authTokenIds + authHeaderIds
+            val missingAuth = authIds.filterNot { authConfigs.containsKey(it) }.toSet()
+            val authPlaceholders = unresolved.filter {
+                VariableResolver.extractAuthTokenId(it) != null || VariableResolver.extractAuthHeaderId(it) != null
+            }.toSet()
+            val unresolvedVars = unresolved - authPlaceholders
+            val builtins = VariableResolver.builtins()
+            val authIssues = authIds
+                .filterNot { missingAuth.contains(it) }
+                .mapNotNull { StaticAuthTokenResolver.describeAuthIssue(it, authConfigs, envVariables + fileVariables, builtins) }
+                .distinct()
+            val messages = mutableListOf<String>()
+            if (missingAuth.isNotEmpty()) {
+                val label = if (missingAuth.size == 1) "Missing auth config: " else "Missing auth configs: "
+                messages += label + missingAuth.sorted().joinToString(", ")
+            }
+            if (authIssues.isNotEmpty()) {
+                val message = if (authIssues.size == 1) {
+                    authIssues.single()
+                } else {
+                    "Auth config issues: " + authIssues.sorted().joinToString("; ")
+                }
+                messages += message
+            }
+            if (unresolvedVars.isNotEmpty()) {
+                val formatted = VariableResolver.formatUnresolved(unresolvedVars)
+                messages += "Unresolved variables: $formatted"
+            }
+            ReqRunNotifier.warn(project, messages.joinToString(" "))
             return
         }
         val spec = HttpRequestParser.parse(resolvedRequest)

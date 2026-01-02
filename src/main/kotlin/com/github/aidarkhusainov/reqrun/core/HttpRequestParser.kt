@@ -1,6 +1,7 @@
 package com.github.aidarkhusainov.reqrun.core
 
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import java.net.http.HttpClient
 
 object HttpRequestParser {
     private val requestLinePattern = Regex("^[A-Za-z]+\\s+\\S+.*$")
@@ -16,11 +17,12 @@ object HttpRequestParser {
         if (requestIndex == -1) return null
 
         val requestLine = lines[requestIndex].trim()
-        val requestParts = requestLine.split(Regex("\\s+"), limit = 2)
-        if (requestParts.size != 2) return null
+        val tokens = requestLine.split(Regex("\\s+"))
+        if (tokens.size < 2) return null
 
-        val method = requestParts[0].uppercase()
-        val url = requestParts[1]
+        val method = tokens[0].uppercase()
+        val url = tokens[1]
+        val version = if (tokens.size >= 3) parseVersion(tokens.last()) else null
 
         val headers = mutableMapOf<String, String>()
         val bodyLines = mutableListOf<String>()
@@ -80,7 +82,7 @@ object HttpRequestParser {
         }
 
         val body = bodyLines.joinToString("\n").ifBlank { null }
-        return HttpRequestSpec(method, url, headers, body)
+        return HttpRequestSpec(method, url, headers, body, version)
     }
 
     private fun isComment(line: String): Boolean = line.trimStart().startsWith("#")
@@ -96,5 +98,11 @@ object HttpRequestParser {
         val name = line.substring(0, separatorIndex).trim()
         val value = line.substring(separatorIndex + 1).trim()
         return name to value
+    }
+
+    private fun parseVersion(token: String): HttpClient.Version? = when (token) {
+        "HTTP/1.1" -> HttpClient.Version.HTTP_1_1
+        "HTTP/2" -> HttpClient.Version.HTTP_2
+        else -> null
     }
 }

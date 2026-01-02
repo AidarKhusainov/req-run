@@ -16,6 +16,7 @@ Run `.http` requests directly from the editor — fast, readable, and without Ul
 - Inline toolbar with templates, import/export, run-all, and environment selector
 - Environment variables from `http-client.env.json` and `http-client.private.env.json`
 - File variables (`@name = value`) and built-in variables (`{{$timestamp}}`, `{{$uuid}}`, `{{$randomInt}}`)
+- Static auth configs in env files (see `docs/auth.md`)
 - Warnings for unresolved variables before execution
 - Full response viewer: status, headers, body, and quick compare
 - Service tool window with history and one-click re-run
@@ -35,6 +36,12 @@ Content-Type: application/json
 
 Place the caret inside a request block and press `Ctrl+Alt+R`.
 
+You can specify the HTTP version in the request line (default is HTTP/1.1):
+
+```http
+GET https://example.com HTTP/2
+```
+
 ## Feedback
 
 Suggestions and bug reports:  
@@ -49,9 +56,10 @@ https://github.com/AidarKhusainov/req-run
 - **Run Selected Requests** — run all requests from selection, file, or folder
 - **Run All Requests (Toolbar)** — execute all requests in the current file
 - **Convert to cURL and Copy** — copy request as a cURL command
-- **Paste cURL as HTTP** — convert cURL to `.http`
+- **Paste cURL as HTTP** — convert cURL to `.http` (supports `--http1.1`, `--http2`, `--http2-prior-knowledge`)
 - **New Request Templates** — insert GET/POST/PUT/PATCH/DELETE templates
 - **Add Environment Variable** — add variable to shared or private env file
+- **Add Auth Configuration** — add static auth template to shared or private env file
 
 ## Toolbar
 
@@ -109,6 +117,11 @@ Example `http-client.env.json`:
 ```
 
 Select the active environment from the toolbar.
+
+## Static Auth
+
+ReqRun supports static auth configs defined under `Security.Auth` in env files and referenced via `{{$auth.token("id")}}` or `{{$auth.header("id")}}`.
+Full auth documentation: `docs/auth.md`.
 
 ## Installation
 

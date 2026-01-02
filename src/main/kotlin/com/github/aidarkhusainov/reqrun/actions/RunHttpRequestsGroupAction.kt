@@ -2,6 +2,8 @@ package com.github.aidarkhusainov.reqrun.actions
 
 import com.github.aidarkhusainov.reqrun.core.HttpRequestParser
 import com.github.aidarkhusainov.reqrun.core.RequestExtractor
+import com.github.aidarkhusainov.reqrun.core.AuthConfig
+import com.github.aidarkhusainov.reqrun.core.StaticAuthTokenResolver
 import com.github.aidarkhusainov.reqrun.core.VariableResolver
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
 import com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService
@@ -60,6 +62,7 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
         val files = e.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
         val envService = project.getService(ReqRunEnvironmentService::class.java)
         val envCache = mutableMapOf<String, Map<String, String>>()
+        val authCache = mutableMapOf<String, Map<String, AuthConfig>>()
 
         val editorBlocks = when {
             editor != null && file != null && file.isReqRunHttpFile() -> blocksFromEditor(file, editor)
@@ -87,6 +90,8 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                 var parseErrors = 0
                 var execErrors = 0
                 var unresolvedErrors = 0
+                val missingAuthIds = LinkedHashSet<String>()
+                val authIssues = LinkedHashSet<String>()
                 var cancelled = false
                 val total = blocks.size
 
@@ -102,9 +107,31 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                     val envVariables = envCache.getOrPut(block.file.path) {
                         envService.loadVariablesForFile(block.file)
                     }
-                    val resolvedRequest = VariableResolver.resolveRequest(block.text, block.variables, envVariables)
+                    val authConfigs = authCache.getOrPut(block.file.path) {
+                        envService.loadAuthConfigsForFile(block.file)
+                    }
+                    val authResolver = StaticAuthTokenResolver.createResolver(authConfigs)
+                    val resolvedRequest = VariableResolver.resolveRequest(
+                        block.text,
+                        block.variables,
+                        envVariables,
+                        authResolver
+                    )
                     val unresolved = VariableResolver.findUnresolvedPlaceholders(resolvedRequest)
                     if (unresolved.isNotEmpty()) {
+                        val authTokenIds = unresolved.mapNotNull { VariableResolver.extractAuthTokenId(it) }.toSet()
+                        val authHeaderIds = unresolved.mapNotNull { VariableResolver.extractAuthHeaderId(it) }.toSet()
+                        val authIds = authTokenIds + authHeaderIds
+                        val missingAuth = authIds.filterNot { authConfigs.containsKey(it) }
+                        if (missingAuth.isNotEmpty()) {
+                            missingAuthIds.addAll(missingAuth)
+                        }
+                        val builtins = VariableResolver.builtins()
+                        val combined = envVariables + block.variables
+                        val issues = authIds
+                            .filterNot { missingAuth.contains(it) }
+                            .mapNotNull { StaticAuthTokenResolver.describeAuthIssue(it, authConfigs, combined, builtins) }
+                        authIssues.addAll(issues)
                         unresolvedErrors += 1
                         log.warn("ReqRun: unresolved variables for request: ${VariableResolver.formatUnresolved(unresolved)}")
                         continue
@@ -161,6 +188,24 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                     ApplicationManager.getApplication().invokeLater {
                         if (project.isDisposed) return@invokeLater
                         ReqRunNotifier.warn(project, "Skipped $unresolvedErrors request(s) due to unresolved variables.")
+                    }
+                }
+                if (missingAuthIds.isNotEmpty()) {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        val label = if (missingAuthIds.size == 1) "Missing auth config: " else "Missing auth configs: "
+                        ReqRunNotifier.warn(project, label + missingAuthIds.sorted().joinToString(", "))
+                    }
+                }
+                if (authIssues.isNotEmpty()) {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        val message = if (authIssues.size == 1) {
+                            authIssues.single()
+                        } else {
+                            "Auth config issues: " + authIssues.sorted().joinToString("; ")
+                        }
+                        ReqRunNotifier.warn(project, message)
                     }
                 }
                 if (execErrors > 0) {

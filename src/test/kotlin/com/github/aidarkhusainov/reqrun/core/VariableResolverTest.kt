@@ -74,6 +74,69 @@ class VariableResolverTest {
     }
 
     @Test
+    fun `resolveRequest supports auth token function`() {
+        val raw = "Authorization: Bearer {{${'$'}auth.token(\"api\")}}"
+        val resolver = object : AuthTokenResolver {
+            override fun resolveToken(id: String, variables: Map<String, String>, builtins: Map<String, String>): String? {
+                return if (id == "api") "secret" else null
+            }
+        }
+
+        val resolved = VariableResolver.resolveRequest(raw, emptyMap(), emptyMap(), resolver)
+
+        assertTrue(resolved.contains("Authorization: Bearer secret"))
+    }
+
+    @Test
+    fun `resolveRequest supports auth token id without quotes and with single quotes`() {
+        val raw = """
+            Authorization: Bearer {{${'$'}auth.token(api)}}
+            Authorization: Bearer {{${'$'}auth.token('api')}}
+        """.trimIndent()
+        val resolver = object : AuthTokenResolver {
+            override fun resolveToken(id: String, variables: Map<String, String>, builtins: Map<String, String>): String? {
+                return if (id == "api") "secret" else null
+            }
+        }
+
+        val resolved = VariableResolver.resolveRequest(raw, emptyMap(), emptyMap(), resolver)
+
+        assertTrue(resolved.contains("Authorization: Bearer secret"))
+    }
+
+    @Test
+    fun `resolveRequest leaves unmatched auth token intact`() {
+        val raw = "Authorization: Bearer {{${'$'}auth.tokens(\"api\")}}"
+        val resolver = object : AuthTokenResolver {
+            override fun resolveToken(id: String, variables: Map<String, String>, builtins: Map<String, String>): String? {
+                return "secret"
+            }
+        }
+
+        val resolved = VariableResolver.resolveRequest(raw, emptyMap(), emptyMap(), resolver)
+
+        assertTrue(resolved.contains("{{${'$'}auth.tokens(\"api\")}}"))
+    }
+
+    @Test
+    fun `resolveRequest supports auth header function`() {
+        val raw = "{{\$auth.header(\"api\")}}"
+        val resolver = object : AuthTokenResolver {
+            override fun resolveToken(id: String, variables: Map<String, String>, builtins: Map<String, String>): String? {
+                return null
+            }
+
+            override fun resolveHeader(id: String, variables: Map<String, String>, builtins: Map<String, String>): String? {
+                return if (id == "api") "X-Api-Key: secret" else null
+            }
+        }
+
+        val resolved = VariableResolver.resolveRequest(raw, emptyMap(), emptyMap(), resolver)
+
+        assertTrue(resolved.contains("X-Api-Key: secret"))
+    }
+
+    @Test
     fun `findUnresolvedPlaceholders ignores comments`() {
         val raw = """
             # {{ignoreMe}}

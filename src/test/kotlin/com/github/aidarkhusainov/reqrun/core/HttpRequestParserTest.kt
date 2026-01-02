@@ -214,6 +214,61 @@ class HttpRequestParserTest {
     }
 
     @Test
+    fun `parse extracts http version from request line`() {
+        val raw = "GET https://example.com HTTP/2"
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com", spec?.url)
+        assertEquals(java.net.http.HttpClient.Version.HTTP_2, spec?.version)
+    }
+
+    @Test
+    fun `parse extracts http_1_1 from request line`() {
+        val raw = "GET https://example.com HTTP/1.1"
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com", spec?.url)
+        assertEquals(java.net.http.HttpClient.Version.HTTP_1_1, spec?.version)
+    }
+
+    @Test
+    fun `parse ignores unknown version token`() {
+        val raw = "GET https://example.com HTTP/3"
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com", spec?.url)
+        assertEquals(null, spec?.version)
+    }
+
+    @Test
+    fun `parse ignores extra request line token that is not a version`() {
+        val raw = "GET https://example.com trailing"
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com", spec?.url)
+        assertEquals(null, spec?.version)
+    }
+
+    @Test
+    fun `parse does not infer version from url`() {
+        val raw = "GET https://example.com?q=HTTP/2"
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com?q=HTTP/2", spec?.url)
+        assertEquals(null, spec?.version)
+    }
+
+    @Test
     fun `parse ignores body without blank line separator`() {
         val raw = """
             POST https://example.com

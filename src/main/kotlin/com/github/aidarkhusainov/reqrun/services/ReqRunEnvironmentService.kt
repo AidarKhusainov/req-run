@@ -1,5 +1,8 @@
 package com.github.aidarkhusainov.reqrun.services
 
+import com.github.aidarkhusainov.reqrun.core.AuthConfig
+import com.github.aidarkhusainov.reqrun.core.AuthScheme
+import com.github.aidarkhusainov.reqrun.core.AuthType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -12,6 +15,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.github.aidarkhusainov.reqrun.settings.ReqRunEnvPathSettings
@@ -30,6 +34,8 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
 
     private val log = logger<ReqRunEnvironmentService>()
     private var state = State()
+    private val jsonErrorNotified = HashSet<Path>()
+    private val authConfigWarningKeys = HashSet<String>()
 
     override fun getState(): State = state
 
@@ -56,6 +62,19 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         maybeSuggestGitignore(paths.privatePath)
         val merged = loadMergedEnvironments(paths)
         return merged[envName] ?: emptyMap()
+    }
+
+    fun loadAuthConfigsForFile(file: VirtualFile?): Map<String, AuthConfig> {
+        val envName = state.envName ?: return emptyMap()
+        val paths = resolveEnvFiles(file)
+        maybeSuggestGitignore(paths.privatePath)
+        val shared = paths.sharedPath?.let { loadAuthConfigs(it, envName) } ?: emptyMap()
+        val privateAuth = paths.privatePath?.let { loadAuthConfigs(it, envName) } ?: emptyMap()
+        if (shared.isEmpty()) return privateAuth
+        if (privateAuth.isEmpty()) return shared
+        val result = LinkedHashMap(shared)
+        result.putAll(privateAuth)
+        return result
     }
 
     fun describeEnvPaths(file: VirtualFile?): String {
@@ -121,6 +140,52 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         return result
     }
 
+    private fun loadAuthConfigs(path: Path, envName: String): Map<String, AuthConfig> {
+        if (!Files.exists(path)) return emptyMap()
+        val json = readJson(path) ?: return emptyMap()
+        val envValue = json.get(envName) ?: return emptyMap()
+        if (!envValue.isJsonObject) return emptyMap()
+        val envObj = envValue.asJsonObject
+        val security = envObj.getAsJsonObject("Security") ?: return emptyMap()
+        val auth = security.getAsJsonObject("Auth") ?: return emptyMap()
+        val result = LinkedHashMap<String, AuthConfig>()
+        for ((id, value) in auth.entrySet()) {
+            if (!value.isJsonObject) continue
+            val config = parseAuthConfig(value.asJsonObject) ?: continue
+            validateAuthConfig(path, envName, id, config)
+            result[id] = config
+        }
+        return result
+    }
+
+    private fun parseAuthConfig(obj: JsonObject): AuthConfig? {
+        val type = obj.get("Type")?.asString ?: return null
+        if (!type.equals("Static", ignoreCase = true)) return null
+        val schemeRaw = obj.get("Scheme")?.asString ?: return null
+        val scheme = parseScheme(schemeRaw) ?: return null
+        val token = obj.get("Token")?.let { stringify(it) }
+        val username = obj.get("Username")?.let { stringify(it) }
+        val password = obj.get("Password")?.let { stringify(it) }
+        val header = obj.get("Header")?.let { stringify(it) }
+        return AuthConfig(
+            type = AuthType.STATIC,
+            scheme = scheme,
+            token = token,
+            username = username,
+            password = password,
+            header = header,
+        )
+    }
+
+    private fun parseScheme(raw: String): AuthScheme? {
+        return when (raw.trim().lowercase()) {
+            "bearer" -> AuthScheme.BEARER
+            "basic" -> AuthScheme.BASIC
+            "apikey", "api-key", "api_key" -> AuthScheme.API_KEY
+            else -> null
+        }
+    }
+
     private fun stringify(value: JsonElement): String {
         return if (value.isJsonPrimitive) {
             value.asJsonPrimitive.asString
@@ -130,30 +195,86 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
     }
 
     private fun readJson(path: Path): JsonObject? {
-        return try {
-            val content = readText(path) ?: return null
-            val parsed = JsonParser.parseString(content)
-            if (parsed.isJsonObject) parsed.asJsonObject else null
+        val content = readText(path) ?: return null
+        val parsed = try {
+            JsonParser.parseString(content)
         } catch (t: Throwable) {
-            log.warn("ReqRun: failed to read ${path.fileName}", t)
-            null
+            log.warn("ReqRun: failed to parse ${path.fileName}", t)
+            notifyJsonError(path, "Failed to parse ${path.fileName}. Check JSON syntax.")
+            return null
         }
+        if (!parsed.isJsonObject) {
+            log.warn("ReqRun: invalid json root in ${path.fileName}")
+            notifyJsonError(path, "Invalid JSON in ${path.fileName}. Expected object at root.")
+            return null
+        }
+        clearJsonError(path)
+        return parsed.asJsonObject
     }
 
     private fun readText(path: Path): String? {
         val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)
-        if (vFile != null) {
-            val document = FileDocumentManager.getInstance().getDocument(vFile)
-            if (document != null) {
-                if (FileDocumentManager.getInstance().isDocumentUnsaved(document)) {
-                    return document.text
+        val documentText = if (vFile != null) {
+            ReadAction.compute<String?, RuntimeException> {
+                val document = FileDocumentManager.getInstance().getDocument(vFile)
+                if (document != null && FileDocumentManager.getInstance().isDocumentUnsaved(document)) {
+                    document.text
+                } else {
+                    null
                 }
             }
+        } else {
+            null
         }
+        if (documentText != null) return documentText
         return try {
             Files.readString(path, StandardCharsets.UTF_8)
         } catch (_: Throwable) {
             null
+        }
+    }
+
+    private fun validateAuthConfig(path: Path, envName: String, id: String, config: AuthConfig) {
+        val hasToken = !config.token.isNullOrBlank()
+        val hasUser = !config.username.isNullOrBlank()
+        val hasPass = !config.password.isNullOrBlank()
+        when (config.scheme) {
+            AuthScheme.BASIC -> {
+                if (hasToken && (hasUser || hasPass)) {
+                    warnOnce(
+                        key = "auth:${path.normalize()}:$envName:$id:basic",
+                        message = "Auth config '$id' in env '$envName' (${path.fileName}) mixes Token with Username/Password."
+                    )
+                }
+            }
+            AuthScheme.BEARER, AuthScheme.API_KEY -> {
+                if (hasUser || hasPass) {
+                    warnOnce(
+                        key = "auth:${path.normalize()}:$envName:$id:${config.scheme.name.lowercase()}",
+                        message = "Auth config '$id' in env '$envName' (${path.fileName}) ignores Username/Password for ${config.scheme.name.lowercase()}."
+                    )
+                }
+            }
+        }
+    }
+
+    private fun notifyJsonError(path: Path, message: String) {
+        if (!jsonErrorNotified.add(path.normalize())) return
+        ApplicationManager.getApplication().invokeLater {
+            if (project.isDisposed) return@invokeLater
+            ReqRunNotifier.warn(project, message)
+        }
+    }
+
+    private fun clearJsonError(path: Path) {
+        jsonErrorNotified.remove(path.normalize())
+    }
+
+    private fun warnOnce(key: String, message: String) {
+        if (!authConfigWarningKeys.add(key)) return
+        ApplicationManager.getApplication().invokeLater {
+            if (project.isDisposed) return@invokeLater
+            ReqRunNotifier.warn(project, message)
         }
     }
 
