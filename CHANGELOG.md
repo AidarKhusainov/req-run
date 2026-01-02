@@ -6,6 +6,7 @@
 ### Added
 - RELEASING.md with a tag-based release flow and CI expectations.
 - UI tests as a required CI gate for releases.
+- Response view settings (View As, line numbers, header folding) and toolbar actions (soft wraps, scroll, copy body).
 
 ### Changed
 - CI workflows consolidated via reusable setup action and wrapper validation.

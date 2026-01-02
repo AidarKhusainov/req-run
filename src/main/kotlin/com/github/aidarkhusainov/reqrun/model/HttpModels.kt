@@ -22,4 +22,24 @@ data class HttpResponsePayload(
     val headers: Map<String, List<String>>,
     val body: String,
     val durationMillis: Long,
-)
+    val formattedBody: String? = null,
+    val jsonFormatError: String? = null,
+    val formattedHtml: String? = null,
+    val formattedXml: String? = null,
+) {
+    constructor(
+        statusLine: String,
+        headers: Map<String, List<String>>,
+        body: String,
+        durationMillis: Long,
+    ) : this(
+        statusLine = statusLine,
+        headers = headers,
+        body = body,
+        durationMillis = durationMillis,
+        formattedBody = null,
+        jsonFormatError = null,
+        formattedHtml = null,
+        formattedXml = null,
+    )
+}

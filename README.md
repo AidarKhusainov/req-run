@@ -19,6 +19,8 @@ Run `.http` requests directly from the editor — fast, readable, and without Ul
 - Static auth configs in env files (see `docs/auth.md`)
 - Warnings for unresolved variables before execution
 - Full response viewer: status, headers, body, and quick compare
+- Response view settings: view as JSON/XML/HTML/Text, line numbers, header folding, and soft wraps
+- Response viewer tools: scroll to top/end and copy response body
 - Service tool window with history and one-click re-run
 - Convert requests to cURL or paste cURL as `.http`
 - Line comments with `#` and request separators with `###`
@@ -70,6 +72,15 @@ When you open a `.http` file, ReqRun shows an inline toolbar above the editor:
 - **Run All Requests** — execute every request in the current file
 - **Run With** — select environment or open env files
 - **Examples** — open curated examples
+
+## Response Viewer
+
+Response results open in the Service tool window and include:
+
+- View As modes for JSON/XML/HTML/Text (Auto by Content-Type)
+- Soft wraps and line numbers toggles
+- Header folding for non-empty responses
+- Quick actions: scroll to top/end, copy response body
 
 ## Variables
 
