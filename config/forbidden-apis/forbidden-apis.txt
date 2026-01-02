@@ -1,0 +1,10 @@
+# Ultimate-only API packages (keep IC-compatible)
+com.intellij.database.**
+com.intellij.sql.**
+com.intellij.spring.**
+com.intellij.javaee.**
+com.intellij.ejb.**
+com.intellij.struts.**
+com.intellij.webServices.**
+com.intellij.js.**
+com.intellij.lang.javascript.**

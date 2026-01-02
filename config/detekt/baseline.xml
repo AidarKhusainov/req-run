@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:OkHttpReqRunClient.kt$OkHttpReqRunClient$!isClosing &amp;&amp; !isDoctype &amp;&amp; !isSelfClosing &amp;&amp; !hasInlineClose</ID>
+    <ID>ComplexCondition:OkHttpReqRunClient.kt$OkHttpReqRunClient$i &lt; line.length &amp;&amp; (line[i].isLetterOrDigit() || line[i] == ':' || line[i] == '_' || line[i] == '-')</ID>
+    <ID>ComplexCondition:VariableResolver.kt$VariableResolver$(raw.startsWith("\"") &amp;&amp; raw.endsWith("\"")) || (raw.startsWith("'") &amp;&amp; raw.endsWith("'"))</ID>
+    <ID>CyclomaticComplexMethod:CurlConverter.kt$CurlConverter$fun fromCurl(text: String): HttpRequestSpec?</ID>
+    <ID>CyclomaticComplexMethod:CurlConverter.kt$CurlConverter$private fun tokenize(input: String): List&lt;String></ID>
+    <ID>CyclomaticComplexMethod:HttpRequestParser.kt$HttpRequestParser$fun parse(raw: String): HttpRequestSpec?</ID>
+    <ID>CyclomaticComplexMethod:OkHttpReqRunClient.kt$OkHttpReqRunClient$private fun reasonPhrase(code: Int): String</ID>
+    <ID>InstanceOfCheckForException:ReqRunRunner.kt$ReqRunRunner$t is ProcessCanceledException</ID>
+    <ID>LongMethod:CopyCurlAction.kt$CopyCurlAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>LongMethod:CurlConverter.kt$CurlConverter$fun fromCurl(text: String): HttpRequestSpec?</ID>
+    <ID>LongMethod:HttpRequestParser.kt$HttpRequestParser$fun parse(raw: String): HttpRequestSpec?</ID>
+    <ID>LongMethod:ResponseViewer.kt$ResponseViewer$private fun buildCombinedText(): Combined</ID>
+    <ID>LongMethod:RunHttpRequestAction.kt$RunHttpRequestAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>LongMethod:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction.&lt;no name provided>$override fun run(indicator: ProgressIndicator)</ID>
+    <ID>LoopWithTooManyJumpStatements:HttpRequestParser.kt$HttpRequestParser$for</ID>
+    <ID>LoopWithTooManyJumpStatements:InsertHttpRequestTemplateAction.kt$InsertHttpRequestTemplateAction$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$for</ID>
+    <ID>LoopWithTooManyJumpStatements:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$while</ID>
+    <ID>LoopWithTooManyJumpStatements:ReqRunLineMarkerProvider.kt$ReqRunLineMarkerProvider$for</ID>
+    <ID>LoopWithTooManyJumpStatements:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction.&lt;no name provided>$for</ID>
+    <ID>LoopWithTooManyJumpStatements:VariableResolver.kt$VariableResolver$for</ID>
+    <ID>MagicNumber:CurlConverter.kt$CurlConverter$2</ID>
+    <ID>MagicNumber:HttpRequestParser.kt$HttpRequestParser$2</ID>
+    <ID>MagicNumber:HttpRequestParser.kt$HttpRequestParser$3</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$1_000_000</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$200</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$201</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$202</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$204</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$301</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$302</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$304</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$400</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$401</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$403</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$404</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$409</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$422</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$429</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$500</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$502</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$503</ID>
+    <ID>MagicNumber:OkHttpReqRunClient.kt$OkHttpReqRunClient$64</ID>
+    <ID>MagicNumber:ReqRunEnvPathConfigurable.kt$ReqRunEnvPathConfigurable$10</ID>
+    <ID>MagicNumber:ReqRunEnvPathConfigurable.kt$ReqRunEnvPathConfigurable$12</ID>
+    <ID>MagicNumber:ReqRunExecutor.kt$ReqRunExecutor$10</ID>
+    <ID>MagicNumber:ReqRunExecutor.kt$ReqRunExecutor$60</ID>
+    <ID>MagicNumber:ReqRunExecutor.kt$ReqRunExecutor.JavaNetProxyAuthenticator$407</ID>
+    <ID>MagicNumber:ReqRunToolbarPanel.kt$ReqRunToolbarPanel$6</ID>
+    <ID>MagicNumber:ResponseViewer.kt$ResponseViewer$2</ID>
+    <ID>MagicNumber:ResponseViewer.kt$ResponseViewer$6</ID>
+    <ID>MagicNumber:VariableResolver.kt$VariableResolver$1001</ID>
+    <ID>MagicNumber:VariableResolver.kt$VariableResolver$2</ID>
+    <ID>MagicNumber:VariableResolver.kt$VariableResolver$5</ID>
+    <ID>MaxLineLength:CopyCurlAction.kt$CopyCurlAction$.</ID>
+    <ID>MaxLineLength:CopyCurlAction.kt$CopyCurlAction$ReqRunNotifier.error(project, "Cannot parse request. Use 'METHOD URL' followed by optional headers and body.")</ID>
+    <ID>MaxLineLength:CurlConverterTest.kt$CurlConverterTest$"curl -X POST 'https://httpbin.org/post' -H 'Accept: application/json' -H 'Content-Type: text/xml' --data '&lt;ping>ReqRun&lt;/ping>'"</ID>
+    <ID>MaxLineLength:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$class</ID>
+    <ID>MaxLineLength:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$message = "Auth config '$id' in env '$envName' (${path.fileName}) ignores Username/Password for ${config.scheme.name.lowercase()}."</ID>
+    <ID>MaxLineLength:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$message = "Auth config '$id' in env '$envName' (${path.fileName}) mixes Token with Username/Password."</ID>
+    <ID>MaxLineLength:RequestExtractor.kt$RequestExtractor$val caretText = document.getText(TextRange(document.getLineStartOffset(caretLine), document.getLineEndOffset(caretLine)))</ID>
+    <ID>MaxLineLength:ResponseViewer.kt$ResponseViewer$"Response code: $code$reasonPart; Time: ${response.durationMillis}ms; Content length: $bodyBytes bytes ($bodyBytes B)"</ID>
+    <ID>MaxLineLength:ResponseViewer.kt$ResponseViewer$contentType.contains("application/xml") || contentType.contains("text/xml") || contentType.contains("+xml") -> XML</ID>
+    <ID>MaxLineLength:RunHttpRequestAction.kt$RunHttpRequestAction$.</ID>
+    <ID>MaxLineLength:RunHttpRequestAction.kt$RunHttpRequestAction.&lt;no name provided>$ReqRunNotifier.error(project, "Request failed: ${result.execution.error ?: "unknown error"}")</ID>
+    <ID>MaxLineLength:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction.&lt;no name provided>$"ReqRun: failed ${spec.method} ${spec.url}: ${result.execution.error ?: "unknown error"}"</ID>
+    <ID>MaxLineLength:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction.&lt;no name provided>$.</ID>
+    <ID>MaxLineLength:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction.&lt;no name provided>$ReqRunNotifier.warn(project, "Skipped $unresolvedErrors request(s) due to unresolved variables.")</ID>
+    <ID>MaxLineLength:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction.&lt;no name provided>$log.warn("ReqRun: unresolved variables for request: ${VariableResolver.formatUnresolved(unresolved)}")</ID>
+    <ID>MaxLineLength:VariableResolverTest.kt$VariableResolverTest.&lt;no name provided>$override</ID>
+    <ID>NestedBlockDepth:HttpRequestParser.kt$HttpRequestParser$fun parse(raw: String): HttpRequestSpec?</ID>
+    <ID>ReturnCount:AddAuthConfigAction.kt$AddAuthConfigAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>ReturnCount:AddEnvVariableAction.kt$AddEnvVariableAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>ReturnCount:CopyCurlAction.kt$CopyCurlAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>ReturnCount:CurlConverter.kt$CurlConverter$fun fromCurl(text: String): HttpRequestSpec?</ID>
+    <ID>ReturnCount:HttpRequestParser.kt$HttpRequestParser$fun parse(raw: String): HttpRequestSpec?</ID>
+    <ID>ReturnCount:OkHttpReqRunClient.kt$OkHttpReqRunClient$private fun extractTagName(line: String): String?</ID>
+    <ID>ReturnCount:OkHttpReqRunClient.kt$OkHttpReqRunClient$private fun formatHtmlBody(body: String, contentType: String?): String?</ID>
+    <ID>ReturnCount:OkHttpReqRunClient.kt$OkHttpReqRunClient$private fun formatJsonBody(body: String, contentType: String?): JsonFormatResult</ID>
+    <ID>ReturnCount:OkHttpReqRunClient.kt$OkHttpReqRunClient$private fun formatXmlBody(body: String, contentType: String?): String?</ID>
+    <ID>ReturnCount:PasteCurlAction.kt$PasteCurlAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$fun ensureEnvFile(file: VirtualFile?, isPrivate: Boolean): Path?</ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$fun loadAuthConfigsForFile(file: VirtualFile?): Map&lt;String, AuthConfig></ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun loadAuthConfigs(path: Path, envName: String): Map&lt;String, AuthConfig></ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun loadEnvFile(path: Path): Map&lt;String, Map&lt;String, String>></ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun loadMergedEnvironments(paths: EnvPaths): Map&lt;String, Map&lt;String, String>></ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun maybeSuggestGitignore(privatePath: Path?)</ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun parseAuthConfig(obj: JsonObject): AuthConfig?</ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun readJson(path: Path): JsonObject?</ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun resolveEnvFiles(file: VirtualFile?): EnvPaths</ID>
+    <ID>ReturnCount:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$private fun resolveEnvironmentDir(file: VirtualFile?): Path?</ID>
+    <ID>ReturnCount:ReqRunExecutor.kt$ReqRunExecutor$private fun getClient(request: HttpRequestSpec): ReqRunHttpClient</ID>
+    <ID>ReturnCount:ReqRunExecutor.kt$ReqRunExecutor$private fun resolveSslConfig(sdkHome: String?): SslConfig</ID>
+    <ID>ReturnCount:ReqRunExecutor.kt$ReqRunExecutor.JavaNetProxyAuthenticator$override fun authenticate(route: Route?, response: Response): okhttp3.Request?</ID>
+    <ID>ReturnCount:ReqRunLineMarkerProvider.kt$ReqRunLineMarkerProvider$override fun collectSlowLineMarkers( elements: MutableList&lt;out PsiElement>, result: MutableCollection&lt;in LineMarkerInfo&lt;*>> )</ID>
+    <ID>ReturnCount:ReqRunLineMarkerProvider.kt$ReqRunLineMarkerProvider$private fun invokeRunAction(project: Project?, file: VirtualFile, offset: Int)</ID>
+    <ID>ReturnCount:ReqRunLineMarkerProvider.kt$ReqRunLineMarkerProvider$private fun isFirstInBlock(document: com.intellij.openapi.editor.Document, line: Int): Boolean</ID>
+    <ID>ReturnCount:RequestExtractor.kt$RequestExtractor$fun extract(editor: Editor): String?</ID>
+    <ID>ReturnCount:RequestExtractor.kt$RequestExtractor$fun extractFull(editor: Editor): String?</ID>
+    <ID>ReturnCount:RequestExtractor.kt$RequestExtractor$private fun findRequestLine(document: com.intellij.openapi.editor.Document, from: Int): Int?</ID>
+    <ID>ReturnCount:RunHttpRequestAction.kt$RunHttpRequestAction$override fun actionPerformed(e: AnActionEvent)</ID>
+    <ID>ReturnCount:RunHttpRequestsGroupAction.kt$RunHttpRequestsGroupAction$private fun collectHttpFiles(file: VirtualFile, indicator: ProgressIndicator?): List&lt;VirtualFile></ID>
+    <ID>ReturnCount:StaticAuthTokenResolver.kt$StaticAuthTokenResolver$fun describeAuthIssue( id: String, configs: Map&lt;String, AuthConfig>, variables: Map&lt;String, String>, builtins: Map&lt;String, String>, ): String?</ID>
+    <ID>ReturnCount:StaticAuthTokenResolver.kt$StaticAuthTokenResolver$fun resolveHeader( id: String, configs: Map&lt;String, AuthConfig>, variables: Map&lt;String, String>, builtins: Map&lt;String, String>, ): String?</ID>
+    <ID>ReturnCount:StaticAuthTokenResolver.kt$StaticAuthTokenResolver$fun resolveToken( id: String, configs: Map&lt;String, AuthConfig>, variables: Map&lt;String, String>, builtins: Map&lt;String, String>, ): String?</ID>
+    <ID>ReturnCount:StaticAuthTokenResolver.kt$StaticAuthTokenResolver$private fun resolveBasicToken( config: AuthConfig, variables: Map&lt;String, String>, builtins: Map&lt;String, String>, ): String?</ID>
+    <ID>ReturnCount:VariableResolver.kt$VariableResolver$private fun parseAuthId(rawValue: String): String?</ID>
+    <ID>SpreadOperator:ReqRunEditorPopupGroup.kt$ReqRunEditorPopupGroup$(Separator.getInstance(), *actions.toTypedArray())</ID>
+    <ID>SwallowedException:OkHttpReqRunClient.kt$OkHttpReqRunClient$e: CancellationException</ID>
+    <ID>SwallowedException:OkHttpReqRunClient.kt$OkHttpReqRunClient$e: ExecutionException</ID>
+    <ID>SwallowedException:OkHttpReqRunClient.kt$OkHttpReqRunClient$e: TimeoutException</ID>
+    <ID>TooGenericExceptionCaught:OkHttpReqRunClient.kt$OkHttpReqRunClient$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ReqRunEnvironmentService.kt$ReqRunEnvironmentService$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ReqRunExecutor.kt$ReqRunExecutor$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ReqRunRunner.kt$ReqRunRunner$t: Throwable</ID>
+    <ID>TooManyFunctions:OkHttpReqRunClient.kt$OkHttpReqRunClient : ReqRunHttpClient</ID>
+    <ID>TooManyFunctions:ReqRunEnvironmentService.kt$ReqRunEnvironmentService : PersistentStateComponent</ID>
+    <ID>TooManyFunctions:RequestExtractor.kt$RequestExtractor</ID>
+    <ID>TooManyFunctions:ResponseViewer.kt$ResponseViewer</ID>
+    <ID>TooManyFunctions:VariableResolver.kt$VariableResolver</ID>
+    <ID>WildcardImport:HttpRequestParserTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ReqRunExecutor.kt$import java.net.*</ID>
+    <ID>WildcardImport:ReqRunExecutor.kt$import okhttp3.*</ID>
+    <ID>WildcardImport:ResponseViewer.kt$import com.github.aidarkhusainov.reqrun.settings.ResponseViewMode.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

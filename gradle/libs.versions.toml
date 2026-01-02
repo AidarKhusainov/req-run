@@ -10,6 +10,10 @@ intelliJPlatform = "2.10.5"
 kotlin = "2.2.21"
 kover = "0.9.3"
 qodana = "2025.2.2"
+detekt = "1.23.8"
+ktlint = "14.0.1"
+dependencyCheck = "12.1.9"
+forbiddenApis = "3.10"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -23,3 +27,7 @@ intelliJPlatform = { id = "org.jetbrains.intellij.platform", version.ref = "inte
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 qodana = { id = "org.jetbrains.qodana", version.ref = "qodana" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+dependencyCheck = { id = "org.owasp.dependencycheck", version.ref = "dependencyCheck" }
+forbiddenApis = { id = "de.thetaphi.forbiddenapis", version.ref = "forbiddenApis" }
