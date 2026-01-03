@@ -175,7 +175,9 @@ dependencyCheck {
     failBuildOnCVSS = 7.0f
     autoUpdate = hasNvdApiKey
     skip = !hasNvdApiKey
-    suppressionFile = "$rootDir/config/dependency-check/suppressions.xml"
+    suppressionFiles.set(
+        listOf(layout.projectDirectory.file("config/dependency-check/suppressions.xml").asFile.path),
+    )
     outputDirectory =
         layout.buildDirectory
             .dir("reports/dependency-check")
