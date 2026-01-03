@@ -117,7 +117,26 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            val ideVersions = providers.gradleProperty("pluginVerifierIdeVersions").orNull
+            if (!ideVersions.isNullOrBlank()) {
+                ideVersions
+                    .split(',')
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                    .forEach { notation ->
+                        val separatorIndex = notation.indexOfAny(charArrayOf('-', ':'))
+                        if (separatorIndex <= 0 || separatorIndex >= notation.lastIndex) {
+                            throw GradleException(
+                                "Invalid IDE notation '$notation'. Expected 'IC-2024.1' or 'IC:2024.1'.",
+                            )
+                        }
+                        val type = notation.substring(0, separatorIndex)
+                        val version = notation.substring(separatorIndex + 1)
+                        create(type, version)
+                    }
+            } else {
+                recommended()
+            }
         }
     }
 }

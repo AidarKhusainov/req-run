@@ -1,0 +1,22 @@
+# Fast PR checks: no secrets, no publishing, no heavy scanners.
+name: PR Checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: PR Checks
+    uses: ./.github/workflows/build_base.yml
+    with:
+      runPluginVerifier: false
+      runQodana: false
+      runDependencyCheck: false
+      uploadArtifacts: false

@@ -1,0 +1,25 @@
+# Scheduled deep checks (heavy scans and full verifier coverage).
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Nightly Checks
+    uses: ./.github/workflows/build_base.yml
+    with:
+      runPluginVerifier: true
+      runQodana: true
+      runDependencyCheck: true
+      uploadArtifacts: true
+    secrets: inherit

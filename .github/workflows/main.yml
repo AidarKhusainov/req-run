@@ -1,0 +1,25 @@
+# Full checks on main with verifier matrix and dependency scanning.
+name: Main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Main Checks
+    uses: ./.github/workflows/build_base.yml
+    with:
+      runPluginVerifier: true
+      runQodana: true
+      runDependencyCheck: true
+      uploadArtifacts: true
+    secrets: inherit

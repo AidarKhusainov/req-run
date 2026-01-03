@@ -1,0 +1,14 @@
+name: CI Config
+description: Provide shared CI configuration values.
+inputs:
+  plugin-verifier-ide-versions:
+    description: Comma-separated IDE versions for plugin verifier.
+    required: false
+    default: "IC-2024.1,IC-2024.2,IC-2024.3,IC-2025.1,IC-2025.2,IC-2025.3,IC-LATEST-STABLE"
+runs:
+  using: "composite"
+  steps:
+    - name: Set verifier versions
+      shell: bash
+      run: |
+        echo "PLUGIN_VERIFIER_VERSIONS=${{ inputs.plugin-verifier-ide-versions }}" >> "$GITHUB_ENV"

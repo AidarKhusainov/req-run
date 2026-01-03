@@ -1,4 +1,4 @@
-# GitHub Actions Workflow created for tag-based GitHub releases.
+# Tag-based GitHub release: build, verify, generate notes, and publish artifacts.
 name: Release
 on:
   push:
@@ -13,12 +13,16 @@ permissions:
 jobs:
   checks:
     name: Checks
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/build_base.yml
     with:
       pluginVersion: ${{ github.ref_name }}
+      runPluginVerifier: true
+      runQodana: false
+      runDependencyCheck: false
+      uploadArtifacts: false
     secrets: inherit
 
-  # Prepare and publish the plugin to JetBrains Marketplace repository
+  # Prepare GitHub release assets and a changelog PR.
   release:
     name: Release Assets
     needs: [ checks ]
@@ -38,12 +42,14 @@ jobs:
       # Fetch sources to access local actions
       - name: Fetch Sources
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
-      # Check out the current repository
+      # Set up Java/Gradle for release tasks
       - name: Setup Environment
         uses: ./.github/actions/setup-env
         with:
-          ref: ${{ github.ref_name }}
           cache-read-only: true
           plugin-version: ${{ github.ref_name }}
 

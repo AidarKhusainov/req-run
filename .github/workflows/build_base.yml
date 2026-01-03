@@ -1,0 +1,181 @@
+# Reusable CI workflow for PR/main/nightly/release pipelines.
+# Runs wrapper validation plus optional verifier, Qodana, and dependency-check.
+name: Build Base
+
+on:
+  workflow_call:
+    inputs:
+      pluginVersion:
+        description: Plugin version override.
+        required: false
+        type: string
+        default: ""
+      runPluginVerifier:
+        description: Run IntelliJ Plugin Verifier.
+        required: false
+        type: boolean
+        default: false
+      verifierIdeVersions:
+        description: Comma-separated IDE versions for plugin verifier.
+        required: false
+        type: string
+        default: ""
+      runQodana:
+        description: Run Qodana scan.
+        required: false
+        type: boolean
+        default: false
+      runDependencyCheck:
+        description: Run OWASP dependency-check.
+        required: false
+        type: boolean
+        default: false
+      uploadArtifacts:
+        description: Upload build artifacts and reports.
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+      QODANA_TOKEN:
+        required: false
+      NVD_API_KEY:
+        required: false
+
+jobs:
+  validate_wrapper:
+    name: Validate Gradle Wrapper
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v5
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v5
+
+  build:
+    name: Build and Test
+    needs: [ validate_wrapper ]
+    runs-on: ubuntu-latest
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - name: Fetch Sources
+        uses: actions/checkout@v5
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+        with:
+          plugin-version: ${{ inputs.pluginVersion }}
+
+      - name: Run checks
+        run: ./gradlew --no-daemon clean ktlintCheck forbiddenApisMain detekt test buildPlugin verifyPlugin
+
+      - name: Dependency Check
+        if: ${{ inputs.runDependencyCheck }}
+        run: ./gradlew --no-daemon dependencyCheckAnalyze
+
+      - name: Upload reports
+        if: ${{ inputs.uploadArtifacts }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: reports
+          path: ./build/reports
+
+      - name: Upload plugin artifact
+        if: ${{ inputs.uploadArtifacts }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: plugin
+          path: ./build/distributions/*.zip
+
+      - name: Upload Code Coverage Report
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        uses: codecov/codecov-action@v5
+        with:
+          files: ${{ github.workspace }}/build/reports/kover/report.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  plugin_verifier:
+    name: Plugin Verifier
+    needs: [ validate_wrapper ]
+    if: ${{ inputs.runPluginVerifier }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - name: Fetch Sources
+        uses: actions/checkout@v5
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+        with:
+          cache-read-only: true
+          plugin-version: ${{ inputs.pluginVersion }}
+
+      - name: Load CI config
+        uses: ./.github/actions/ci-config
+        with:
+          plugin-verifier-ide-versions: ${{ inputs.verifierIdeVersions }}
+
+      - name: Run Plugin Verifier
+        env:
+          ORG_GRADLE_PROJECT_pluginVerifierIdeVersions: ${{ env.PLUGIN_VERIFIER_VERSIONS }}
+        run: ./gradlew --no-daemon runPluginVerifier
+
+      - name: Upload Plugin Verifier reports
+        if: ${{ always() && inputs.uploadArtifacts }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: pluginVerifier
+          path: ./build/reports/pluginVerifier
+
+  qodana:
+    name: Qodana
+    needs: [ validate_wrapper ]
+    if: ${{ inputs.runQodana }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
+    env:
+      QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+      QODANA_ENDPOINT: "https://qodana.cloud"
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - name: Fetch Sources
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-env
+        with:
+          plugin-version: ${{ inputs.pluginVersion }}
+
+      - name: Qodana skipped
+        if: ${{ env.QODANA_TOKEN == '' }}
+        run: echo "QODANA_TOKEN is not set; skipping Qodana scan."
+
+      - name: Qodana Scan
+        if: ${{ env.QODANA_TOKEN != '' }}
+        uses: JetBrains/qodana-action@v2025.2
+        with:
+          cache-default-branch-only: true

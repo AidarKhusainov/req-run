@@ -1,14 +1,6 @@
 name: Setup Environment
-description: Checkout sources and prepare Java/Gradle for CI jobs.
+description: Prepare Java/Gradle for CI jobs.
 inputs:
-  ref:
-    description: Git ref to check out.
-    required: false
-    default: ""
-  fetch-depth:
-    description: Number of commits to fetch. Use 0 for full history.
-    required: false
-    default: "1"
   java-version:
     description: Java version to install.
     required: false
@@ -28,11 +20,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Fetch Sources
-      uses: actions/checkout@v5
-      with:
-        ref: ${{ inputs.ref }}
-        fetch-depth: ${{ inputs.fetch-depth }}
     - name: Setup Java
       uses: actions/setup-java@v5
       with:
