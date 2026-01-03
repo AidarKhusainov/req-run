@@ -14,6 +14,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.DumbAware
 import java.awt.datatransfer.StringSelection
+import java.nio.file.Path
 
 class CopyCurlAction : AnAction("Copy as cURL"), DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
@@ -84,7 +85,8 @@ class CopyCurlAction : AnAction("Copy as cURL"), DumbAware {
             ReqRunNotifier.warn(project, messages.joinToString(" "))
             return
         }
-        val spec = HttpRequestParser.parse(resolvedRequest)
+        val baseDir = file?.path?.let { Path.of(it).parent }
+        val spec = HttpRequestParser.parse(resolvedRequest, baseDir)
         if (spec == null) {
             ReqRunNotifier.error(project, "Cannot parse request. Use 'METHOD URL' followed by optional headers and body.")
             return

@@ -26,6 +26,7 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
+import java.nio.file.Path
 
 class RunHttpRequestsGroupAction : AnAction(), DumbAware {
     private val log = logger<RunHttpRequestsGroupAction>()
@@ -136,7 +137,8 @@ class RunHttpRequestsGroupAction : AnAction(), DumbAware {
                         log.warn("ReqRun: unresolved variables for request: ${VariableResolver.formatUnresolved(unresolved)}")
                         continue
                     }
-                    val spec = HttpRequestParser.parse(resolvedRequest)
+                    val baseDir = Path.of(block.file.path).parent
+                    val spec = HttpRequestParser.parse(resolvedRequest, baseDir)
                     if (spec == null) {
                         parseErrors += 1
                         log.warn("ReqRun: failed to parse request block (length=${block.text.length})")

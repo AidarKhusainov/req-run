@@ -77,7 +77,7 @@ Content-Type: text/xml
 </soapenv:Envelope>
 
 ###
-# Multipart form-data
+# Multipart form-data with file
 POST {{baseUrl}}/post
 Accept: application/json
 Content-Type: multipart/form-data; boundary=ReqRunBoundary
@@ -90,7 +90,7 @@ ReqRun Multipart
 Content-Disposition: form-data; name="file"; filename="note.txt"
 Content-Type: text/plain
 
-Hello from ReqRun multipart.
+< ./note.txt
 --ReqRunBoundary--
 
 ###
@@ -105,3 +105,9 @@ Raw binary bytes: 00 01 02 03 04
 # Streaming response
 GET {{baseUrl}}/stream/5
 Accept: application/x-ndjson
+
+###
+# Save response to file
+GET {{baseUrl}}/image/png
+Accept: image/png
+> ./downloads/image.png

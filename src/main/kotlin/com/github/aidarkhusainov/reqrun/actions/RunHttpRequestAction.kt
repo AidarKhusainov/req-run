@@ -21,6 +21,7 @@ import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbAware
+import java.nio.file.Path
 
 class RunHttpRequestAction : AnAction(), DumbAware {
     private val log = logger<RunHttpRequestAction>()
@@ -93,7 +94,8 @@ class RunHttpRequestAction : AnAction(), DumbAware {
             ReqRunNotifier.warn(project, messages.joinToString(" "))
             return
         }
-        val spec = HttpRequestParser.parse(resolvedRequest)
+        val baseDir = file?.path?.let { Path.of(it).parent }
+        val spec = HttpRequestParser.parse(resolvedRequest, baseDir)
         if (spec == null) {
             log.warn("ReqRun: failed to parse request (length=${rawRequest.length})")
             ReqRunNotifier.error(

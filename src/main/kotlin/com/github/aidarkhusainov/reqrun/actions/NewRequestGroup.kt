@@ -8,6 +8,7 @@ class NewRequestGroup : DefaultActionGroup("Add to HTTP Client...", true) {
         templatePresentation.icon = AllIcons.General.Add
         add(InsertHttpRequestTemplateAction("GET"))
         add(InsertHttpRequestTemplateAction("POST"))
+        add(InsertFileUploadRequestTemplateAction())
         add(InsertHttpRequestTemplateAction("PUT"))
         add(InsertHttpRequestTemplateAction("PATCH"))
         add(InsertHttpRequestTemplateAction("DELETE"))

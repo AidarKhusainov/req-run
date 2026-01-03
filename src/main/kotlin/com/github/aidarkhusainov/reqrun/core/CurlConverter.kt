@@ -1,6 +1,9 @@
 package com.github.aidarkhusainov.reqrun.core
 
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.TextBody
 
 object CurlConverter {
     fun toCurl(spec: HttpRequestSpec): String {
@@ -9,9 +12,23 @@ object CurlConverter {
             parts += "-H"
             parts += shellQuote("$name: $value")
         }
-        spec.body?.let {
-            parts += "--data"
-            parts += shellQuote(it)
+        spec.body?.let { body ->
+            when (body) {
+                is TextBody -> {
+                    parts += "--data"
+                    parts += shellQuote(body.preview)
+                }
+                is CompositeBody -> {
+                    val singleFile = body.parts.singleOrNull() as? BodyPart.File
+                    if (singleFile != null) {
+                        parts += "--data-binary"
+                        parts += shellQuote("@${singleFile.path}")
+                    } else {
+                        parts += "--data-binary"
+                        parts += shellQuote(body.preview)
+                    }
+                }
+            }
         }
         return parts.joinToString(" ")
     }
@@ -27,8 +44,15 @@ object CurlConverter {
             }
             sb.setLength(sb.length - 1)
         }
-        spec.body?.let {
-            sb.append("\n\n").append(it)
+        spec.body?.let { body ->
+            sb.append("\n\n").append(body.preview)
+        }
+        spec.responseTarget?.let { target ->
+            if (spec.body == null) {
+                sb.append('\n')
+            }
+            val prefix = if (target.append) ">>" else ">"
+            sb.append('\n').append(prefix).append(' ').append(target.path)
         }
         return sb.toString()
     }
@@ -125,7 +149,8 @@ object CurlConverter {
             method = if (bodyParts.isNotEmpty()) "POST" else "GET"
         }
         val body = bodyParts.joinToString("\n").ifBlank { null }
-        return HttpRequestSpec(method.uppercase(), url, headers, body, version)
+        val bodySpec = body?.let { TextBody(it) }
+        return HttpRequestSpec(method.uppercase(), url, headers, bodySpec, version)
     }
 
     private fun addHeader(headers: MutableMap<String, String>, header: String) {

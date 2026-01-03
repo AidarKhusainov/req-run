@@ -22,6 +22,7 @@ Run `.http` requests directly from the editor — fast, readable, and without Ul
 - Response view settings: view as JSON/XML/HTML/Text, line numbers, header folding, and soft wraps
 - Response viewer tools: scroll to top/end and copy response body
 - Service tool window with history and one-click re-run
+- File upload with `< path` and response save with `> path`
 - Convert requests to cURL or paste cURL as `.http`
 - Line comments with `#` and request separators with `###`
 
@@ -44,6 +45,30 @@ You can specify the HTTP version in the request line (default is HTTP/1.1):
 GET https://example.com HTTP/2
 ```
 
+### Files
+
+Upload a file (multipart):
+
+```http
+POST https://httpbin.org/post
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Accept: application/json
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="note.txt"
+
+< ./note.txt
+--WebAppBoundary--
+```
+
+Save a response to a file:
+
+```http
+GET https://httpbin.org/image/png
+Accept: image/png
+> ./downloads/image.png
+```
+
 ## Feedback
 
 Suggestions and bug reports:  
@@ -59,7 +84,7 @@ https://github.com/AidarKhusainov/req-run
 - **Run All Requests (Toolbar)** — execute all requests in the current file
 - **Convert to cURL and Copy** — copy request as a cURL command
 - **Paste cURL as HTTP** — convert cURL to `.http` (supports `--http1.1`, `--http2`, `--http2-prior-knowledge`)
-- **New Request Templates** — insert GET/POST/PUT/PATCH/DELETE templates
+- **New Request Templates** — insert GET/POST/POST (File)/PUT/PATCH/DELETE templates
 - **Add Environment Variable** — add variable to shared or private env file
 - **Add Auth Configuration** — add static auth template to shared or private env file
 

@@ -1,12 +1,16 @@
 package com.github.aidarkhusainov.reqrun.integration
 
 import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.TextBody
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.util.ProgressIndicatorBase
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import java.nio.file.Files
 
 class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
     private lateinit var server: MockWebServer
@@ -66,7 +70,7 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
             method = "POST",
             url = server.url("/items").toString(),
             headers = mapOf("Content-Type" to "application/json"),
-            body = "{\"a\":1}"
+            body = TextBody("{\"a\":1}")
         )
 
         val response = executor.execute(request)
@@ -78,6 +82,42 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         assertEquals("{\"a\":1}", recorded.body.readUtf8())
         assertEquals("HTTP/1.1 201 Created", response.statusLine)
         assertEquals("created", response.body)
+    }
+
+    fun `test execute sends multipart body with file part`() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("ok")
+        )
+
+        val tempFile = Files.createTempFile("reqrun", ".txt")
+        Files.writeString(tempFile, "file-content")
+        try {
+            val body = CompositeBody(
+                preview = "< $tempFile",
+                parts = listOf(
+                    BodyPart.Text("--Boundary\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\n\n"),
+                    BodyPart.File(tempFile),
+                    BodyPart.Text("\n--Boundary--")
+                )
+            )
+            val request = HttpRequestSpec(
+                method = "POST",
+                url = server.url("/upload").toString(),
+                headers = mapOf("Content-Type" to "multipart/form-data; boundary=Boundary"),
+                body = body
+            )
+
+            executor.execute(request)
+            val recorded = server.takeRequest()
+            val expectedBody =
+                "--Boundary\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\n\nfile-content\n--Boundary--"
+
+            assertEquals(expectedBody, recorded.body.readUtf8())
+        } finally {
+            Files.deleteIfExists(tempFile)
+        }
     }
 
     fun `test execute follows redirects`() {

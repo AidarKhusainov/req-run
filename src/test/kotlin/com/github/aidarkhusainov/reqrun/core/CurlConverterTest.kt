@@ -1,11 +1,15 @@
 package com.github.aidarkhusainov.reqrun.core
 
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.TextBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import java.net.http.HttpClient
+import java.nio.file.Path
 
 class CurlConverterTest {
     @Test
@@ -33,7 +37,7 @@ class CurlConverterTest {
         assertEquals("POST", spec?.method)
         assertEquals("https://example.com/api", spec?.url)
         assertEquals("application/json", spec?.headers?.get("Accept"))
-        assertEquals("{\"a\":1}", spec?.body)
+        assertEquals("{\"a\":1}", spec?.body?.preview)
     }
 
     @Test
@@ -60,7 +64,7 @@ class CurlConverterTest {
             method = "POST",
             url = "https://example.com/it's",
             headers = mapOf("X-Name" to "O'Brian"),
-            body = "value='1'"
+            body = TextBody("value='1'")
         )
 
         val curl = CurlConverter.toCurl(spec)
@@ -86,6 +90,27 @@ class CurlConverterTest {
     }
 
     @Test
+    fun `toCurl uses data-binary with file body`() {
+        val path = Path.of("tmp", "payload.bin")
+        val spec = HttpRequestSpec(
+            method = "POST",
+            url = "https://example.com/upload",
+            headers = emptyMap(),
+            body = CompositeBody(
+                preview = "< ./payload.bin",
+                parts = listOf(BodyPart.File(path))
+            )
+        )
+
+        val curl = CurlConverter.toCurl(spec)
+
+        assertEquals(
+            "curl -X POST 'https://example.com/upload' --data-binary '@$path'",
+            curl
+        )
+    }
+
+    @Test
     fun `fromCurl parses request flag variants and headers`() {
         val curl = "curl --request=PATCH -H 'Header: v' --header='X-Test: ok' https://example.com"
 
@@ -104,7 +129,7 @@ class CurlConverterTest {
         val spec = CurlConverter.fromCurl(curl)
 
         assertEquals("POST", spec?.method)
-        assertEquals("one\ntwo\nthree", spec?.body)
+        assertEquals("one\ntwo\nthree", spec?.body?.preview)
     }
 
     @Test
@@ -115,7 +140,7 @@ class CurlConverterTest {
 
         assertEquals("POST", spec?.method)
         assertEquals("https://example.com/a b", spec?.url)
-        assertEquals("a=1&b=2", spec?.body)
+        assertEquals("a=1&b=2", spec?.body?.preview)
     }
 
     @Test

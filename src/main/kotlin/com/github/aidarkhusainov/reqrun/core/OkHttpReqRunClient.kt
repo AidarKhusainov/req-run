@@ -1,7 +1,10 @@
 package com.github.aidarkhusainov.reqrun.core
 
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
+import com.github.aidarkhusainov.reqrun.model.TextBody
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.google.gson.GsonBuilder
@@ -11,9 +14,15 @@ import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okio.BufferedSink
+import okio.source
 import java.io.IOException
+import java.nio.file.Files
 import java.time.Duration
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
@@ -36,7 +45,7 @@ class OkHttpReqRunClient(
     ): HttpResponsePayload {
         val startedAt = System.nanoTime()
         val deadline = startedAt + requestTimeout.toNanos()
-        val body = request.body?.toRequestBody(null)
+        val body = buildRequestBody(request)
         val builder = Request.Builder()
             .url(request.url)
             .method(request.method, body)
@@ -60,6 +69,22 @@ class OkHttpReqRunClient(
                 response.use {
                     val duration = (System.nanoTime() - startedAt) / 1_000_000
                     val status = "${formatVersion(it.protocol)} ${it.code} ${reasonPhrase(it.code)}"
+                    val responseTarget = request.responseTarget
+                    if (responseTarget != null) {
+                        saveResponseBody(it, responseTarget.path, responseTarget.append)
+                        return HttpResponsePayload(
+                            statusLine = status,
+                            headers = it.headers.toMultimap(),
+                            body = "",
+                            durationMillis = duration,
+                            formattedBody = null,
+                            jsonFormatError = null,
+                            formattedHtml = null,
+                            formattedXml = null,
+                            savedBodyPath = responseTarget.path.toString(),
+                            savedBodyAppend = responseTarget.append,
+                        )
+                    }
                     val responseBody = it.body?.string().orEmpty()
                     val jsonFormat = formatJsonBody(responseBody, it.header("Content-Type"))
                     val formattedHtml = formatHtmlBody(responseBody, it.header("Content-Type"))
@@ -109,6 +134,78 @@ class OkHttpReqRunClient(
             }
         })
         return future
+    }
+
+    private fun buildRequestBody(request: HttpRequestSpec): RequestBody? {
+        val spec = request.body ?: return null
+        val mediaType = null
+        return when (spec) {
+            is TextBody -> spec.preview.toRequestBody(mediaType)
+            is CompositeBody -> compositeToRequestBody(spec, mediaType)
+        }
+    }
+
+    private fun compositeToRequestBody(body: CompositeBody, mediaType: okhttp3.MediaType?): RequestBody {
+        val parts = body.parts
+        val singleFile = parts.singleOrNull() as? BodyPart.File
+        if (singleFile != null) {
+            val file = singleFile.path.toFile()
+            validateFileExists(singleFile.path)
+            return file.asRequestBody(mediaType)
+        }
+        parts.filterIsInstance<BodyPart.File>().forEach { validateFileExists(it.path) }
+        return CompositeRequestBody(parts, mediaType)
+    }
+
+    private fun validateFileExists(path: java.nio.file.Path) {
+        if (!Files.isRegularFile(path)) {
+            throw IOException("File not found: $path")
+        }
+    }
+
+    private fun saveResponseBody(response: Response, path: java.nio.file.Path, append: Boolean) {
+        val parent = path.parent
+        if (parent != null) {
+            Files.createDirectories(parent)
+        }
+        val options = if (append) {
+            arrayOf(
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.APPEND
+            )
+        } else {
+            arrayOf(
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+            )
+        }
+        Files.newOutputStream(path, *options).use { output ->
+            val input = response.body?.byteStream()
+            if (input == null) return
+            input.use { it.copyTo(output) }
+        }
+    }
+
+    private class CompositeRequestBody(
+        private val parts: List<BodyPart>,
+        private val mediaType: okhttp3.MediaType?
+    ) : RequestBody() {
+        override fun contentType(): okhttp3.MediaType? = mediaType
+
+        override fun writeTo(sink: BufferedSink) {
+            for (part in parts) {
+                when (part) {
+                    is BodyPart.Text -> sink.writeUtf8(part.text)
+                    is BodyPart.File -> {
+                        Files.newInputStream(part.path).use { input ->
+                            input.source().use { source ->
+                                sink.writeAll(source)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun formatVersion(protocol: Protocol): String =

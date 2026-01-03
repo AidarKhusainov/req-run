@@ -1,8 +1,12 @@
 package com.github.aidarkhusainov.reqrun.core
 
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
+import com.github.aidarkhusainov.reqrun.model.FileResponseTarget
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import org.junit.Assert.*
 import org.junit.Test
+import java.nio.file.Path
 
 class HttpRequestParserTest {
     @Test
@@ -43,7 +47,7 @@ class HttpRequestParserTest {
         assertEquals("https://example.com/api", spec?.url)
         assertEquals("application/json", spec?.headers?.get("Content-Type"))
         assertEquals("a:b", spec?.headers?.get("X-Test"))
-        assertEquals("{\"a\":1}\nline2", spec?.body)
+        assertEquals("{\"a\":1}\nline2", spec?.body?.preview)
     }
 
     @Test
@@ -105,7 +109,7 @@ class HttpRequestParserTest {
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("ok", spec?.headers?.get("X-Test"))
-        assertEquals("Header: not-a-header", spec?.body)
+        assertEquals("Header: not-a-header", spec?.body?.preview)
     }
 
     @Test
@@ -119,8 +123,8 @@ class HttpRequestParserTest {
         """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
-        assertEquals("line1\n\nline3", spec?.body)
-        assertTrue(spec?.body?.contains("\n\n") == true)
+        assertEquals("line1\n\nline3", spec?.body?.preview)
+        assertTrue(spec?.body?.preview?.contains("\n\n") == true)
     }
 
     @Test
@@ -144,7 +148,7 @@ class HttpRequestParserTest {
         assertEquals("https://example.com/api", spec?.url)
         assertEquals("application/json", spec?.headers?.get("Content-Type"))
         assertEquals("ok", spec?.headers?.get("X-Test"))
-        assertEquals("line1\nline2", spec?.body)
+        assertEquals("line1\nline2", spec?.body?.preview)
     }
 
     @Test
@@ -163,7 +167,7 @@ class HttpRequestParserTest {
         assertEquals("POST", spec?.method)
         assertEquals("application/json", spec?.headers?.get("Accept"))
         assertEquals("application/json", spec?.headers?.get("Content-Type"))
-        assertEquals("{\"message\":\"Hello\"}", spec?.body)
+        assertEquals("{\"message\":\"Hello\"}", spec?.body?.preview)
     }
 
     @Test
@@ -181,7 +185,7 @@ class HttpRequestParserTest {
         val spec = HttpRequestParser.parse(raw)
         assertEquals("POST", spec?.method)
         assertEquals("application/json", spec?.headers?.get("Accept"))
-        assertEquals("{\"message\":\"Hello\"}\n\nline2", spec?.body)
+        assertEquals("{\"message\":\"Hello\"}\n\nline2", spec?.body?.preview)
     }
 
     @Test
@@ -200,7 +204,7 @@ class HttpRequestParserTest {
         assertEquals("POST", spec?.method)
         assertEquals("application/json", spec?.headers?.get("Accept"))
         assertEquals("application/json", spec?.headers?.get("Content-Type"))
-        assertEquals("{\n  \"query\": \"query { countries { code name emoji } }\"\n}", spec?.body)
+        assertEquals("{\n  \"query\": \"query { countries { code name emoji } }\"\n}", spec?.body?.preview)
     }
 
     @Test
@@ -306,7 +310,7 @@ class HttpRequestParserTest {
 
         val spec = HttpRequestParser.parse(raw)
 
-        assertEquals("line1\nline2", spec?.body)
+        assertEquals("line1\nline2", spec?.body?.preview)
     }
 
     @Test
@@ -319,5 +323,64 @@ class HttpRequestParserTest {
         val spec = HttpRequestParser.parse(raw)
 
         assertEquals("value", spec?.headers?.get("X-Test"))
+    }
+
+    @Test
+    fun `parse detects file directive inside body`() {
+        val raw = """
+            POST https://example.com
+            Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+            --WebAppBoundary
+            Content-Disposition: form-data; name="file"; filename="file.txt"
+
+            < ./files/data.txt
+            --WebAppBoundary--
+        """.trimIndent()
+
+        val baseDir = Path.of("workspace")
+        val spec = HttpRequestParser.parse(raw, baseDir)
+        val body = spec?.body as? CompositeBody
+
+        assertNotNull(body)
+        assertTrue(body!!.preview.contains("< ./files/data.txt"))
+        val filePart = body.parts.filterIsInstance<BodyPart.File>().single()
+        assertEquals(baseDir.resolve("files/data.txt").normalize(), filePart.path)
+        assertEquals(3, body.parts.size)
+    }
+
+    @Test
+    fun `parse captures response target line`() {
+        val raw = """
+            GET https://example.com
+            > ./out/resp.json
+        """.trimIndent()
+
+        val baseDir = Path.of("workspace")
+        val spec = HttpRequestParser.parse(raw, baseDir)
+
+        assertEquals(
+            FileResponseTarget(baseDir.resolve("out/resp.json").normalize(), append = false),
+            spec?.responseTarget
+        )
+    }
+
+    @Test
+    fun `parse response target after body is not part of body`() {
+        val raw = """
+            POST https://example.com
+
+            line1
+            > ./out/resp.txt
+        """.trimIndent()
+
+        val baseDir = Path.of("workspace")
+        val spec = HttpRequestParser.parse(raw, baseDir)
+
+        assertEquals("line1", spec?.body?.preview)
+        assertEquals(
+            FileResponseTarget(baseDir.resolve("out/resp.txt").normalize(), append = false),
+            spec?.responseTarget
+        )
     }
 }

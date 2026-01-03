@@ -2,6 +2,7 @@ package com.github.aidarkhusainov.reqrun.ui
 
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
+import com.github.aidarkhusainov.reqrun.model.TextBody
 import com.github.aidarkhusainov.reqrun.services.ReqRunExecution
 import com.github.aidarkhusainov.reqrun.settings.ReqRunResponseViewSettings
 import com.github.aidarkhusainov.reqrun.settings.ResponseViewMode
@@ -37,7 +38,7 @@ class ResponseViewerTest : BasePlatformTestCase() {
                 method = "POST",
                 url = "https://example.com",
                 headers = mapOf("X-Req-1" to "a", "X-Req-2" to "b"),
-                body = "req-body"
+                body = TextBody("req-body")
             ),
             response = HttpResponsePayload(
                 statusLine = "HTTP/1.1 200 OK",
@@ -221,7 +222,7 @@ class ResponseViewerTest : BasePlatformTestCase() {
                 method = "POST",
                 url = "https://example.com",
                 headers = mapOf("X-Req-1" to "a"),
-                body = "req\r\nbody"
+                body = TextBody("req\r\nbody")
             ),
             response = HttpResponsePayload(
                 statusLine = "HTTP/1.1 200 OK",
@@ -273,6 +274,27 @@ class ResponseViewerTest : BasePlatformTestCase() {
 
         assertTrue(combined.text.contains("JSON parse error: Expected ',' or '}'"))
         assertTrue(combined.text.contains("{\"a\":1"))
+    }
+
+    fun testShowsSavedBodyInfoInCombinedText() {
+        val savedPath = java.nio.file.Path.of("build", "out.bin").toString()
+        val execution = ReqRunExecution(
+            request = HttpRequestSpec("GET", "https://example.com", emptyMap(), null),
+            response = HttpResponsePayload(
+                statusLine = "HTTP/1.1 200 OK",
+                headers = mapOf("Content-Type" to listOf("application/octet-stream")),
+                body = "",
+                durationMillis = 1,
+                savedBodyPath = savedPath,
+                savedBodyAppend = true
+            ),
+            error = null
+        )
+
+        val combined = buildCombined(execution)
+
+        assertTrue(combined.text.contains("Saved response body to $savedPath (append)"))
+        assertTrue(combined.text.contains("Saved to: $savedPath (append)"))
     }
 
     fun testShowsNoResponseMetaOnError() {

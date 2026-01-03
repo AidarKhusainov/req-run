@@ -160,18 +160,24 @@ class ResponseViewer(
         val rawBody = response?.body.orEmpty()
         val displayBody = renderBody(response, error)
         val normalizedBody = normalizeText(displayBody)
-        val requestBody = execution.request.body?.takeIf { it.isNotBlank() } ?: ""
+        val requestBody = execution.request.body?.preview?.takeIf { it.isNotBlank() } ?: ""
         val normalizedRequestBody = normalizeText(requestBody)
         val status = statusText(response, error)
         val bytesSource = if (response != null) rawBody else displayBody
         val bodyBytes = bytesSource.toByteArray(StandardCharsets.UTF_8).size
         val code = response?.statusLine?.split(" ")?.getOrNull(1)
         val reason = response?.statusLine?.split(" ", limit = 3)?.getOrNull(2).orEmpty()
+        val savedInfo = response?.savedBodyPath?.let { path ->
+            val append = if (response.savedBodyAppend) " (append)" else ""
+            "Saved to: $path$append"
+        }
         val meta = if (response != null && code != null) {
             val reasonPart = if (reason.isNotBlank()) " ($reason)" else ""
-            "Response code: $code$reasonPart; Time: ${response.durationMillis}ms; Content length: $bodyBytes bytes ($bodyBytes B)"
+            val base = "Response code: $code$reasonPart; Time: ${response.durationMillis}ms; Content length: $bodyBytes bytes ($bodyBytes B)"
+            if (savedInfo != null) "$base; $savedInfo" else base
         } else {
-            "No response; Content length: $bodyBytes bytes ($bodyBytes B)"
+            val base = "No response; Content length: $bodyBytes bytes ($bodyBytes B)"
+            if (savedInfo != null) "$base; $savedInfo" else base
         }
         val folds = mutableListOf<FoldSection>()
         val sb = StringBuilder()
@@ -231,6 +237,10 @@ class ResponseViewer(
 
     private fun renderBody(response: HttpResponsePayload?, error: String?): String {
         if (response == null) return error ?: ""
+        response.savedBodyPath?.let { path ->
+            val append = if (response.savedBodyAppend) " (append)" else ""
+            return "Saved response body to $path$append"
+        }
         val rawBody = response.body
         return when (resolveViewMode(response)) {
             JSON -> renderJsonBody(response, rawBody)
