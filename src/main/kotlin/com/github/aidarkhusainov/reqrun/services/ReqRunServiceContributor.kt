@@ -2,6 +2,7 @@ package com.github.aidarkhusainov.reqrun.services
 
 import com.github.aidarkhusainov.reqrun.icons.ReqRunIcons
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
+import com.github.aidarkhusainov.reqrun.settings.ReqRunHistorySettings
 import com.github.aidarkhusainov.reqrun.ui.ResponseViewer
 import com.intellij.execution.services.ServiceViewActionUtils
 import com.intellij.execution.services.ServiceViewContributor
@@ -168,8 +169,15 @@ private class ExecutionDescriptor(
     private val popupActions: DefaultActionGroup,
     private val removeViewer: () -> Unit
 ) : ServiceViewDescriptor {
+    private val historySettings = ApplicationManager.getApplication().getService(ReqRunHistorySettings::class.java)
+
     override fun getPresentation(): ItemPresentation =
-        PresentationData("${execution.request.method} ${execution.request.url}", null, null, null)
+        PresentationData(
+            "${execution.request.method} ${formatUrl(execution.request.url)}",
+            null,
+            null,
+            null
+        )
 
     override fun getContentComponent(): javax.swing.JComponent =
         viewer.component
@@ -193,5 +201,30 @@ private class ExecutionDescriptor(
         if (removed) {
             removeViewer()
         }
+    }
+
+    private fun formatUrl(url: String): String {
+        if (!historySettings.state.shortenHistoryUrls) return url
+        val trimmed = url.trim()
+        return try {
+            val uri = java.net.URI(trimmed)
+            if (uri.host != null) {
+                val path = uri.rawPath?.takeIf { it.isNotEmpty() } ?: "/"
+                val query = uri.rawQuery?.let { "?$it" }.orEmpty()
+                val fragment = uri.rawFragment?.let { "#$it" }.orEmpty()
+                path + query + fragment
+            } else {
+                stripHostFallback(trimmed)
+            }
+        } catch (_: Exception) {
+            stripHostFallback(trimmed)
+        }
+    }
+
+    private fun stripHostFallback(url: String): String {
+        val schemeIndex = url.indexOf("://")
+        if (schemeIndex == -1) return url
+        val pathStart = url.indexOf('/', schemeIndex + 3)
+        return if (pathStart == -1) "/" else url.substring(pathStart)
     }
 }

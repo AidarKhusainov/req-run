@@ -12,11 +12,13 @@ import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JComponent
+import javax.swing.JCheckBox
 
 class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
     private val scopeBox = ComboBox(arrayOf("Global", "Project"))
     private val sharedField = TextFieldWithBrowseButton()
     private val privateField = TextFieldWithBrowseButton()
+    private val shortenHistoryUrls = JCheckBox("Shorten history URLs (hide host)")
     private var component: JComponent? = null
 
     override fun getDisplayName(): String = "ReqRun"
@@ -36,6 +38,7 @@ class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
                 .addLabeledComponent("Scope:", scopeBox)
                 .addLabeledComponent("Shared env file:", sharedField)
                 .addLabeledComponent("Private env file:", privateField)
+                .addComponent(shortenHistoryUrls)
                 .panel
             component = JPanel(BorderLayout()).apply {
                 border = JBUI.Borders.empty(10, 12)
@@ -48,18 +51,21 @@ class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
     override fun isModified(): Boolean {
         val projectSettings = project.getService(ReqRunProjectEnvPathSettings::class.java)
         val globalSettings = ApplicationManager.getApplication().getService(ReqRunEnvPathSettings::class.java)
+        val historySettings = ApplicationManager.getApplication().getService(ReqRunHistorySettings::class.java)
 
         val projectScopeSelected = scopeBox.selectedItem == "Project"
         if (projectScopeSelected != projectSettings.state.useProjectPaths) return true
 
         val (shared, privatePath) = currentStoredValues(projectScopeSelected, projectSettings, globalSettings)
         return sharedField.text.orEmpty() != shared.orEmpty() ||
-            privateField.text.orEmpty() != privatePath.orEmpty()
+            privateField.text.orEmpty() != privatePath.orEmpty() ||
+            shortenHistoryUrls.isSelected != historySettings.state.shortenHistoryUrls
     }
 
     override fun apply() {
         val projectSettings = project.getService(ReqRunProjectEnvPathSettings::class.java)
         val globalSettings = ApplicationManager.getApplication().getService(ReqRunEnvPathSettings::class.java)
+        val historySettings = ApplicationManager.getApplication().getService(ReqRunHistorySettings::class.java)
         val projectScopeSelected = scopeBox.selectedItem == "Project"
 
         projectSettings.state.useProjectPaths = projectScopeSelected
@@ -71,11 +77,14 @@ class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
             globalSettings.state.sharedPath = sharedField.text.takeIf { it.isNotBlank() }
             globalSettings.state.privatePath = privateField.text.takeIf { it.isNotBlank() }
         }
+        historySettings.state.shortenHistoryUrls = shortenHistoryUrls.isSelected
     }
 
     override fun reset() {
         val projectSettings = project.getService(ReqRunProjectEnvPathSettings::class.java)
+        val historySettings = ApplicationManager.getApplication().getService(ReqRunHistorySettings::class.java)
         scopeBox.selectedItem = if (projectSettings.state.useProjectPaths) "Project" else "Global"
+        shortenHistoryUrls.isSelected = historySettings.state.shortenHistoryUrls
         loadFields()
     }
 

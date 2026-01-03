@@ -9,6 +9,7 @@
 - Response view settings (View As, line numbers, header folding) and toolbar actions (soft wraps, scroll, copy body).
 - File upload via `< path` and response save via `> / >> path`.
 - New POST (File) request template in “Add to HTTP Client…”.
+- Setting to shorten request history URLs (hide host).
 
 ### Changed
 - CI workflows consolidated via reusable setup action and wrapper validation.

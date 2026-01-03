@@ -138,6 +138,9 @@ Custom paths can be configured in:
 
 `Settings → Tools → ReqRun`
 
+Also available there:
+- Toggle short URLs in request history (hide host).
+
 Example `http-client.env.json`:
 
 ```json
