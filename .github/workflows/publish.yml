@@ -20,7 +20,7 @@ jobs:
 
       # Fetch sources to access local actions
       - name: Fetch Sources (for local actions)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.ref_name }}
           fetch-depth: 0
