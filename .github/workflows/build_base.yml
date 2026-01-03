@@ -76,7 +76,7 @@ jobs:
           plugin-version: ${{ inputs.pluginVersion }}
 
       - name: Run checks
-        run: ./gradlew --no-daemon clean ktlintCheck forbiddenApisMain detekt test buildPlugin verifyPlugin
+        run: ./gradlew --no-daemon clean ktlintCheck forbiddenApisMain detekt test buildPlugin
 
       - name: Dependency Check
         if: ${{ inputs.runDependencyCheck }}
@@ -132,7 +132,7 @@ jobs:
       - name: Run Plugin Verifier
         env:
           ORG_GRADLE_PROJECT_pluginVerifierIdeVersions: ${{ env.PLUGIN_VERIFIER_VERSIONS }}
-        run: ./gradlew --no-daemon runPluginVerifier
+        run: ./gradlew --no-daemon verifyPlugin
 
       - name: Upload Plugin Verifier reports
         if: ${{ always() && inputs.uploadArtifacts }}
