@@ -12,18 +12,18 @@ jobs:
       contents: write
       pull-requests: write
       checks: write
+    env:
+      QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+      QODANA_ENDPOINT: "https://qodana.cloud"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Qodana skipped
-        if: ${{ secrets.QODANA_TOKEN == '' }}
+        if: ${{ env.QODANA_TOKEN == '' }}
         run: echo "QODANA_TOKEN is not set; skipping Qodana scan."
       - name: Qodana Scan
-        if: ${{ secrets.QODANA_TOKEN != '' }}
+        if: ${{ env.QODANA_TOKEN != '' }}
         uses: JetBrains/qodana-action@v2025.2
         with:
           pr-mode: false
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
-          QODANA_ENDPOINT: "https://qodana.cloud"
