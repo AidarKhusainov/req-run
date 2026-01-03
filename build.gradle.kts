@@ -176,7 +176,12 @@ dependencyCheck {
     autoUpdate = hasNvdApiKey
     skip = !hasNvdApiKey
     suppressionFiles.set(
-        listOf(layout.projectDirectory.file("config/dependency-check/suppressions.xml").asFile.path),
+        listOf(
+            layout.projectDirectory
+                .file("config/dependency-check/suppressions.xml")
+                .asFile
+                .path,
+        ),
     )
     outputDirectory =
         layout.buildDirectory
