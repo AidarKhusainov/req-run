@@ -1,8 +1,21 @@
 # ReqRun
 
-![Build](https://github.com/AidarKhusainov/req-run/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/29471-reqrun.svg)](https://plugins.jetbrains.com/plugin/29471-reqrun)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/29471-reqrun.svg)](https://plugins.jetbrains.com/plugin/29471-reqrun)
+[![Rating](https://img.shields.io/jetbrains/plugin/r/rating/29471-reqrun.svg)](https://plugins.jetbrains.com/plugin/29471-reqrun)
+
+[![IDEs](https://img.shields.io/badge/IDEs-JetBrains-0B7285.svg)](https://plugins.jetbrains.com/plugin/29471-reqrun)
+[![IDE Since](https://img.shields.io/badge/IDE%20since-241-0B7285.svg)](https://plugins.jetbrains.com/plugin/29471-reqrun)
+[![IDE Until](https://img.shields.io/badge/IDE%20until-%2A-0B7285.svg)](https://plugins.jetbrains.com/plugin/29471-reqrun)
+
+[![Main](https://img.shields.io/github/actions/workflow/status/AidarKhusainov/req-run/main.yml?branch=main&label=Main)](https://github.com/AidarKhusainov/req-run/actions/workflows/main.yml)
+[![Qodana](https://img.shields.io/github/actions/workflow/status/AidarKhusainov/req-run/main.yml?branch=main&label=Qodana)](https://github.com/AidarKhusainov/req-run/actions/workflows/main.yml)
+
+[![Release](https://img.shields.io/github/v/release/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/commits)
+[![Stars](https://img.shields.io/github/stars/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/stargazers)
+[![Contributors](https://img.shields.io/github/contributors/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/graphs/contributors)
+[![License](https://img.shields.io/badge/License-MIT%20-6B4E2E.svg)](LICENSE)
 
 <!-- Plugin description -->
 **ReqRun** is a minimal HTTP client for IntelliJ IDEA Community Edition.
