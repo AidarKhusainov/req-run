@@ -94,6 +94,22 @@ Content-Type: text/plain
 --ReqRunBoundary--
 
 ###
+# Multipart form-data without files
+POST {{baseUrl}}/post
+Accept: application/json
+Content-Type: multipart/form-data; boundary=ReqRunBoundary
+
+--ReqRunBoundary
+Content-Disposition: form-data; name="title"
+
+ReqRun Fields
+--ReqRunBoundary
+Content-Disposition: form-data; name="count"
+
+3
+--ReqRunBoundary--
+
+###
 # Raw body
 POST {{baseUrl}}/post
 Accept: application/json
