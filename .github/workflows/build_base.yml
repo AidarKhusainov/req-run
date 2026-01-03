@@ -80,7 +80,7 @@ jobs:
 
       - name: Dependency Check
         if: ${{ inputs.runDependencyCheck }}
-        run: ./gradlew --no-daemon dependencyCheckAnalyze
+        run: ./gradlew --no-daemon --no-configuration-cache dependencyCheckAnalyze
 
       - name: Upload reports
         if: ${{ inputs.uploadArtifacts }}
