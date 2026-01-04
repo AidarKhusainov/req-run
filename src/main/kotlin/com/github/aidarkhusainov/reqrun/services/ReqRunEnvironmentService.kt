@@ -4,9 +4,13 @@ import com.github.aidarkhusainov.reqrun.core.AuthConfig
 import com.github.aidarkhusainov.reqrun.core.AuthScheme
 import com.github.aidarkhusainov.reqrun.core.AuthType
 import com.github.aidarkhusainov.reqrun.notification.ReqRunNotifier
+import com.github.aidarkhusainov.reqrun.settings.ReqRunEnvPathSettings
+import com.github.aidarkhusainov.reqrun.settings.ReqRunProjectEnvPathSettings
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
@@ -14,22 +18,20 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.github.aidarkhusainov.reqrun.settings.ReqRunEnvPathSettings
-import com.github.aidarkhusainov.reqrun.settings.ReqRunProjectEnvPathSettings
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
 @Service(Service.Level.PROJECT)
 @State(name = "ReqRunEnvironmentState", storages = [Storage("reqrun-environment.xml")])
-class ReqRunEnvironmentService(private val project: Project) : PersistentStateComponent<ReqRunEnvironmentService.State> {
+class ReqRunEnvironmentService(
+    private val project: Project,
+) : PersistentStateComponent<ReqRunEnvironmentService.State> {
     data class State(
         var envName: String? = null,
-        var privateIgnoreSuggested: Boolean = false
+        var privateIgnoreSuggested: Boolean = false,
     )
 
     private val log = logger<ReqRunEnvironmentService>()
@@ -86,13 +88,18 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         return "<html>Shared ($scope): $shared<br>Private ($scope): $privatePath</html>"
     }
 
-    fun ensureEnvFile(file: VirtualFile?, isPrivate: Boolean): Path? {
+    @Suppress("ReturnCount")
+    fun ensureEnvFile(
+        file: VirtualFile?,
+        isPrivate: Boolean,
+    ): Path? {
         val paths = resolveEnvFiles(file)
         val target = if (isPrivate) paths.privatePath else paths.sharedPath
-        val resolved = target ?: run {
-            val envDir = resolveEnvironmentDir(file) ?: return null
-            envDir.resolve(if (isPrivate) PRIVATE_ENV_FILE else SHARED_ENV_FILE)
-        }
+        val resolved =
+            target ?: run {
+                val envDir = resolveEnvironmentDir(file) ?: return null
+                envDir.resolve(if (isPrivate) PRIVATE_ENV_FILE else SHARED_ENV_FILE)
+            }
         val finalTarget = resolved
         if (Files.exists(finalTarget)) return finalTarget
         return try {
@@ -140,7 +147,11 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         return result
     }
 
-    private fun loadAuthConfigs(path: Path, envName: String): Map<String, AuthConfig> {
+    @Suppress("ReturnCount")
+    private fun loadAuthConfigs(
+        path: Path,
+        envName: String,
+    ): Map<String, AuthConfig> {
         if (!Files.exists(path)) return emptyMap()
         val json = readJson(path) ?: return emptyMap()
         val envValue = json.get(envName) ?: return emptyMap()
@@ -177,32 +188,31 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         )
     }
 
-    private fun parseScheme(raw: String): AuthScheme? {
-        return when (raw.trim().lowercase()) {
+    private fun parseScheme(raw: String): AuthScheme? =
+        when (raw.trim().lowercase()) {
             "bearer" -> AuthScheme.BEARER
             "basic" -> AuthScheme.BASIC
             "apikey", "api-key", "api_key" -> AuthScheme.API_KEY
             else -> null
         }
-    }
 
-    private fun stringify(value: JsonElement): String {
-        return if (value.isJsonPrimitive) {
+    private fun stringify(value: JsonElement): String =
+        if (value.isJsonPrimitive) {
             value.asJsonPrimitive.asString
         } else {
             value.toString()
         }
-    }
 
     private fun readJson(path: Path): JsonObject? {
         val content = readText(path) ?: return null
-        val parsed = try {
-            JsonParser.parseString(content)
-        } catch (t: Throwable) {
-            log.warn("ReqRun: failed to parse ${path.fileName}", t)
-            notifyJsonError(path, "Failed to parse ${path.fileName}. Check JSON syntax.")
-            return null
-        }
+        val parsed =
+            try {
+                JsonParser.parseString(content)
+            } catch (t: Throwable) {
+                log.warn("ReqRun: failed to parse ${path.fileName}", t)
+                notifyJsonError(path, "Failed to parse ${path.fileName}. Check JSON syntax.")
+                return null
+            }
         if (!parsed.isJsonObject) {
             log.warn("ReqRun: invalid json root in ${path.fileName}")
             notifyJsonError(path, "Invalid JSON in ${path.fileName}. Expected object at root.")
@@ -214,18 +224,19 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
 
     private fun readText(path: Path): String? {
         val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)
-        val documentText = if (vFile != null) {
-            ReadAction.compute<String?, RuntimeException> {
-                val document = FileDocumentManager.getInstance().getDocument(vFile)
-                if (document != null && FileDocumentManager.getInstance().isDocumentUnsaved(document)) {
-                    document.text
-                } else {
-                    null
+        val documentText =
+            if (vFile != null) {
+                ReadAction.compute<String?, RuntimeException> {
+                    val document = FileDocumentManager.getInstance().getDocument(vFile)
+                    if (document != null && FileDocumentManager.getInstance().isDocumentUnsaved(document)) {
+                        document.text
+                    } else {
+                        null
+                    }
                 }
+            } else {
+                null
             }
-        } else {
-            null
-        }
         if (documentText != null) return documentText
         return try {
             Files.readString(path, StandardCharsets.UTF_8)
@@ -234,7 +245,12 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         }
     }
 
-    private fun validateAuthConfig(path: Path, envName: String, id: String, config: AuthConfig) {
+    private fun validateAuthConfig(
+        path: Path,
+        envName: String,
+        id: String,
+        config: AuthConfig,
+    ) {
         val hasToken = !config.token.isNullOrBlank()
         val hasUser = !config.username.isNullOrBlank()
         val hasPass = !config.password.isNullOrBlank()
@@ -243,7 +259,7 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
                 if (hasToken && (hasUser || hasPass)) {
                     warnOnce(
                         key = "auth:${path.normalize()}:$envName:$id:basic",
-                        message = "Auth config '$id' in env '$envName' (${path.fileName}) mixes Token with Username/Password."
+                        message = "Auth config '$id' in env '$envName' (${path.fileName}) mixes Token with Username/Password.",
                     )
                 }
             }
@@ -251,14 +267,19 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
                 if (hasUser || hasPass) {
                     warnOnce(
                         key = "auth:${path.normalize()}:$envName:$id:${config.scheme.name.lowercase()}",
-                        message = "Auth config '$id' in env '$envName' (${path.fileName}) ignores Username/Password for ${config.scheme.name.lowercase()}."
+                        message =
+                            "Auth config '$id' in env '$envName' (${path.fileName}) " +
+                                "ignores Username/Password for ${config.scheme.name.lowercase()}.",
                     )
                 }
             }
         }
     }
 
-    private fun notifyJsonError(path: Path, message: String) {
+    private fun notifyJsonError(
+        path: Path,
+        message: String,
+    ) {
         if (!jsonErrorNotified.add(path.normalize())) return
         ApplicationManager.getApplication().invokeLater {
             if (project.isDisposed) return@invokeLater
@@ -270,7 +291,10 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         jsonErrorNotified.remove(path.normalize())
     }
 
-    private fun warnOnce(key: String, message: String) {
+    private fun warnOnce(
+        key: String,
+        message: String,
+    ) {
         if (!authConfigWarningKeys.add(key)) return
         ApplicationManager.getApplication().invokeLater {
             if (project.isDisposed) return@invokeLater
@@ -304,11 +328,12 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         if (!privatePath.normalize().startsWith(base)) return
         val gitignore = Path.of(basePath, ".gitignore")
         if (!Files.exists(gitignore)) return
-        val content = try {
-            Files.readString(gitignore, StandardCharsets.UTF_8)
-        } catch (_: Throwable) {
-            return
-        }
+        val content =
+            try {
+                Files.readString(gitignore, StandardCharsets.UTF_8)
+            } catch (_: Throwable) {
+                return
+            }
         if (content.contains(privatePath.fileName.toString())) {
             state.privateIgnoreSuggested = true
             return
@@ -317,7 +342,10 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         ReqRunNotifier.warn(project, "Consider adding ${privatePath.fileName} to .gitignore")
     }
 
-    private data class EnvPaths(val sharedPath: Path?, val privatePath: Path?)
+    private data class EnvPaths(
+        val sharedPath: Path?,
+        val privatePath: Path?,
+    )
 
     private fun resolveEnvFiles(file: VirtualFile?): EnvPaths {
         val projectSettings = project.getService(ReqRunProjectEnvPathSettings::class.java)
@@ -336,15 +364,20 @@ class ReqRunEnvironmentService(private val project: Project) : PersistentStateCo
         val envDir = resolveEnvironmentDir(file) ?: return EnvPaths(null, null)
         return EnvPaths(
             envDir.resolve(SHARED_ENV_FILE),
-            envDir.resolve(PRIVATE_ENV_FILE)
+            envDir.resolve(PRIVATE_ENV_FILE),
         )
     }
 
-    private fun resolvePath(path: String?, basePath: String?): Path? {
+    private fun resolvePath(
+        path: String?,
+        basePath: String?,
+    ): Path? {
         val trimmed = path?.trim().orEmpty()
         if (trimmed.isEmpty()) return null
         val p = Path.of(trimmed)
-        return if (p.isAbsolute) p.normalize() else {
+        return if (p.isAbsolute) {
+            p.normalize()
+        } else {
             if (basePath.isNullOrBlank()) p.normalize() else Path.of(basePath, trimmed).normalize()
         }
     }

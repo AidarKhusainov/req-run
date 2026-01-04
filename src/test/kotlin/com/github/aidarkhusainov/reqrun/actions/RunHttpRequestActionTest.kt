@@ -52,7 +52,7 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         assertEquals(NotificationType.WARNING, notifications.single().type)
         assertEquals(
             "Place the caret inside a request block or select text to run.",
-            notifications.single().content
+            notifications.single().content,
         )
     }
 
@@ -61,9 +61,9 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         runner.setExecutorForTests { _, _ ->
             HttpResponsePayload(
                 statusLine = "HTTP/1.1 200 OK",
-                headers = emptyMap(),
+                headers = emptyMap<String, List<String>>(),
                 body = "ok",
-                durationMillis = 1
+                durationMillis = 1,
             )
         }
         myFixture.configureByText("test.http", "GET https://example.com")
@@ -95,9 +95,9 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         myFixture.configureByText(
             "test.http",
             """
-                GET https://example.com
-                Authorization: Bearer {{${'$'}auth.token("bearer")}}
-            """.trimIndent()
+            GET https://example.com
+            Authorization: Bearer {{${'$'}auth.token("bearer")}}
+            """.trimIndent(),
         )
         val action = RunHttpRequestAction()
 
@@ -116,26 +116,27 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.env.json"),
             """
-                {
-                  "local": {
-                    "Security": {
-                      "Auth": {
-                        "basic": { "Type": "Static", "Scheme": "Basic", "Username": "user" }
-                      }
-                    }
+            {
+              "local": {
+                "Security": {
+                  "Auth": {
+                    "basic": { "Type": "Static", "Scheme": "Basic", "Username": "user" }
                   }
                 }
+              }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         myFixture.configureByText(
             "test.http",
             """
-                GET https://example.com
-                Authorization: Basic {{${'$'}auth.token("basic")}}
-            """.trimIndent()
+            GET https://example.com
+            Authorization: Basic {{${'$'}auth.token("basic")}}
+            """.trimIndent(),
         )
-        project.getService(com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService::class.java)
+        project
+            .getService(com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService::class.java)
             .setSelectedEnvironment("local")
         val action = RunHttpRequestAction()
 
@@ -148,7 +149,10 @@ class RunHttpRequestActionTest : BasePlatformTestCase() {
         assertEquals("Auth config 'basic' Password is missing.", notifications.single().content)
     }
 
-    private fun waitForExecutionCount(service: ReqRunExecutionService, expected: Int) {
+    private fun waitForExecutionCount(
+        service: ReqRunExecutionService,
+        expected: Int,
+    ) {
         val deadline = System.currentTimeMillis() + 2_000
         while (System.currentTimeMillis() < deadline) {
             if (service.list().size >= expected) return

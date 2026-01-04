@@ -23,7 +23,8 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
-import java.util.*
+import java.util.UUID
+import java.util.WeakHashMap
 import java.util.concurrent.ConcurrentHashMap
 
 class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
@@ -33,7 +34,7 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
             val descriptors: ConcurrentHashMap<UUID, ExecutionDescriptor>,
         )
 
-        private val caches = java.util.WeakHashMap<Project, ProjectCache>()
+        private val caches = WeakHashMap<Project, ProjectCache>()
         private val popupActions: DefaultActionGroup =
             DefaultActionGroup(createRerunAction(), createClearHistoryAction())
 
@@ -57,33 +58,43 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
                     val project = e.project ?: return
                     val execution = selectedExecution(e) ?: return
                     val spec = execution.request
-                    ProgressManager.getInstance()
-                        .run(object : Task.Backgroundable(project, "Re-running HTTP request", true) {
-                            override fun run(indicator: com.intellij.openapi.progress.ProgressIndicator) {
-                                val runner = project.getService(ReqRunRunner::class.java)
-                                try {
-                                    val result = runner.run(spec, execution.source, indicator)
-                                    runOnUi(project) {
-                                        ServiceViewManager.getInstance(project)
-                                            .select(result.execution, ReqRunServiceContributor::class.java, true, true)
-                                        if (result.status == ReqRunRunner.Status.ERROR) {
-                                            ReqRunNotifier.error(
-                                                project,
-                                                "Request failed: ${result.execution.error ?: "unknown error"}"
-                                            )
+                    ProgressManager
+                        .getInstance()
+                        .run(
+                            object : Task.Backgroundable(project, "Re-running HTTP request", true) {
+                                override fun run(indicator: com.intellij.openapi.progress.ProgressIndicator) {
+                                    val runner = project.getService(ReqRunRunner::class.java)
+                                    try {
+                                        val result = runner.run(spec, execution.source, indicator)
+                                        runOnUi(project) {
+                                            ServiceViewManager
+                                                .getInstance(project)
+                                                .select(
+                                                    result.execution,
+                                                    ReqRunServiceContributor::class.java,
+                                                    true,
+                                                    true,
+                                                )
+                                            if (result.status == ReqRunRunner.Status.ERROR) {
+                                                ReqRunNotifier.error(
+                                                    project,
+                                                    "Request failed: ${result.execution.error ?: "unknown error"}",
+                                                )
+                                            }
                                         }
+                                    } catch (t: ProcessCanceledException) {
+                                        val exec = runner.addCancelledExecution(spec, execution.source)
+                                        runOnUi(project) {
+                                            ReqRunNotifier.info(project, "Request cancelled")
+                                            ServiceViewManager
+                                                .getInstance(project)
+                                                .select(exec, ReqRunServiceContributor::class.java, true, true)
+                                        }
+                                        throw t
                                     }
-                                } catch (t: ProcessCanceledException) {
-                                    val exec = runner.addCancelledExecution(spec, execution.source)
-                                    runOnUi(project) {
-                                        ReqRunNotifier.info(project, "Request cancelled")
-                                        ServiceViewManager.getInstance(project)
-                                            .select(exec, ReqRunServiceContributor::class.java, true, true)
-                                    }
-                                    throw t
                                 }
-                            }
-                        })
+                            },
+                        )
                 }
             }
 
@@ -106,7 +117,10 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
             }
 
         private fun selectedExecution(e: AnActionEvent): ReqRunExecution? =
-            ServiceViewActionUtils.getTarget(e, ReqRunExecution::class.java)
+            ServiceViewActionUtils.getTarget(
+                e,
+                ReqRunExecution::class.java,
+            )
 
         private fun clearCache(project: Project) {
             synchronized(caches) {
@@ -114,7 +128,10 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
             }
         }
 
-        fun evict(project: Project, ids: Collection<UUID>) {
+        fun evict(
+            project: Project,
+            ids: Collection<UUID>,
+        ) {
             synchronized(caches) {
                 val cache = caches[project] ?: return
                 ids.forEach {
@@ -124,7 +141,10 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
             }
         }
 
-        private fun runOnUi(project: Project, action: () -> Unit) {
+        private fun runOnUi(
+            project: Project,
+            action: () -> Unit,
+        ) {
             ApplicationManager.getApplication().invokeLater({
                 if (project.isDisposed) return@invokeLater
                 action()
@@ -133,12 +153,21 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
     }
 
     override fun getViewDescriptor(project: Project): ServiceViewDescriptor =
-        SimpleDescriptor("Request Run", ReqRunIcons.Api, null)
+        SimpleDescriptor(
+            "Request Run",
+            ReqRunIcons.Api,
+            null,
+        )
 
     override fun getServices(project: Project): List<ReqRunExecution> =
-        project.getService(ReqRunExecutionService::class.java).list()
+        project
+            .getService(ReqRunExecutionService::class.java)
+            .list()
 
-    override fun getServiceDescriptor(project: Project, service: ReqRunExecution): ServiceViewDescriptor {
+    override fun getServiceDescriptor(
+        project: Project,
+        service: ReqRunExecution,
+    ): ServiceViewDescriptor {
         val cache = cacheFor(project)
         val viewer = cache.viewers.computeIfAbsent(service.id) { ResponseViewer(project, service) }
         return cache.descriptors.computeIfAbsent(service.id) {
@@ -148,17 +177,19 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
             }
         }
     }
-
 }
 
 internal open class SimpleDescriptor(
     private val text: String,
     private val icon: javax.swing.Icon?,
-    private val content: javax.swing.JComponent?
+    private val content: javax.swing.JComponent?,
 ) : ServiceViewDescriptor {
     override fun getPresentation(): ItemPresentation = PresentationData(text, null, icon, null)
+
     override fun getContentComponent(): javax.swing.JComponent? = content
+
     override fun getId(): String = text
+
     override fun isVisible(): Boolean = true
 }
 
@@ -167,7 +198,7 @@ private class ExecutionDescriptor(
     private val execution: ReqRunExecution,
     private val viewer: ResponseViewer,
     private val popupActions: DefaultActionGroup,
-    private val removeViewer: () -> Unit
+    private val removeViewer: () -> Unit,
 ) : ServiceViewDescriptor {
     private val historySettings = ApplicationManager.getApplication().getService(ReqRunHistorySettings::class.java)
 
@@ -176,32 +207,34 @@ private class ExecutionDescriptor(
             "${execution.request.method} ${formatUrl(execution.request.url)}",
             null,
             null,
-            null
+            null,
         )
 
-    override fun getContentComponent(): javax.swing.JComponent =
-        viewer.component
+    override fun getContentComponent(): javax.swing.JComponent = viewer.component
 
     override fun getId(): String = execution.id.toString()
+
     override fun isVisible(): Boolean = true
 
     override fun getToolbarActions(): com.intellij.openapi.actionSystem.ActionGroup? = null
 
-    override fun getPopupActions(): com.intellij.openapi.actionSystem.ActionGroup =
-        popupActions
+    override fun getPopupActions(): com.intellij.openapi.actionSystem.ActionGroup = popupActions
 
     override fun getNavigatable(): Navigatable? {
         val source = execution.source ?: return null
         return OpenFileDescriptor(project, source.file, source.offset)
     }
 
-    override fun getRemover(): Runnable = Runnable {
-        val removed = project.getService(ReqRunExecutionService::class.java)
-            .removeExecution(execution.id)
-        if (removed) {
-            removeViewer()
+    override fun getRemover(): Runnable =
+        Runnable {
+            val removed =
+                project
+                    .getService(ReqRunExecutionService::class.java)
+                    .removeExecution(execution.id)
+            if (removed) {
+                removeViewer()
+            }
         }
-    }
 
     private fun formatUrl(url: String): String {
         if (!historySettings.state.shortenHistoryUrls) return url
@@ -222,9 +255,10 @@ private class ExecutionDescriptor(
     }
 
     private fun stripHostFallback(url: String): String {
-        val schemeIndex = url.indexOf("://")
+        val schemeSeparator = "://"
+        val schemeIndex = url.indexOf(schemeSeparator)
         if (schemeIndex == -1) return url
-        val pathStart = url.indexOf('/', schemeIndex + 3)
+        val pathStart = url.indexOf('/', schemeIndex + schemeSeparator.length)
         return if (pathStart == -1) "/" else url.substring(pathStart)
     }
 }

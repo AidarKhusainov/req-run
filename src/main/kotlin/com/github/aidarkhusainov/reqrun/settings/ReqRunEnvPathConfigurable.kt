@@ -1,20 +1,22 @@
 package com.github.aidarkhusainov.reqrun.settings
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.ui.TextBrowseFolderListener
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
-import javax.swing.JPanel
-import javax.swing.JComponent
 import javax.swing.JCheckBox
+import javax.swing.JComponent
+import javax.swing.JPanel
 
-class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
+class ReqRunEnvPathConfigurable(
+    private val project: Project,
+) : Configurable {
     private val scopeBox = ComboBox(arrayOf("Global", "Project"))
     private val sharedField = TextFieldWithBrowseButton()
     private val privateField = TextFieldWithBrowseButton()
@@ -25,25 +27,30 @@ class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
 
     override fun createComponent(): JComponent {
         if (component == null) {
-            val sharedDescriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor().apply {
-                title = "Select shared env file"
-            }
-            val privateDescriptor = FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor().apply {
-                title = "Select private env file"
-            }
+            val sharedDescriptor =
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor().apply {
+                    title = "Select shared env file"
+                }
+            val privateDescriptor =
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor().apply {
+                    title = "Select private env file"
+                }
             sharedField.addBrowseFolderListener(TextBrowseFolderListener(sharedDescriptor, project))
             privateField.addBrowseFolderListener(TextBrowseFolderListener(privateDescriptor, project))
             scopeBox.addActionListener { loadFields() }
-            val form = FormBuilder.createFormBuilder()
-                .addLabeledComponent("Scope:", scopeBox)
-                .addLabeledComponent("Shared env file:", sharedField)
-                .addLabeledComponent("Private env file:", privateField)
-                .addComponent(shortenHistoryUrls)
-                .panel
-            component = JPanel(BorderLayout()).apply {
-                border = JBUI.Borders.empty(10, 12)
-                add(form, BorderLayout.NORTH)
-            }
+            val form =
+                FormBuilder
+                    .createFormBuilder()
+                    .addLabeledComponent("Scope:", scopeBox)
+                    .addLabeledComponent("Shared env file:", sharedField)
+                    .addLabeledComponent("Private env file:", privateField)
+                    .addComponent(shortenHistoryUrls)
+                    .panel
+            component =
+                JPanel(BorderLayout()).apply {
+                    border = JBUI.Borders.empty(10, 12)
+                    add(form, BorderLayout.NORTH)
+                }
         }
         return component!!
     }
@@ -100,12 +107,11 @@ class ReqRunEnvPathConfigurable(private val project: Project) : Configurable {
     private fun currentStoredValues(
         projectScopeSelected: Boolean,
         projectSettings: ReqRunProjectEnvPathSettings,
-        globalSettings: ReqRunEnvPathSettings
-    ): Pair<String?, String?> {
-        return if (projectScopeSelected) {
+        globalSettings: ReqRunEnvPathSettings,
+    ): Pair<String?, String?> =
+        if (projectScopeSelected) {
             projectSettings.state.sharedPath to projectSettings.state.privatePath
         } else {
             globalSettings.state.sharedPath to globalSettings.state.privatePath
         }
-    }
 }

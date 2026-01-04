@@ -14,8 +14,9 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 
-class AddAuthConfigAction(private val isPrivate: Boolean) :
-    AnAction(if (isPrivate) "Auth in Private File" else "Auth in Public File"),
+class AddAuthConfigAction(
+    private val isPrivate: Boolean,
+) : AnAction(if (isPrivate) "Auth in Private File" else "Auth in Public File"),
     DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
@@ -45,31 +46,43 @@ class AddAuthConfigAction(private val isPrivate: Boolean) :
         }
     }
 
-    private data class UpdateResult(val text: String, val caretOffset: Int)
+    private data class UpdateResult(
+        val text: String,
+        val caretOffset: Int,
+    )
 
-    private fun addAuthConfig(text: String, envName: String): UpdateResult {
+    private fun addAuthConfig(
+        text: String,
+        envName: String,
+    ): UpdateResult {
         val root = parseRoot(text)
-        val envObj = if (root.has(envName) && root.get(envName).isJsonObject) {
-            root.getAsJsonObject(envName)
-        } else {
-            JsonObject().also { root.add(envName, it) }
-        }
-        val securityObj = if (envObj.has("Security") && envObj.get("Security").isJsonObject) {
-            envObj.getAsJsonObject("Security")
-        } else {
-            JsonObject().also { envObj.add("Security", it) }
-        }
-        val authObj = if (securityObj.has("Auth") && securityObj.get("Auth").isJsonObject) {
-            securityObj.getAsJsonObject("Auth")
-        } else {
-            JsonObject().also { securityObj.add("Auth", it) }
-        }
+        val envObj =
+            if (root.has(envName) && root.get(envName).isJsonObject) {
+                root.getAsJsonObject(envName)
+            } else {
+                JsonObject().also { root.add(envName, it) }
+            }
+        val securityObj =
+            if (envObj.has("Security") && envObj.get("Security").isJsonObject) {
+                envObj.getAsJsonObject("Security")
+            } else {
+                JsonObject().also { envObj.add("Security", it) }
+            }
+        val authObj =
+            if (securityObj.has("Auth") && securityObj.get("Auth").isJsonObject) {
+                securityObj.getAsJsonObject("Auth")
+            } else {
+                JsonObject().also { securityObj.add("Auth", it) }
+            }
         val key = nextKey(authObj, "auth")
-        authObj.add(key, JsonObject().apply {
-            addProperty("Type", "Static")
-            addProperty("Scheme", "Bearer")
-            addProperty("Token", "{{token}}")
-        })
+        authObj.add(
+            key,
+            JsonObject().apply {
+                addProperty("Type", "Static")
+                addProperty("Scheme", "Bearer")
+                addProperty("Token", "{{token}}")
+            },
+        )
 
         val gson = GsonBuilder().setPrettyPrinting().create()
         val updatedText = gson.toJson(root) + "\n"
@@ -78,16 +91,18 @@ class AddAuthConfigAction(private val isPrivate: Boolean) :
         return UpdateResult(updatedText, caret)
     }
 
-    private fun parseRoot(text: String): JsonObject {
-        return try {
+    private fun parseRoot(text: String): JsonObject =
+        try {
             val parsed = JsonParser.parseString(text)
             if (parsed.isJsonObject) parsed.asJsonObject else JsonObject()
         } catch (_: Throwable) {
             JsonObject()
         }
-    }
 
-    private fun nextKey(obj: JsonObject, base: String): String {
+    private fun nextKey(
+        obj: JsonObject,
+        base: String,
+    ): String {
         if (!obj.has(base)) return base
         var index = 1
         while (true) {

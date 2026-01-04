@@ -1,6 +1,7 @@
 package com.github.aidarkhusainov.reqrun.services
 
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
 import com.intellij.execution.services.ServiceEventListener
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -16,12 +17,13 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
         val service = project.getService(ReqRunExecutionService::class.java)
         assertEquals(0, service.list().size)
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val exec = service.addExecution(request, null, "boom")
         val listAfterAdd = service.list()
@@ -38,12 +40,13 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
 
     fun testClearAll() {
         val service = project.getService(ReqRunExecutionService::class.java)
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         repeat(3) {
             service.addExecution(request, null, "boom")
@@ -57,12 +60,13 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
 
     fun testHistoryLimit() {
         val service = project.getService(ReqRunExecutionService::class.java)
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val first = service.addExecution(request, null, "first")
         repeat(205) {
@@ -78,15 +82,16 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
         val eventCount = AtomicInteger(0)
         project.messageBus.connect(testRootDisposable).subscribe(
             ServiceEventListener.TOPIC,
-            ServiceEventListener { eventCount.incrementAndGet() }
+            ServiceEventListener { eventCount.incrementAndGet() },
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
         val exec = service.addExecution(request, null, "boom")
         waitForEventCount(eventCount, 1)
 
@@ -100,7 +105,10 @@ class ReqRunExecutionServiceTest : BasePlatformTestCase() {
         waitForEventCount(eventCount, 4)
     }
 
-    private fun waitForEventCount(counter: AtomicInteger, expected: Int) {
+    private fun waitForEventCount(
+        counter: AtomicInteger,
+        expected: Int,
+    ) {
         val deadline = System.currentTimeMillis() + 2_000
         while (System.currentTimeMillis() < deadline) {
             PlatformTestUtil.dispatchAllEventsInIdeEventQueue()

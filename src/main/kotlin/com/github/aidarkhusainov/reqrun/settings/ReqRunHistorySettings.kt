@@ -7,12 +7,12 @@ import com.intellij.openapi.components.Storage
 
 @State(
     name = "ReqRunHistorySettings",
-    storages = [Storage("reqrun.xml")]
+    storages = [Storage("reqrun.xml")],
 )
 @Service(Service.Level.APP)
 class ReqRunHistorySettings : PersistentStateComponent<ReqRunHistorySettings.State> {
     data class State(
-        var shortenHistoryUrls: Boolean = true
+        var shortenHistoryUrls: Boolean = true,
     )
 
     private var state = State()

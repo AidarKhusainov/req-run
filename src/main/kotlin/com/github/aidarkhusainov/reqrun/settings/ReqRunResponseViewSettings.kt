@@ -7,7 +7,7 @@ import com.intellij.openapi.components.Storage
 
 @State(
     name = "ReqRunResponseViewSettings",
-    storages = [Storage("reqrun.xml")]
+    storages = [Storage("reqrun.xml")],
 )
 @Service(Service.Level.APP)
 class ReqRunResponseViewSettings : PersistentStateComponent<ReqRunResponseViewSettings.State> {
@@ -15,7 +15,7 @@ class ReqRunResponseViewSettings : PersistentStateComponent<ReqRunResponseViewSe
         var showLineNumbers: Boolean = true,
         var showRequestMethod: Boolean = true,
         var foldHeadersByDefault: Boolean = true,
-        var viewMode: ResponseViewMode = ResponseViewMode.AUTO
+        var viewMode: ResponseViewMode = ResponseViewMode.AUTO,
     )
 
     private var state = State()
@@ -32,5 +32,5 @@ enum class ResponseViewMode {
     TEXT,
     JSON,
     XML,
-    HTML
+    HTML,
 }

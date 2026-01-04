@@ -6,7 +6,9 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAware
 
-class RunAllRequestsToolbarAction : AnAction("Run All Requests", null, AllIcons.Actions.Execute), DumbAware {
+class RunAllRequestsToolbarAction :
+    AnAction("Run All Requests", null, AllIcons.Actions.Execute),
+    DumbAware {
     private val delegate = RunHttpRequestsGroupAction()
 
     override fun getActionUpdateThread(): ActionUpdateThread = delegate.actionUpdateThread

@@ -12,7 +12,7 @@ class ReqRunProjectEnvPathSettings : PersistentStateComponent<ReqRunProjectEnvPa
     data class State(
         var useProjectPaths: Boolean = false,
         var sharedPath: String? = null,
-        var privatePath: String? = null
+        var privatePath: String? = null,
     )
 
     private var state = State()

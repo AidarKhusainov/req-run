@@ -1,9 +1,9 @@
 package com.github.aidarkhusainov.reqrun.services
 
-import com.github.aidarkhusainov.reqrun.testutil.clearReqRunNotifications
-import com.github.aidarkhusainov.reqrun.testutil.collectReqRunNotifications
 import com.github.aidarkhusainov.reqrun.core.AuthScheme
 import com.github.aidarkhusainov.reqrun.core.AuthType
+import com.github.aidarkhusainov.reqrun.testutil.clearReqRunNotifications
+import com.github.aidarkhusainov.reqrun.testutil.collectReqRunNotifications
 import com.intellij.notification.NotificationType
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -25,22 +25,22 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.env.json"),
             """
-                {
-                  "local": { "baseUrl": "https://shared", "token": "shared" },
-                  "stage": { "baseUrl": "https://stage" }
-                }
+            {
+              "local": { "baseUrl": "https://shared", "token": "shared" },
+              "stage": { "baseUrl": "https://stage" }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         Files.writeString(
             basePath.resolve("http-client.private.env.json"),
             """
-                {
-                  "local": { "token": "private", "secret": 42 },
-                  "dev": { "flag": true }
-                }
+            {
+              "local": { "token": "private", "secret": 42 },
+              "dev": { "flag": true }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET {{baseUrl}}").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -62,7 +62,7 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.private.env.json"),
             "{ \"local\": {} }\n",
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET https://example.com").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -75,7 +75,7 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         assertEquals(NotificationType.WARNING, notifications.single().type)
         assertEquals(
             "Consider adding http-client.private.env.json to .gitignore",
-            notifications.single().content
+            notifications.single().content,
         )
     }
 
@@ -84,35 +84,35 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.env.json"),
             """
-                {
-                  "local": {
-                    "baseUrl": "https://shared",
-                    "Security": {
-                      "Auth": {
-                        "bearer": { "Type": "Static", "Scheme": "Bearer", "Token": "{{token}}" },
-                        "basic": { "Type": "Static", "Scheme": "Basic", "Username": "user", "Password": "pass" }
-                      }
-                    }
+            {
+              "local": {
+                "baseUrl": "https://shared",
+                "Security": {
+                  "Auth": {
+                    "bearer": { "Type": "Static", "Scheme": "Bearer", "Token": "{{token}}" },
+                    "basic": { "Type": "Static", "Scheme": "Basic", "Username": "user", "Password": "pass" }
                   }
                 }
+              }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         Files.writeString(
             basePath.resolve("http-client.private.env.json"),
             """
-                {
-                  "local": {
-                    "Security": {
-                      "Auth": {
-                        "bearer": { "Type": "Static", "Scheme": "Bearer", "Token": "private" },
-                        "api": { "Type": "Static", "Scheme": "ApiKey", "Token": "secret" }
-                      }
-                    }
+            {
+              "local": {
+                "Security": {
+                  "Auth": {
+                    "bearer": { "Type": "Static", "Scheme": "Bearer", "Token": "private" },
+                    "api": { "Type": "Static", "Scheme": "ApiKey", "Token": "secret" }
                   }
                 }
+              }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET {{baseUrl}}").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -137,19 +137,19 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.env.json"),
             """
-                {
-                  "local": {
-                    "Security": {
-                      "Auth": {
-                        "api1": { "Type": "Static", "Scheme": "ApiKey", "Token": "a" },
-                        "api2": { "Type": "Static", "Scheme": "api-key", "Token": "b" },
-                        "api3": { "Type": "Static", "Scheme": "API_KEY", "Token": "c" }
-                      }
-                    }
+            {
+              "local": {
+                "Security": {
+                  "Auth": {
+                    "api1": { "Type": "Static", "Scheme": "ApiKey", "Token": "a" },
+                    "api2": { "Type": "Static", "Scheme": "api-key", "Token": "b" },
+                    "api3": { "Type": "Static", "Scheme": "API_KEY", "Token": "c" }
                   }
                 }
+              }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET https://example.com").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -167,7 +167,7 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve(".gitignore"),
             "http-client.private.env.json\n",
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET https://example.com").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -184,7 +184,7 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.env.json"),
             "{ invalid json }",
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET https://example.com").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -198,7 +198,7 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         assertEquals(NotificationType.WARNING, notifications.single().type)
         assertEquals(
             "Failed to parse http-client.env.json. Check JSON syntax.",
-            notifications.single().content
+            notifications.single().content,
         )
     }
 
@@ -207,22 +207,22 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         Files.writeString(
             basePath.resolve("http-client.env.json"),
             """
-                {
-                  "local": {
-                    "Security": {
-                      "Auth": {
-                        "basic": {
-                          "Type": "Static",
-                          "Scheme": "Basic",
-                          "Token": "abc",
-                          "Username": "user"
-                        }
-                      }
+            {
+              "local": {
+                "Security": {
+                  "Auth": {
+                    "basic": {
+                      "Type": "Static",
+                      "Scheme": "Basic",
+                      "Token": "abc",
+                      "Username": "user"
                     }
                   }
                 }
+              }
+            }
             """.trimIndent(),
-            StandardCharsets.UTF_8
+            StandardCharsets.UTF_8,
         )
         val file = myFixture.configureByText("test.http", "GET https://example.com").virtualFile
         val service = project.getService(ReqRunEnvironmentService::class.java)
@@ -237,7 +237,7 @@ class ReqRunEnvironmentServiceTest : BasePlatformTestCase() {
         assertEquals(NotificationType.WARNING, notifications.single().type)
         assertEquals(
             "Auth config 'basic' in env 'local' (http-client.env.json) mixes Token with Username/Password.",
-            notifications.single().content
+            notifications.single().content,
         )
     }
 

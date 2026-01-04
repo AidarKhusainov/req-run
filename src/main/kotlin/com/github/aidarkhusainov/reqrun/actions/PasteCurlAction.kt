@@ -11,7 +11,9 @@ import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.DumbAware
 import java.awt.datatransfer.DataFlavor
 
-class PasteCurlAction : AnAction("Paste cURL"), DumbAware {
+class PasteCurlAction :
+    AnAction("Paste cURL"),
+    DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
     override fun update(e: AnActionEvent) {

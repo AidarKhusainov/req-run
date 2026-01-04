@@ -8,7 +8,9 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.DumbAware
 
-class InsertFileUploadRequestTemplateAction : AnAction("POST (File)"), DumbAware {
+class InsertFileUploadRequestTemplateAction :
+    AnAction("POST (File)"),
+    DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
     override fun update(e: AnActionEvent) {
@@ -23,11 +25,12 @@ class InsertFileUploadRequestTemplateAction : AnAction("POST (File)"), DumbAware
         val template = buildTemplate()
         val document = editor.document
         val insertionOffset = findInsertionOffset(document)
-        val insertText = if (insertionOffset < document.textLength) {
-            template.trimEnd() + "\n\n###\n\n"
-        } else {
-            template.trimEnd() + "\n\n"
-        }
+        val insertText =
+            if (insertionOffset < document.textLength) {
+                template.trimEnd() + "\n\n###\n\n"
+            } else {
+                template.trimEnd() + "\n\n"
+            }
         WriteCommandAction.runWriteCommandAction(project) {
             document.insertString(insertionOffset, insertText)
             editor.caretModel.moveToOffset(insertionOffset + "POST ".length)
@@ -37,32 +40,33 @@ class InsertFileUploadRequestTemplateAction : AnAction("POST (File)"), DumbAware
         ReqRunNotifier.info(project, "Inserted POST (File) request template")
     }
 
-    private fun buildTemplate(): String {
-        return """
-            POST https://example.com/upload
-            Content-Type: multipart/form-data; boundary=WebAppBoundary
-            Accept: application/json
+    private fun buildTemplate(): String =
+        """
+        POST https://example.com/upload
+        Content-Type: multipart/form-data; boundary=WebAppBoundary
+        Accept: application/json
 
-            --WebAppBoundary
-            Content-Disposition: form-data; name="field-name"; filename="file.txt"
+        --WebAppBoundary
+        Content-Disposition: form-data; name="field-name"; filename="file.txt"
 
-            < ./relative/path/to/local_file.txt
-            --WebAppBoundary--
+        < ./relative/path/to/local_file.txt
+        --WebAppBoundary--
         """.trimIndent() + "\n"
-    }
 
+    @Suppress("LoopWithTooManyJumpStatements")
     private fun findInsertionOffset(document: com.intellij.openapi.editor.Document): Int {
         val text = document.text
         if (text.isBlank()) return 0
         val lineCount = document.lineCount
         var lastPreludeLine = -1
         for (line in 0 until lineCount) {
-            val lineText = document.getText(
-                com.intellij.openapi.util.TextRange(
-                    document.getLineStartOffset(line),
-                    document.getLineEndOffset(line)
+            val lineText =
+                document.getText(
+                    com.intellij.openapi.util.TextRange(
+                        document.getLineStartOffset(line),
+                        document.getLineEndOffset(line),
+                    ),
                 )
-            )
             val trimmed = lineText.trim()
             if (trimmed.isEmpty() || isVariableDefinition(trimmed)) {
                 lastPreludeLine = line
@@ -77,7 +81,5 @@ class InsertFileUploadRequestTemplateAction : AnAction("POST (File)"), DumbAware
         }
     }
 
-    private fun isVariableDefinition(line: String): Boolean {
-        return line.startsWith("@") && line.contains("=")
-    }
+    private fun isVariableDefinition(line: String): Boolean = line.startsWith("@") && line.contains("=")
 }

@@ -4,8 +4,8 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 object StaticAuthTokenResolver {
-    fun createResolver(configs: Map<String, AuthConfig>): AuthTokenResolver {
-        return object : AuthTokenResolver {
+    fun createResolver(configs: Map<String, AuthConfig>): AuthTokenResolver =
+        object : AuthTokenResolver {
             override fun resolveToken(
                 id: String,
                 variables: Map<String, String>,
@@ -18,7 +18,6 @@ object StaticAuthTokenResolver {
                 builtins: Map<String, String>,
             ): String? = resolveHeader(id, configs, variables, builtins)
         }
-    }
 
     fun resolveToken(
         id: String,
@@ -30,7 +29,8 @@ object StaticAuthTokenResolver {
         if (config.type != AuthType.STATIC) return null
         return when (config.scheme) {
             AuthScheme.BEARER,
-            AuthScheme.API_KEY -> resolvedValue(config.token, variables, builtins)
+            AuthScheme.API_KEY,
+            -> resolvedValue(config.token, variables, builtins)
             AuthScheme.BASIC -> resolveBasicToken(config, variables, builtins)
         }
     }
@@ -44,13 +44,15 @@ object StaticAuthTokenResolver {
         val config = configs[id] ?: return null
         if (config.type != AuthType.STATIC) return null
         val token = resolveToken(id, configs, variables, builtins) ?: return null
-        val headerName = resolvedValue(config.header, variables, builtins)
-            ?: defaultHeaderName(config.scheme)
-        val headerValue = when (config.scheme) {
-            AuthScheme.BEARER -> withPrefix("Bearer", token)
-            AuthScheme.BASIC -> withPrefix("Basic", token)
-            AuthScheme.API_KEY -> token
-        }
+        val headerName =
+            resolvedValue(config.header, variables, builtins)
+                ?: defaultHeaderName(config.scheme)
+        val headerValue =
+            when (config.scheme) {
+                AuthScheme.BEARER -> withPrefix("Bearer", token)
+                AuthScheme.BASIC -> withPrefix("Basic", token)
+                AuthScheme.API_KEY -> token
+            }
         return "$headerName: $headerValue"
     }
 
@@ -73,10 +75,11 @@ object StaticAuthTokenResolver {
                     val userOk = userInfo.value != null && userInfo.unresolved.isEmpty()
                     val passOk = passInfo.value != null && passInfo.unresolved.isEmpty()
                     if (userOk && passOk) return null
-                    val issues = listOfNotNull(
-                        tokenIssue("Username", userInfo),
-                        tokenIssue("Password", passInfo)
-                    )
+                    val issues =
+                        listOfNotNull(
+                            tokenIssue("Username", userInfo),
+                            tokenIssue("Password", passInfo),
+                        )
                     "Auth config '$id' " + issues.joinToString(" ")
                 }
             }
@@ -111,8 +114,11 @@ object StaticAuthTokenResolver {
         return FieldInfo(trimmed.takeIf { it.isNotEmpty() }, unresolved)
     }
 
-    private fun tokenIssue(label: String, info: FieldInfo): String? {
-        return when {
+    private fun tokenIssue(
+        label: String,
+        info: FieldInfo,
+    ): String? =
+        when {
             info.value == null && info.unresolved.isEmpty() -> "$label is missing."
             info.unresolved.isNotEmpty() -> {
                 val formatted = VariableResolver.formatUnresolved(info.unresolved)
@@ -121,16 +127,17 @@ object StaticAuthTokenResolver {
             info.value != null -> null
             else -> "$label is empty."
         }
-    }
 
-    private fun defaultHeaderName(scheme: AuthScheme): String {
-        return when (scheme) {
+    private fun defaultHeaderName(scheme: AuthScheme): String =
+        when (scheme) {
             AuthScheme.BEARER, AuthScheme.BASIC -> "Authorization"
             AuthScheme.API_KEY -> "X-API-Key"
         }
-    }
 
-    private fun withPrefix(prefix: String, token: String): String {
+    private fun withPrefix(
+        prefix: String,
+        token: String,
+    ): String {
         val trimmed = token.trimStart()
         return if (trimmed.startsWith(prefix, ignoreCase = true)) token else "$prefix $token"
     }
@@ -144,5 +151,8 @@ object StaticAuthTokenResolver {
         return resolved?.takeIf { it.isNotEmpty() }
     }
 
-    private data class FieldInfo(val value: String?, val unresolved: Set<String>)
+    private data class FieldInfo(
+        val value: String?,
+        val unresolved: Set<String>,
+    )
 }

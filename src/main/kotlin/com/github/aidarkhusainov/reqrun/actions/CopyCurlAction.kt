@@ -16,7 +16,9 @@ import com.intellij.openapi.project.DumbAware
 import java.awt.datatransfer.StringSelection
 import java.nio.file.Path
 
-class CopyCurlAction : AnAction("Copy as cURL"), DumbAware {
+class CopyCurlAction :
+    AnAction("Copy as cURL"),
+    DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
     override fun update(e: AnActionEvent) {
@@ -56,26 +58,37 @@ class CopyCurlAction : AnAction("Copy as cURL"), DumbAware {
             val authHeaderIds = unresolved.mapNotNull { VariableResolver.extractAuthHeaderId(it) }.toSet()
             val authIds = authTokenIds + authHeaderIds
             val missingAuth = authIds.filterNot { authConfigs.containsKey(it) }.toSet()
-            val authPlaceholders = unresolved.filter {
-                VariableResolver.extractAuthTokenId(it) != null || VariableResolver.extractAuthHeaderId(it) != null
-            }.toSet()
+            val authPlaceholders =
+                unresolved
+                    .filter {
+                        VariableResolver.extractAuthTokenId(it) != null ||
+                            VariableResolver.extractAuthHeaderId(it) != null
+                    }.toSet()
             val unresolvedVars = unresolved - authPlaceholders
             val builtins = VariableResolver.builtins()
-            val authIssues = authIds
-                .filterNot { missingAuth.contains(it) }
-                .mapNotNull { StaticAuthTokenResolver.describeAuthIssue(it, authConfigs, envVariables + fileVariables, builtins) }
-                .distinct()
+            val authIssues =
+                authIds
+                    .filterNot { missingAuth.contains(it) }
+                    .mapNotNull {
+                        StaticAuthTokenResolver.describeAuthIssue(
+                            it,
+                            authConfigs,
+                            envVariables + fileVariables,
+                            builtins,
+                        )
+                    }.distinct()
             val messages = mutableListOf<String>()
             if (missingAuth.isNotEmpty()) {
                 val label = if (missingAuth.size == 1) "Missing auth config: " else "Missing auth configs: "
                 messages += label + missingAuth.sorted().joinToString(", ")
             }
             if (authIssues.isNotEmpty()) {
-                val message = if (authIssues.size == 1) {
-                    authIssues.single()
-                } else {
-                    "Auth config issues: " + authIssues.sorted().joinToString("; ")
-                }
+                val message =
+                    if (authIssues.size == 1) {
+                        authIssues.single()
+                    } else {
+                        "Auth config issues: " + authIssues.sorted().joinToString("; ")
+                    }
                 messages += message
             }
             if (unresolvedVars.isNotEmpty()) {

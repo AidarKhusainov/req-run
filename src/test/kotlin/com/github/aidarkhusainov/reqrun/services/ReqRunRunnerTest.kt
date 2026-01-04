@@ -2,6 +2,7 @@ package com.github.aidarkhusainov.reqrun.services
 
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
@@ -19,9 +20,9 @@ class ReqRunRunnerTest : BasePlatformTestCase() {
         runner.setExecutorForTests { _, _ ->
             HttpResponsePayload(
                 statusLine = "HTTP/1.1 200 OK",
-                headers = emptyMap(),
+                headers = emptyMap<String, List<String>>(),
                 body = "ok",
-                durationMillis = 1
+                durationMillis = 1,
             )
         }
         val spec = requestSpec()
@@ -38,9 +39,10 @@ class ReqRunRunnerTest : BasePlatformTestCase() {
         runner.setExecutorForTests { _, _ -> throw ProcessCanceledException() }
         val spec = requestSpec()
 
-        val ex = assertThrows(ProcessCanceledException::class.java) {
-            runner.run(spec, null, null)
-        }
+        val ex =
+            assertThrows(ProcessCanceledException::class.java) {
+                runner.run(spec, null, null)
+            }
         assertNotNull(ex)
     }
 
@@ -60,8 +62,7 @@ class ReqRunRunnerTest : BasePlatformTestCase() {
         HttpRequestSpec(
             method = "GET",
             url = "https://example.com",
-            headers = emptyMap(),
-            body = null
+            headers = emptyMap<String, String>(),
+            body = null as RequestBodySpec?,
         )
-
 }

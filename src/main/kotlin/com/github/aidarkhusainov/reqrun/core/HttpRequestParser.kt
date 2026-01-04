@@ -14,14 +14,19 @@ import java.nio.file.Path
 object HttpRequestParser {
     private val requestLinePattern = Regex("^[A-Za-z]+\\s+\\S+.*$")
 
-    fun parse(raw: String, baseDir: Path? = null): HttpRequestSpec? {
+    @Suppress("CyclomaticComplexMethod", "LongMethod", "NestedBlockDepth", "ReturnCount")
+    fun parse(
+        raw: String,
+        baseDir: Path? = null,
+    ): HttpRequestSpec? {
         if (raw.isBlank()) return null
 
         val lines = raw.lines()
-        val requestIndex = lines.indexOfFirst { line ->
-            val trimmed = line.trim()
-            trimmed.isNotEmpty() && !isComment(trimmed) && requestLinePattern.matches(trimmed)
-        }
+        val requestIndex =
+            lines.indexOfFirst { line ->
+                val trimmed = line.trim()
+                trimmed.isNotEmpty() && !isComment(trimmed) && requestLinePattern.matches(trimmed)
+            }
         if (requestIndex == -1) return null
 
         val requestLine = lines[requestIndex].trim()
@@ -120,13 +125,17 @@ object HttpRequestParser {
         return name to value
     }
 
-    private fun parseVersion(token: String): HttpClient.Version? = when (token) {
-        "HTTP/1.1" -> HttpClient.Version.HTTP_1_1
-        "HTTP/2" -> HttpClient.Version.HTTP_2
-        else -> null
-    }
+    private fun parseVersion(token: String): HttpClient.Version? =
+        when (token) {
+            "HTTP/1.1" -> HttpClient.Version.HTTP_1_1
+            "HTTP/2" -> HttpClient.Version.HTTP_2
+            else -> null
+        }
 
-    private fun parseBody(bodyLines: List<String>, baseDir: Path?): RequestBodySpec? {
+    private fun parseBody(
+        bodyLines: List<String>,
+        baseDir: Path?,
+    ): RequestBodySpec? {
         val preview = bodyLines.joinToString("\n").ifBlank { return null }
         val parts = mutableListOf<BodyPart>()
         val textBuilder = StringBuilder()
@@ -154,22 +163,31 @@ object HttpRequestParser {
         return if (hasFilePart) CompositeBody(preview, parts) else TextBody(preview)
     }
 
-    private fun parseResponseTarget(line: String, baseDir: Path?): ResponseTarget? {
+    @Suppress("ReturnCount")
+    private fun parseResponseTarget(
+        line: String,
+        baseDir: Path?,
+    ): ResponseTarget? {
         val trimmed = line.trimStart()
         if (!trimmed.startsWith(">")) return null
         val append = trimmed.startsWith(">>")
         val raw = if (append) trimmed.drop(2) else trimmed.drop(1)
         if (raw.isEmpty() || !raw.first().isWhitespace()) return null
         val pathText = unquote(raw.trim()).takeIf { it.isNotBlank() } ?: return null
-        val path = try {
-            resolvePath(pathText, baseDir)
-        } catch (_: InvalidPathException) {
-            return null
-        }
+        val path =
+            try {
+                resolvePath(pathText, baseDir)
+            } catch (_: InvalidPathException) {
+                return null
+            }
         return FileResponseTarget(path, append)
     }
 
-    private fun parseFileDirective(line: String, baseDir: Path?): Path? {
+    @Suppress("ReturnCount")
+    private fun parseFileDirective(
+        line: String,
+        baseDir: Path?,
+    ): Path? {
         val trimmed = line.trimStart()
         if (!trimmed.startsWith("<")) return null
         val raw = trimmed.drop(1)
@@ -182,7 +200,10 @@ object HttpRequestParser {
         }
     }
 
-    private fun resolvePath(pathText: String, baseDir: Path?): Path {
+    private fun resolvePath(
+        pathText: String,
+        baseDir: Path?,
+    ): Path {
         val path = Path.of(pathText)
         return if (path.isAbsolute || baseDir == null) path.normalize() else baseDir.resolve(path).normalize()
     }
@@ -192,7 +213,10 @@ object HttpRequestParser {
         if (trimmed.length >= 2) {
             val first = trimmed.first()
             val last = trimmed.last()
-            if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+            val isQuoted =
+                (first == '"' && last == '"') ||
+                    (first == '\'' && last == '\'')
+            if (isQuoted) {
                 return trimmed.substring(1, trimmed.length - 1).trim()
             }
         }

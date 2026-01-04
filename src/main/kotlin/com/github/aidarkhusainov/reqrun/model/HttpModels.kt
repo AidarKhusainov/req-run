@@ -39,17 +39,22 @@ sealed interface RequestBodySpec {
 }
 
 data class TextBody(
-    override val preview: String
+    override val preview: String,
 ) : RequestBodySpec
 
 data class CompositeBody(
     override val preview: String,
-    val parts: List<BodyPart>
+    val parts: List<BodyPart>,
 ) : RequestBodySpec
 
 sealed interface BodyPart {
-    data class Text(val text: String) : BodyPart
-    data class File(val path: Path) : BodyPart
+    data class Text(
+        val text: String,
+    ) : BodyPart
+
+    data class File(
+        val path: Path,
+    ) : BodyPart
 }
 
 sealed interface ResponseTarget {
@@ -59,7 +64,7 @@ sealed interface ResponseTarget {
 
 data class FileResponseTarget(
     override val path: Path,
-    override val append: Boolean
+    override val append: Boolean,
 ) : ResponseTarget
 
 data class HttpResponsePayload(

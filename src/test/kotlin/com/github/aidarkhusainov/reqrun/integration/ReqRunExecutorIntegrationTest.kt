@@ -4,6 +4,7 @@ import com.github.aidarkhusainov.reqrun.core.ReqRunExecutor
 import com.github.aidarkhusainov.reqrun.model.BodyPart
 import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
 import com.github.aidarkhusainov.reqrun.model.TextBody
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.util.ProgressIndicatorBase
@@ -31,20 +32,21 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         }
     }
 
-    fun `test execute sends GET without body`() {
+    fun testExecuteSendsGetWithoutBody() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
                 .setBody("ok")
-                .addHeader("Content-Type", "text/plain")
+                .addHeader("Content-Type", "text/plain"),
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = server.url("/ping").toString(),
-            headers = mapOf("X-Test" to "1"),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = server.url("/ping").toString(),
+                headers = mapOf("X-Test" to "1"),
+                body = null as RequestBodySpec?,
+            )
 
         val response = executor.execute(request)
         val recorded = server.takeRequest()
@@ -59,19 +61,20 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         assertTrue(response.durationMillis >= 0)
     }
 
-    fun `test execute sends POST with body and headers`() {
+    fun testExecuteSendsPostWithBodyAndHeaders() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(201)
-                .setBody("created")
+                .setBody("created"),
         )
 
-        val request = HttpRequestSpec(
-            method = "POST",
-            url = server.url("/items").toString(),
-            headers = mapOf("Content-Type" to "application/json"),
-            body = TextBody("{\"a\":1}")
-        )
+        val request =
+            HttpRequestSpec(
+                method = "POST",
+                url = server.url("/items").toString(),
+                headers = mapOf("Content-Type" to "application/json"),
+                body = TextBody("{\"a\":1}"),
+            )
 
         val response = executor.execute(request)
         val recorded = server.takeRequest()
@@ -84,35 +87,43 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         assertEquals("created", response.body)
     }
 
-    fun `test execute sends multipart body with file part`() {
+    fun testExecuteSendsMultipartBodyWithFilePart() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
-                .setBody("ok")
+                .setBody("ok"),
         )
 
         val tempFile = Files.createTempFile("reqrun", ".txt")
         Files.writeString(tempFile, "file-content")
         try {
-            val body = CompositeBody(
-                preview = "< $tempFile",
-                parts = listOf(
-                    BodyPart.Text("--Boundary\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\n\n"),
-                    BodyPart.File(tempFile),
-                    BodyPart.Text("\n--Boundary--")
+            val body =
+                CompositeBody(
+                    preview = "< $tempFile",
+                    parts =
+                        listOf(
+                            BodyPart.Text(
+                                "--Boundary\n" +
+                                    "Content-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\n\n",
+                            ),
+                            BodyPart.File(tempFile),
+                            BodyPart.Text("\n--Boundary--"),
+                        ),
                 )
-            )
-            val request = HttpRequestSpec(
-                method = "POST",
-                url = server.url("/upload").toString(),
-                headers = mapOf("Content-Type" to "multipart/form-data; boundary=Boundary"),
-                body = body
-            )
+            val request =
+                HttpRequestSpec(
+                    method = "POST",
+                    url = server.url("/upload").toString(),
+                    headers = mapOf("Content-Type" to "multipart/form-data; boundary=Boundary"),
+                    body = body,
+                )
 
             executor.execute(request)
             val recorded = server.takeRequest()
             val expectedBody =
-                "--Boundary\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\n\nfile-content\n--Boundary--"
+                "--Boundary\n" +
+                    "Content-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\n\n" +
+                    "file-content\n--Boundary--"
 
             assertEquals(expectedBody, recorded.body.readUtf8())
         } finally {
@@ -120,24 +131,25 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         }
     }
 
-    fun `test execute follows redirects`() {
+    fun testExecuteFollowsRedirects() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(302)
-                .addHeader("Location", "/final")
+                .addHeader("Location", "/final"),
         )
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
-                .setBody("done")
+                .setBody("done"),
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = server.url("/start").toString(),
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = server.url("/start").toString(),
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val response = executor.execute(request)
 
@@ -146,19 +158,20 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         assertEquals(2, server.requestCount)
     }
 
-    fun `test execute keeps unknown reason phrase empty`() {
+    fun testExecuteKeepsUnknownReasonPhraseEmpty() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(418)
-                .setBody("teapot")
+                .setBody("teapot"),
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = server.url("/teapot").toString(),
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = server.url("/teapot").toString(),
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val response = executor.execute(request)
 
@@ -166,19 +179,20 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         assertEquals("teapot", response.body)
     }
 
-    fun `test execute uses mapped reason phrase`() {
+    fun testExecuteUsesMappedReasonPhrase() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(404)
-                .setBody("missing")
+                .setBody("missing"),
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = server.url("/missing").toString(),
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = server.url("/missing").toString(),
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val response = executor.execute(request)
 
@@ -186,19 +200,20 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         assertEquals("missing", response.body)
     }
 
-    fun `test execute respects cancellation`() {
+    fun testExecuteRespectsCancellation() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
-                .setBody("ok")
+                .setBody("ok"),
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = server.url("/slow").toString(),
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = server.url("/slow").toString(),
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
         val indicator = ProgressIndicatorBase()
         indicator.cancel()
 
@@ -207,19 +222,20 @@ class ReqRunExecutorIntegrationTest : BasePlatformTestCase() {
         }
     }
 
-    fun `test execute handles empty body response`() {
+    fun testExecuteHandlesEmptyBodyResponse() {
         server.enqueue(
             MockResponse()
                 .setResponseCode(204)
-                .setBody("")
+                .setBody(""),
         )
 
-        val request = HttpRequestSpec(
-            method = "GET",
-            url = server.url("/empty").toString(),
-            headers = emptyMap(),
-            body = null
-        )
+        val request =
+            HttpRequestSpec(
+                method = "GET",
+                url = server.url("/empty").toString(),
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val response = executor.execute(request)
 

@@ -15,22 +15,24 @@ fun createActionEvent(
     project: Project?,
     editor: Editor?,
     file: VirtualFile?,
-    files: Array<VirtualFile>? = null
+    files: Array<VirtualFile>? = null,
 ): AnActionEvent {
-    val dataContext = DataContext { dataId ->
-        when (dataId) {
-            CommonDataKeys.PROJECT.name -> project
-            CommonDataKeys.EDITOR.name -> editor
-            CommonDataKeys.VIRTUAL_FILE.name -> file
-            CommonDataKeys.VIRTUAL_FILE_ARRAY.name -> files
-            else -> null
+    val dataContext =
+        DataContext { dataId ->
+            when (dataId) {
+                CommonDataKeys.PROJECT.name -> project
+                CommonDataKeys.EDITOR.name -> editor
+                CommonDataKeys.VIRTUAL_FILE.name -> file
+                CommonDataKeys.VIRTUAL_FILE_ARRAY.name -> files
+                else -> null
+            }
         }
-    }
     return AnActionEvent.createFromDataContext(ActionPlaces.UNKNOWN, Presentation(), dataContext)
 }
 
 fun collectReqRunNotifications(project: Project): List<Notification> =
-    NotificationsManager.getNotificationsManager()
+    NotificationsManager
+        .getNotificationsManager()
         .getNotificationsOfType(Notification::class.java, project)
         .toList()
 

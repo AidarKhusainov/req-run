@@ -44,12 +44,13 @@ class CopyCurlActionTest : BasePlatformTestCase() {
     }
 
     fun testCopiesCurlOnSuccess() {
-        val text = """
+        val text =
+            """
             POST https://example.com
             X-Test: v
 
             body
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val action = CopyCurlAction()
 
@@ -82,9 +83,9 @@ class CopyCurlActionTest : BasePlatformTestCase() {
         myFixture.configureByText(
             "test.http",
             """
-                GET https://example.com
-                Authorization: Bearer {{${'$'}auth.token("bearer")}}
-            """.trimIndent()
+            GET https://example.com
+            Authorization: Bearer {{${'$'}auth.token("bearer")}}
+            """.trimIndent(),
         )
         val action = CopyCurlAction()
 

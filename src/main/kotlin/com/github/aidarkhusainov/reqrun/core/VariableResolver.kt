@@ -5,8 +5,17 @@ import java.util.UUID
 import kotlin.random.Random
 
 interface AuthTokenResolver {
-    fun resolveToken(id: String, variables: Map<String, String>, builtins: Map<String, String>): String?
-    fun resolveHeader(id: String, variables: Map<String, String>, builtins: Map<String, String>): String? = null
+    fun resolveToken(
+        id: String,
+        variables: Map<String, String>,
+        builtins: Map<String, String>,
+    ): String?
+
+    fun resolveHeader(
+        id: String,
+        variables: Map<String, String>,
+        builtins: Map<String, String>,
+    ): String? = null
 }
 
 object VariableResolver {
@@ -44,15 +53,21 @@ object VariableResolver {
     }
 
     fun findUnresolvedPlaceholders(text: String): Set<String> {
-        val withoutComments = text.lineSequence()
-            .filterNot { it.trimStart().startsWith("#") }
-            .joinToString("\n")
-        return placeholderPattern.findAll(withoutComments)
+        val withoutComments =
+            text
+                .lineSequence()
+                .filterNot { it.trimStart().startsWith("#") }
+                .joinToString("\n")
+        return placeholderPattern
+            .findAll(withoutComments)
             .map { it.groupValues[1].trim() }
             .toSet()
     }
 
-    fun formatUnresolved(unresolved: Set<String>, limit: Int = 5): String {
+    fun formatUnresolved(
+        unresolved: Set<String>,
+        limit: Int = 5,
+    ): String {
         if (unresolved.isEmpty()) return ""
         val sorted = unresolved.sorted()
         val shown = sorted.take(limit)
@@ -81,9 +96,10 @@ object VariableResolver {
     }
 
     private fun stripVariableLines(rawRequest: String): String {
-        val lines = rawRequest.lineSequence().filterNot { line ->
-            variableDefinitionPattern.matches(line)
-        }
+        val lines =
+            rawRequest.lineSequence().filterNot { line ->
+                variableDefinitionPattern.matches(line)
+            }
         return lines.joinToString("\n")
     }
 
@@ -119,21 +135,13 @@ object VariableResolver {
         variables: Map<String, String>,
         builtins: Map<String, String>,
         authTokenResolver: AuthTokenResolver? = null,
-    ): String {
-        return resolvePlaceholders(value, variables, builtins, authTokenResolver)
-    }
+    ): String = resolvePlaceholders(value, variables, builtins, authTokenResolver)
 
-    fun extractAuthTokenId(token: String): String? {
-        return parseAuthTokenId(token)
-    }
+    fun extractAuthTokenId(token: String): String? = parseAuthTokenId(token)
 
-    fun extractAuthHeaderId(token: String): String? {
-        return parseAuthHeaderId(token)
-    }
+    fun extractAuthHeaderId(token: String): String? = parseAuthHeaderId(token)
 
-    fun builtins(): Map<String, String> {
-        return builtinVariables()
-    }
+    fun builtins(): Map<String, String> = builtinVariables()
 
     private fun parseAuthTokenId(token: String): String? {
         val match = authTokenPattern.matchEntire(token) ?: return null
@@ -154,11 +162,10 @@ object VariableResolver {
         return raw
     }
 
-    private fun builtinVariables(): Map<String, String> {
-        return mapOf(
+    private fun builtinVariables(): Map<String, String> =
+        mapOf(
             "timestamp" to Instant.now().epochSecond.toString(),
             "uuid" to UUID.randomUUID().toString(),
             "randomInt" to Random.nextInt(0, 1001).toString(),
         )
-    }
 }

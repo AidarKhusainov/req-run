@@ -40,7 +40,11 @@ object CurlConverter {
         if (spec.headers.isNotEmpty()) {
             sb.append('\n')
             spec.headers.forEach { (name, value) ->
-                sb.append(name).append(": ").append(value).append('\n')
+                sb
+                    .append(name)
+                    .append(": ")
+                    .append(value)
+                    .append('\n')
             }
             sb.setLength(sb.length - 1)
         }
@@ -52,7 +56,11 @@ object CurlConverter {
                 sb.append('\n')
             }
             val prefix = if (target.append) ">>" else ">"
-            sb.append('\n').append(prefix).append(' ').append(target.path)
+            sb
+                .append('\n')
+                .append(prefix)
+                .append(' ')
+                .append(target.path)
         }
         return sb.toString()
     }
@@ -108,8 +116,12 @@ object CurlConverter {
                     addHeader(headers, token.substringAfter("="))
                     i += 1
                 }
-                token == "-d" || token == "--data" || token == "--data-raw" ||
-                    token == "--data-binary" || token == "--data-urlencode" || token == "--data-ascii" -> {
+                token == "-d" ||
+                    token == "--data" ||
+                    token == "--data-raw" ||
+                    token == "--data-binary" ||
+                    token == "--data-urlencode" ||
+                    token == "--data-ascii" -> {
                     val data = tokens.getOrNull(i + 1)
                     if (data != null) {
                         bodyParts += data
@@ -153,7 +165,10 @@ object CurlConverter {
         return HttpRequestSpec(method.uppercase(), url, headers, bodySpec, version)
     }
 
-    private fun addHeader(headers: MutableMap<String, String>, header: String) {
+    private fun addHeader(
+        headers: MutableMap<String, String>,
+        header: String,
+    ) {
         val index = header.indexOf(':')
         if (index <= 0) return
         val name = header.substring(0, index).trim()
@@ -163,9 +178,7 @@ object CurlConverter {
         }
     }
 
-    private fun looksLikeUrl(value: String): Boolean {
-        return value.startsWith("http://") || value.startsWith("https://")
-    }
+    private fun looksLikeUrl(value: String): Boolean = value.startsWith("http://") || value.startsWith("https://")
 
     private fun shellQuote(value: String): String {
         if (value.isEmpty()) return "''"

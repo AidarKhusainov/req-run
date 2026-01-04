@@ -1,20 +1,21 @@
 package com.github.aidarkhusainov.reqrun.markers
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.psi.util.PsiElementFilter
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
 class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
     fun testMarkersOnlyForRequestLines() {
-        val text = """
+        val text =
+            """
             GET https://a
             Header: v
 
             POST https://b
             ### Case1
             PUT https://c
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val provider = ReqRunLineMarkerProvider()
 
@@ -41,10 +42,11 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
     }
 
     fun testOnlyFirstRequestLineInBlockGetsMarker() {
-        val text = """
+        val text =
+            """
             GET https://a
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val provider = ReqRunLineMarkerProvider()
 
@@ -79,7 +81,7 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
 
     private fun collectMarkers(
         provider: ReqRunLineMarkerProvider,
-        file: com.intellij.psi.PsiFile
+        file: com.intellij.psi.PsiFile,
     ): List<LineMarkerInfo<*>> {
         val elements = PsiTreeUtil.collectElements(file, PsiElementFilter { true }).toMutableList()
         val result = mutableListOf<LineMarkerInfo<*>>()
@@ -90,8 +92,6 @@ class ReqRunLineMarkerProviderTest : BasePlatformTestCase() {
     private fun markerAtLine(
         markers: List<LineMarkerInfo<*>>,
         doc: com.intellij.openapi.editor.Document,
-        line: Int
-    ): LineMarkerInfo<*>? {
-        return markers.firstOrNull { doc.getLineNumber(it.startOffset) == line }
-    }
+        line: Int,
+    ): LineMarkerInfo<*>? = markers.firstOrNull { doc.getLineNumber(it.startOffset) == line }
 }

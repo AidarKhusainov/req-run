@@ -6,11 +6,12 @@ import org.junit.Test
 class ReqRunLexerTest {
     @Test
     fun `lexer tokenizes comments methods and text by line`() {
-        val text = """
+        val text =
+            """
             # comment
             GET https://example.com
             Header: v
-        """.trimIndent()
+            """.trimIndent()
 
         val tokens = tokenize(text)
 

@@ -4,10 +4,11 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
 class RequestExtractorTest : BasePlatformTestCase() {
     fun testExtractReturnsSelectionWhenPresent() {
-        val text = """
+        val text =
+            """
             GET https://example.com
             Header: v
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         val start = editor.document.text.indexOf("GET")
@@ -37,11 +38,12 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractBlockAroundCaretSeparatedByBlankLines() {
-        val text = """
+        val text =
+            """
             GET https://a
 
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "POST")
@@ -51,11 +53,12 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractTreatsSeparatorAndExcludesIt() {
-        val text = """
+        val text =
+            """
             GET https://a
             ###
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "POST")
@@ -66,11 +69,12 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractTreatsSeparatorWithTitleAndExcludesIt() {
-        val text = """
+        val text =
+            """
             GET https://a
             ### Case1
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "POST")
@@ -81,12 +85,13 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractReturnsHeadersOnlyWhenBodySeparatedByBlankLine() {
-        val text = """
+        val text =
+            """
             POST https://example.com
             H1: v1
 
             body line
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "H1")
@@ -96,12 +101,13 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractFullReturnsHeadersAndBody() {
-        val text = """
+        val text =
+            """
             POST https://example.com
             H1: v1
 
             body line
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "H1")
@@ -111,11 +117,12 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractCombinesBlocksWhenCaretIsOnSeparator() {
-        val text = """
+        val text =
+            """
             GET https://a
             ###
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "###")
@@ -125,12 +132,13 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractIgnoresCommentLines() {
-        val text = """
+        val text =
+            """
             # request comment
             GET https://example.com
             # header comment
             Header: v
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "Header")
@@ -140,13 +148,14 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractIncludesBodyWhenCaretInBody() {
-        val text = """
+        val text =
+            """
             POST https://example.com
             H1: v1
 
             line1
             line2
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         moveCaretTo(editor, "line2")
@@ -156,12 +165,13 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractUsesHeadersWhenCaretOnBlankLineBetweenHeadersAndBody() {
-        val text = """
+        val text =
+            """
             POST https://example.com
             H1: v1
 
             body line
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         val blankLineOffset = text.indexOf("\n\n") + 1
@@ -182,11 +192,12 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractAllFromTextSplitsBySeparator() {
-        val text = """
+        val text =
+            """
             GET https://a
             ###
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
 
         val blocks = RequestExtractor.extractAllFromText(text)
 
@@ -198,11 +209,12 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractAllUsesSelectionOffsets() {
-        val text = """
+        val text =
+            """
             GET https://a
             ###
             POST https://b
-        """.trimIndent()
+            """.trimIndent()
         myFixture.configureByText("test.http", text)
         val editor = myFixture.editor
         val selectionStart = text.indexOf("POST")
@@ -216,14 +228,15 @@ class RequestExtractorTest : BasePlatformTestCase() {
     }
 
     fun testExtractAllFromTextSkipsEmptyBlocksAroundSeparators() {
-        val text = """
+        val text =
+            """
             ###
             GET https://a
             ###
             ###
             POST https://b
             ###
-        """.trimIndent()
+            """.trimIndent()
 
         val blocks = RequestExtractor.extractAllFromText(text)
 
@@ -232,7 +245,10 @@ class RequestExtractorTest : BasePlatformTestCase() {
         assertEquals("POST https://b", blocks[1].text)
     }
 
-    private fun moveCaretTo(editor: com.intellij.openapi.editor.Editor, token: String) {
+    private fun moveCaretTo(
+        editor: com.intellij.openapi.editor.Editor,
+        token: String,
+    ) {
         val offset = editor.document.text.indexOf(token)
         require(offset >= 0) { "Token not found in document: $token" }
         editor.caretModel.moveToOffset(offset)

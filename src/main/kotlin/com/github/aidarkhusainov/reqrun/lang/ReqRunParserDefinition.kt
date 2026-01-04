@@ -32,10 +32,14 @@ class ReqRunParserDefinition : ParserDefinition {
 
     override fun getStringLiteralElements(): TokenSet = TokenSet.EMPTY
 
-    override fun spaceExistenceTypeBetweenTokens(left: ASTNode?, right: ASTNode?): ParserDefinition.SpaceRequirements =
-        ParserDefinition.SpaceRequirements.MAY
+    override fun spaceExistenceTypeBetweenTokens(
+        left: ASTNode?,
+        right: ASTNode?,
+    ): ParserDefinition.SpaceRequirements = ParserDefinition.SpaceRequirements.MAY
 
-    override fun createElement(node: ASTNode): PsiElement = com.intellij.extapi.psi.ASTWrapperPsiElement(node)
+    override fun createElement(node: ASTNode): PsiElement =
+        com.intellij.extapi.psi
+            .ASTWrapperPsiElement(node)
 
     override fun createFile(viewProvider: FileViewProvider): PsiFile = ReqRunFile(viewProvider)
 }

@@ -10,7 +10,9 @@ import com.intellij.openapi.project.Project
 import java.util.concurrent.CopyOnWriteArrayList
 
 @Service(Service.Level.PROJECT)
-class ReqRunExecutionService(private val project: Project) {
+class ReqRunExecutionService(
+    private val project: Project,
+) {
     companion object {
         private const val MAX_HISTORY = 200
     }
@@ -21,7 +23,7 @@ class ReqRunExecutionService(private val project: Project) {
         request: HttpRequestSpec,
         response: HttpResponsePayload?,
         error: String?,
-        source: ReqRunRequestSource? = null
+        source: ReqRunRequestSource? = null,
     ): ReqRunExecution {
         val exec = ReqRunExecution(request = request, response = response, error = error, source = source)
         val evictedIds = mutableListOf<java.util.UUID>()
@@ -36,26 +38,27 @@ class ReqRunExecutionService(private val project: Project) {
         }
         ApplicationManager.getApplication().invokeLater({
             if (project.isDisposed) return@invokeLater
-            project.messageBus.syncPublisher(ServiceEventListener.TOPIC)
+            project.messageBus
+                .syncPublisher(ServiceEventListener.TOPIC)
                 .handle(ServiceEventListener.ServiceEvent.createResetEvent(ReqRunServiceContributor::class.java))
         }, ModalityState.any())
         return exec
     }
 
-    fun list(): List<ReqRunExecution> {
-        return executions.toList()
-    }
+    fun list(): List<ReqRunExecution> = executions.toList()
 
     fun clearAll(): Int {
-        val removed = synchronized(executions) {
-            val count = executions.size
-            executions.clear()
-            count
-        }
+        val removed =
+            synchronized(executions) {
+                val count = executions.size
+                executions.clear()
+                count
+            }
         if (removed > 0) {
             ApplicationManager.getApplication().invokeLater({
                 if (project.isDisposed) return@invokeLater
-                project.messageBus.syncPublisher(ServiceEventListener.TOPIC)
+                project.messageBus
+                    .syncPublisher(ServiceEventListener.TOPIC)
                     .handle(ServiceEventListener.ServiceEvent.createResetEvent(ReqRunServiceContributor::class.java))
             }, ModalityState.any())
         }
@@ -63,13 +66,15 @@ class ReqRunExecutionService(private val project: Project) {
     }
 
     fun removeExecution(id: java.util.UUID): Boolean {
-        val removed = synchronized(executions) {
-            executions.removeIf { it.id == id }
-        }
+        val removed =
+            synchronized(executions) {
+                executions.removeIf { it.id == id }
+            }
         if (removed) {
             ApplicationManager.getApplication().invokeLater({
                 if (project.isDisposed) return@invokeLater
-                project.messageBus.syncPublisher(ServiceEventListener.TOPIC)
+                project.messageBus
+                    .syncPublisher(ServiceEventListener.TOPIC)
                     .handle(ServiceEventListener.ServiceEvent.createResetEvent(ReqRunServiceContributor::class.java))
             }, ModalityState.any())
         }

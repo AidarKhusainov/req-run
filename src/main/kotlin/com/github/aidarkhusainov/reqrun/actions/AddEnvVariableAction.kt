@@ -14,8 +14,9 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 
-class AddEnvVariableAction(private val isPrivate: Boolean) :
-    AnAction(if (isPrivate) "Variable in Private File" else "Variable in Public File"),
+class AddEnvVariableAction(
+    private val isPrivate: Boolean,
+) : AnAction(if (isPrivate) "Variable in Private File" else "Variable in Public File"),
     DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
@@ -45,15 +46,22 @@ class AddEnvVariableAction(private val isPrivate: Boolean) :
         }
     }
 
-    private data class UpdateResult(val text: String, val caretOffset: Int)
+    private data class UpdateResult(
+        val text: String,
+        val caretOffset: Int,
+    )
 
-    private fun addVariable(text: String, envName: String): UpdateResult {
+    private fun addVariable(
+        text: String,
+        envName: String,
+    ): UpdateResult {
         val root = parseRoot(text)
-        val envObj = if (root.has(envName) && root.get(envName).isJsonObject) {
-            root.getAsJsonObject(envName)
-        } else {
-            JsonObject().also { root.add(envName, it) }
-        }
+        val envObj =
+            if (root.has(envName) && root.get(envName).isJsonObject) {
+                root.getAsJsonObject(envName)
+            } else {
+                JsonObject().also { root.add(envName, it) }
+            }
         val key = nextKey(envObj, "newVar")
         envObj.addProperty(key, "value")
 
@@ -64,16 +72,18 @@ class AddEnvVariableAction(private val isPrivate: Boolean) :
         return UpdateResult(updatedText, caret)
     }
 
-    private fun parseRoot(text: String): JsonObject {
-        return try {
+    private fun parseRoot(text: String): JsonObject =
+        try {
             val parsed = JsonParser.parseString(text)
             if (parsed.isJsonObject) parsed.asJsonObject else JsonObject()
         } catch (_: Throwable) {
             JsonObject()
         }
-    }
 
-    private fun nextKey(envObj: JsonObject, base: String): String {
+    private fun nextKey(
+        envObj: JsonObject,
+        base: String,
+    ): String {
         if (!envObj.has(base)) return base
         var index = 1
         while (true) {

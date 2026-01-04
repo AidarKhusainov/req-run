@@ -15,7 +15,12 @@ class ReqRunLexer : LexerBase() {
     private var tokenEnd: Int = 0
     private var tokenType: IElementType? = null
 
-    override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
+    override fun start(
+        buffer: CharSequence,
+        startOffset: Int,
+        endOffset: Int,
+        initialState: Int,
+    ) {
         this.buffer = buffer
         this.startOffset = startOffset
         this.endOffset = endOffset
@@ -40,18 +45,20 @@ class ReqRunLexer : LexerBase() {
 
         tokenStart = tokenEnd
         val newlineIndex = buffer.indexOf('\n', tokenStart)
-        val lineEnd = when {
-            newlineIndex == -1 -> endOffset
-            newlineIndex >= endOffset -> endOffset
-            else -> newlineIndex + 1
-        }
+        val lineEnd =
+            when {
+                newlineIndex == -1 -> endOffset
+                newlineIndex >= endOffset -> endOffset
+                else -> newlineIndex + 1
+            }
         val lineText = buffer.subSequence(tokenStart, lineEnd).toString()
 
-        tokenType = when {
-            commentPattern.matches(lineText) -> ReqRunTypes.COMMENT
-            methodPattern.containsMatchIn(lineText) -> ReqRunTypes.METHOD
-            else -> ReqRunTypes.TEXT
-        }
+        tokenType =
+            when {
+                commentPattern.matches(lineText) -> ReqRunTypes.COMMENT
+                methodPattern.containsMatchIn(lineText) -> ReqRunTypes.METHOD
+                else -> ReqRunTypes.TEXT
+            }
         tokenEnd = lineEnd
     }
 

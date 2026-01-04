@@ -3,6 +3,7 @@ package com.github.aidarkhusainov.reqrun.core
 import com.github.aidarkhusainov.reqrun.model.BodyPart
 import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
 import com.github.aidarkhusainov.reqrun.model.TextBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -14,18 +15,19 @@ import java.nio.file.Path
 class CurlConverterTest {
     @Test
     fun `toCurl includes headers and body`() {
-        val raw = """
+        val raw =
+            """
             POST https://httpbin.org/post
             Accept: application/json
             Content-Type: text/xml
 
             <ping>ReqRun</ping>
-        """.trimIndent()
+            """.trimIndent()
         val spec = HttpRequestParser.parse(raw)
         val curl = CurlConverter.toCurl(spec!!)
         assertEquals(
             "curl -X POST 'https://httpbin.org/post' -H 'Accept: application/json' -H 'Content-Type: text/xml' --data '<ping>ReqRun</ping>'",
-            curl
+            curl,
         )
     }
 
@@ -54,35 +56,37 @@ class CurlConverterTest {
         val http = CurlConverter.toHttp(spec!!)
         assertEquals(
             "POST https://example.com\nX-Test: v\n\nline1\nline2",
-            http
+            http,
         )
     }
 
     @Test
     fun `toCurl escapes single quotes`() {
-        val spec = HttpRequestSpec(
-            method = "POST",
-            url = "https://example.com/it's",
-            headers = mapOf("X-Name" to "O'Brian"),
-            body = TextBody("value='1'")
-        )
+        val spec =
+            HttpRequestSpec(
+                method = "POST",
+                url = "https://example.com/it's",
+                headers = mapOf("X-Name" to "O'Brian"),
+                body = TextBody("value='1'"),
+            )
 
         val curl = CurlConverter.toCurl(spec)
 
         assertEquals(
             "curl -X POST 'https://example.com/it'\"'\"'s' -H 'X-Name: O'\"'\"'Brian' --data 'value='\"'\"'1'\"'\"''",
-            curl
+            curl,
         )
     }
 
     @Test
     fun `toCurl omits data when body is null`() {
-        val spec = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null
-        )
+        val spec =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val curl = CurlConverter.toCurl(spec)
 
@@ -92,21 +96,23 @@ class CurlConverterTest {
     @Test
     fun `toCurl uses data-binary with file body`() {
         val path = Path.of("tmp", "payload.bin")
-        val spec = HttpRequestSpec(
-            method = "POST",
-            url = "https://example.com/upload",
-            headers = emptyMap(),
-            body = CompositeBody(
-                preview = "< ./payload.bin",
-                parts = listOf(BodyPart.File(path))
+        val spec =
+            HttpRequestSpec(
+                method = "POST",
+                url = "https://example.com/upload",
+                headers = emptyMap<String, String>(),
+                body =
+                    CompositeBody(
+                        preview = "< ./payload.bin",
+                        parts = listOf(BodyPart.File(path)),
+                    ),
             )
-        )
 
         val curl = CurlConverter.toCurl(spec)
 
         assertEquals(
             "curl -X POST 'https://example.com/upload' --data-binary '@$path'",
-            curl
+            curl,
         )
     }
 
@@ -145,12 +151,13 @@ class CurlConverterTest {
 
     @Test
     fun `toHttp omits extra blank lines when no headers or body`() {
-        val spec = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null
-        )
+        val spec =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+            )
 
         val http = CurlConverter.toHttp(spec)
 
@@ -204,13 +211,14 @@ class CurlConverterTest {
 
     @Test
     fun `toHttp includes version when provided`() {
-        val spec = HttpRequestSpec(
-            method = "GET",
-            url = "https://example.com",
-            headers = emptyMap(),
-            body = null,
-            version = HttpClient.Version.HTTP_2
-        )
+        val spec =
+            HttpRequestSpec(
+                method = "GET",
+                url = "https://example.com",
+                headers = emptyMap<String, String>(),
+                body = null as RequestBodySpec?,
+                version = HttpClient.Version.HTTP_2,
+            )
 
         val http = CurlConverter.toHttp(spec)
 

@@ -10,7 +10,7 @@ import com.intellij.openapi.components.Storage
 class ReqRunEnvPathSettings : PersistentStateComponent<ReqRunEnvPathSettings.State> {
     data class State(
         var sharedPath: String? = null,
-        var privatePath: String? = null
+        var privatePath: String? = null,
     )
 
     private var state = State()

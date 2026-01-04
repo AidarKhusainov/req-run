@@ -10,15 +10,17 @@ import com.intellij.openapi.project.Project
 import org.jetbrains.annotations.TestOnly
 
 @Service(Service.Level.PROJECT)
-class ReqRunRunner(private val project: Project) {
+class ReqRunRunner(
+    private val project: Project,
+) {
     enum class Status {
         SUCCESS,
-        ERROR
+        ERROR,
     }
 
     data class RunResult(
         val execution: ReqRunExecution,
-        val status: Status
+        val status: Status,
     )
 
     @Volatile
@@ -27,7 +29,7 @@ class ReqRunRunner(private val project: Project) {
     fun run(
         spec: HttpRequestSpec,
         source: ReqRunRequestSource?,
-        indicator: ProgressIndicator?
+        indicator: ProgressIndicator?,
     ): RunResult {
         val executor = project.getService(ReqRunExecutor::class.java)
         val execService = project.getService(ReqRunExecutionService::class.java)
@@ -44,7 +46,7 @@ class ReqRunRunner(private val project: Project) {
 
     fun addCancelledExecution(
         spec: HttpRequestSpec,
-        source: ReqRunRequestSource?
+        source: ReqRunRequestSource?,
     ): ReqRunExecution {
         val execService = project.getService(ReqRunExecutionService::class.java)
         return execService.addExecution(spec, null, "Cancelled by user", source)

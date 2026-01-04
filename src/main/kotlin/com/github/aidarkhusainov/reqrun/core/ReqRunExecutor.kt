@@ -26,22 +26,25 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
 @Service(Service.Level.PROJECT)
-class ReqRunExecutor(private val project: Project) : Disposable {
+class ReqRunExecutor(
+    private val project: Project,
+) : Disposable {
     private val log = logger<ReqRunExecutor>()
 
     private val requestTimeout = Duration.ofSeconds(60)
     private val connectTimeout = Duration.ofSeconds(10)
-    private val httpExecutor = ThreadPoolExecutor(
-        0,
-        HTTP_EXECUTOR_MAX_THREADS,
-        HTTP_EXECUTOR_KEEP_ALIVE_SECONDS,
-        TimeUnit.SECONDS,
-        LinkedBlockingQueue(HTTP_EXECUTOR_QUEUE_CAPACITY),
-        HttpClientThreadFactory(),
-        ThreadPoolExecutor.AbortPolicy(),
-    ).apply {
-        allowCoreThreadTimeOut(true)
-    }
+    private val httpExecutor =
+        ThreadPoolExecutor(
+            0,
+            HTTP_EXECUTOR_MAX_THREADS,
+            HTTP_EXECUTOR_KEEP_ALIVE_SECONDS,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(HTTP_EXECUTOR_QUEUE_CAPACITY),
+            HttpClientThreadFactory(),
+            ThreadPoolExecutor.AbortPolicy(),
+        ).apply {
+            allowCoreThreadTimeOut(true)
+        }
 
     @Volatile
     private var cachedSdkHome: String? = null
@@ -51,7 +54,10 @@ class ReqRunExecutor(private val project: Project) : Disposable {
     @Volatile
     private var clientOverride: ReqRunHttpClient? = null
 
-    fun execute(request: HttpRequestSpec, indicator: ProgressIndicator? = null): HttpResponsePayload {
+    fun execute(
+        request: HttpRequestSpec,
+        indicator: ProgressIndicator? = null,
+    ): HttpResponsePayload {
         val client = getClient(request)
         return client.execute(request, indicator, requestTimeout)
     }
@@ -68,9 +74,10 @@ class ReqRunExecutor(private val project: Project) : Disposable {
 
     private fun getClient(request: HttpRequestSpec): ReqRunHttpClient {
         clientOverride?.let { return it }
-        val sdkHome = ReadAction.compute<String?, RuntimeException> {
-            if (project.isDisposed) null else ProjectRootManager.getInstance(project).projectSdk?.homePath
-        }
+        val sdkHome =
+            ReadAction.compute<String?, RuntimeException> {
+                if (project.isDisposed) null else ProjectRootManager.getInstance(project).projectSdk?.homePath
+            }
         synchronized(this) {
             if (sdkHome != cachedSdkHome) {
                 cachedClients.values.forEach { it.close() }
@@ -86,19 +93,24 @@ class ReqRunExecutor(private val project: Project) : Disposable {
         }
     }
 
-    private fun buildOkHttpClient(sdkHome: String?, mode: ProtocolMode): OkHttpClient {
+    private fun buildOkHttpClient(
+        sdkHome: String?,
+        mode: ProtocolMode,
+    ): OkHttpClient {
         val sslConfig = resolveSslConfig(sdkHome)
         val dispatcher = Dispatcher(httpExecutor)
-        val builder = OkHttpClient.Builder()
-            .dispatcher(dispatcher)
-            .connectTimeout(connectTimeout)
-            .callTimeout(requestTimeout)
-            .readTimeout(requestTimeout)
-            .writeTimeout(requestTimeout)
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .sslSocketFactory(sslConfig.context.socketFactory, sslConfig.trustManager)
-            .protocols(mode.protocols)
+        val builder =
+            OkHttpClient
+                .Builder()
+                .dispatcher(dispatcher)
+                .connectTimeout(connectTimeout)
+                .callTimeout(requestTimeout)
+                .readTimeout(requestTimeout)
+                .writeTimeout(requestTimeout)
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .sslSocketFactory(sslConfig.context.socketFactory, sslConfig.trustManager)
+                .protocols(mode.protocols)
         applyProxySettings(builder)
         return builder.build()
     }
@@ -130,8 +142,9 @@ class ReqRunExecutor(private val project: Project) : Disposable {
             }
             val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
             tmf.init(keyStore)
-            val trustManager = tmf.trustManagers.filterIsInstance<X509TrustManager>().firstOrNull()
-                ?: fallbackTrust
+            val trustManager =
+                tmf.trustManagers.filterIsInstance<X509TrustManager>().firstOrNull()
+                    ?: fallbackTrust
             val context = SSLContext.getInstance("TLS")
             context.init(null, arrayOf(trustManager), null)
             SslConfig(context, trustManager)
@@ -175,11 +188,19 @@ class ReqRunExecutor(private val project: Project) : Disposable {
         private const val EXECUTOR_TERMINATION_TIMEOUT_SECONDS = 3L
     }
 
-    private data class SslConfig(val context: SSLContext, val trustManager: X509TrustManager)
+    private data class SslConfig(
+        val context: SSLContext,
+        val trustManager: X509TrustManager,
+    )
 
-    private data class ClientKey(val sdkHome: String?, val mode: ProtocolMode)
+    private data class ClientKey(
+        val sdkHome: String?,
+        val mode: ProtocolMode,
+    )
 
-    private enum class ProtocolMode(val protocols: List<Protocol>) {
+    private enum class ProtocolMode(
+        val protocols: List<Protocol>,
+    ) {
         HTTP_1_1(listOf(Protocol.HTTP_1_1)),
         HTTP_2(listOf(Protocol.HTTP_2)),
         H2_PRIOR_KNOWLEDGE(listOf(Protocol.H2_PRIOR_KNOWLEDGE)),
@@ -196,26 +217,35 @@ class ReqRunExecutor(private val project: Project) : Disposable {
     }
 
     private class JavaNetProxyAuthenticator(
-        private val authenticator: Authenticator
+        private val authenticator: Authenticator,
     ) : okhttp3.Authenticator {
-        override fun authenticate(route: Route?, response: Response): okhttp3.Request? {
+        @Suppress("ReturnCount")
+        override fun authenticate(
+            route: Route?,
+            response: Response,
+        ): okhttp3.Request? {
             if (response.code != 407) return null
             val proxy = route?.proxy ?: return null
             val address = proxy.address() as? InetSocketAddress
             val host = address?.hostString ?: response.request.url.host
             val port = address?.port ?: response.request.url.port
-            val passwordAuth = requestPasswordAuthentication(
-                host,
-                address,
-                port,
-                response.request.url.scheme,
-                response.request.url.toUri().toURL(),
-            ) ?: return null
-            val credential = Credentials.basic(
-                passwordAuth.userName ?: return null,
-                String(passwordAuth.password ?: return null)
-            )
-            return response.request.newBuilder()
+            val passwordAuth =
+                requestPasswordAuthentication(
+                    host,
+                    address,
+                    port,
+                    response.request.url.scheme,
+                    response.request.url
+                        .toUri()
+                        .toURL(),
+                ) ?: return null
+            val credential =
+                Credentials.basic(
+                    passwordAuth.userName ?: return null,
+                    String(passwordAuth.password ?: return null),
+                )
+            return response.request
+                .newBuilder()
                 .header("Proxy-Authorization", credential)
                 .build()
         }
@@ -226,19 +256,20 @@ class ReqRunExecutor(private val project: Project) : Disposable {
             port: Int,
             protocol: String?,
             url: URL,
-        ): PasswordAuthentication? {
-            return try {
-                val method = Authenticator::class.java.getDeclaredMethod(
-                    "requestPasswordAuthenticationInstance",
-                    String::class.java,
-                    java.net.InetAddress::class.java,
-                    Int::class.javaPrimitiveType,
-                    String::class.java,
-                    String::class.java,
-                    String::class.java,
-                    URL::class.java,
-                    Authenticator.RequestorType::class.java
-                )
+        ): PasswordAuthentication? =
+            try {
+                val method =
+                    Authenticator::class.java.getDeclaredMethod(
+                        "requestPasswordAuthenticationInstance",
+                        String::class.java,
+                        java.net.InetAddress::class.java,
+                        Int::class.javaPrimitiveType,
+                        String::class.java,
+                        String::class.java,
+                        String::class.java,
+                        URL::class.java,
+                        Authenticator.RequestorType::class.java,
+                    )
                 method.isAccessible = true
                 method.invoke(
                     authenticator,
@@ -249,11 +280,10 @@ class ReqRunExecutor(private val project: Project) : Disposable {
                     null,
                     null,
                     url,
-                    Authenticator.RequestorType.PROXY
+                    Authenticator.RequestorType.PROXY,
                 ) as? PasswordAuthentication
             } catch (_: Throwable) {
                 null
             }
-        }
     }
 }

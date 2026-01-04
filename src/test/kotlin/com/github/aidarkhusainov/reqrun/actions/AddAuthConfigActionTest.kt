@@ -7,11 +7,12 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 class AddAuthConfigActionTest : BasePlatformTestCase() {
     fun testAddAuthConfigCreatesSecurityAuth() {
         val action = AddAuthConfigAction(false)
-        val method = AddAuthConfigAction::class.java.getDeclaredMethod(
-            "addAuthConfig",
-            String::class.java,
-            String::class.java
-        )
+        val method =
+            AddAuthConfigAction::class.java.getDeclaredMethod(
+                "addAuthConfig",
+                String::class.java,
+                String::class.java,
+            )
         method.isAccessible = true
 
         val result = method.invoke(action, "{}", "local")
@@ -31,17 +32,19 @@ class AddAuthConfigActionTest : BasePlatformTestCase() {
 
     fun testNextKeySkipsExistingNames() {
         val action = AddAuthConfigAction(false)
-        val method = AddAuthConfigAction::class.java.getDeclaredMethod(
-            "nextKey",
-            JsonObject::class.java,
-            String::class.java
-        )
+        val method =
+            AddAuthConfigAction::class.java.getDeclaredMethod(
+                "nextKey",
+                JsonObject::class.java,
+                String::class.java,
+            )
         method.isAccessible = true
 
-        val auth = JsonObject().apply {
-            addProperty("auth", "value")
-            addProperty("auth1", "value")
-        }
+        val auth =
+            JsonObject().apply {
+                addProperty("auth", "value")
+                addProperty("auth1", "value")
+            }
 
         val key = method.invoke(action, auth, "auth") as String
 

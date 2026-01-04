@@ -4,7 +4,11 @@ import com.github.aidarkhusainov.reqrun.model.BodyPart
 import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.FileResponseTarget
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
-import org.junit.Assert.*
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Path
 
@@ -26,21 +30,22 @@ class HttpRequestParserTest {
     fun `parse normalizes method and trims request line`() {
         val spec = HttpRequestParser.parse("  get   https://example.com  ")
         assertEquals(
-            HttpRequestSpec("GET", "https://example.com", emptyMap(), null),
-            spec
+            HttpRequestSpec("GET", "https://example.com", emptyMap<String, String>(), null as RequestBodySpec?),
+            spec,
         )
     }
 
     @Test
     fun `parse headers and body`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com/api
             Content-Type: application/json
             X-Test: a:b
 
             {"a":1}
             line2
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("POST", spec?.method)
@@ -52,12 +57,13 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse ignores malformed headers`() {
-        val raw = """
+        val raw =
+            """
             GET https://example.com
             BadHeader
             : missing-name
             Good: value
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals(1, spec?.headers?.size)
@@ -66,10 +72,11 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse keeps empty header values`() {
-        val raw = """
+        val raw =
+            """
             GET https://example.com
             Empty: 
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("", spec?.headers?.get("Empty"))
@@ -77,10 +84,11 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse body is null when no body separator`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
             Content-Type: application/json
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertNull(spec?.body)
@@ -88,10 +96,11 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse body is null when separator is empty`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
 
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertNull(spec?.body)
@@ -99,13 +108,14 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse treats header-looking lines after separator as body`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
 
             X-Test: ok
 
             Header: not-a-header
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("ok", spec?.headers?.get("X-Test"))
@@ -114,13 +124,14 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse preserves blank lines in body`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
 
             line1
 
             line3
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("line1\n\nline3", spec?.body?.preview)
@@ -129,7 +140,8 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse ignores comment lines`() {
-        val raw = """
+        val raw =
+            """
             # top comment
             POST https://example.com/api
             # header comment
@@ -141,7 +153,7 @@ class HttpRequestParserTest {
             line1
             # line2 comment
             line2
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("POST", spec?.method)
@@ -153,7 +165,8 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse allows blank lines before headers`() {
-        val raw = """
+        val raw =
+            """
             POST https://httpbin.org/post
 
 
@@ -161,7 +174,7 @@ class HttpRequestParserTest {
             Content-Type: application/json
 
             {"message":"Hello"}
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("POST", spec?.method)
@@ -172,7 +185,8 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse allows multiple blank lines before body`() {
-        val raw = """
+        val raw =
+            """
             POST https://httpbin.org/post
             Accept: application/json
 
@@ -180,7 +194,7 @@ class HttpRequestParserTest {
             {"message":"Hello"}
 
             line2
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("POST", spec?.method)
@@ -190,7 +204,8 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse allows comment separator before body`() {
-        val raw = """
+        val raw =
+            """
             POST https://countries.trevorblades.com/
             Accept: application/json
             Content-Type: application/json
@@ -198,7 +213,7 @@ class HttpRequestParserTest {
             {
               "query": "query { countries { code name emoji } }"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
         assertEquals("POST", spec?.method)
@@ -274,10 +289,11 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse ignores body without blank line separator`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
             some body line
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
 
@@ -286,11 +302,12 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse uses last header value for duplicates`() {
-        val raw = """
+        val raw =
+            """
             GET https://example.com
             X-Test: one
             X-Test: two
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
 
@@ -300,13 +317,14 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse strips comments inside body`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
 
             line1
             # comment
             line2
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
 
@@ -315,10 +333,11 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse trims header names and values around colon`() {
-        val raw = """
+        val raw =
+            """
             GET https://example.com
             X-Test   :    value
-        """.trimIndent()
+            """.trimIndent()
 
         val spec = HttpRequestParser.parse(raw)
 
@@ -327,7 +346,8 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse detects file directive inside body`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
             Content-Type: multipart/form-data; boundary=WebAppBoundary
 
@@ -336,7 +356,7 @@ class HttpRequestParserTest {
 
             < ./files/data.txt
             --WebAppBoundary--
-        """.trimIndent()
+            """.trimIndent()
 
         val baseDir = Path.of("workspace")
         val spec = HttpRequestParser.parse(raw, baseDir)
@@ -351,28 +371,30 @@ class HttpRequestParserTest {
 
     @Test
     fun `parse captures response target line`() {
-        val raw = """
+        val raw =
+            """
             GET https://example.com
             > ./out/resp.json
-        """.trimIndent()
+            """.trimIndent()
 
         val baseDir = Path.of("workspace")
         val spec = HttpRequestParser.parse(raw, baseDir)
 
         assertEquals(
             FileResponseTarget(baseDir.resolve("out/resp.json").normalize(), append = false),
-            spec?.responseTarget
+            spec?.responseTarget,
         )
     }
 
     @Test
     fun `parse response target after body is not part of body`() {
-        val raw = """
+        val raw =
+            """
             POST https://example.com
 
             line1
             > ./out/resp.txt
-        """.trimIndent()
+            """.trimIndent()
 
         val baseDir = Path.of("workspace")
         val spec = HttpRequestParser.parse(raw, baseDir)
@@ -380,7 +402,7 @@ class HttpRequestParserTest {
         assertEquals("line1", spec?.body?.preview)
         assertEquals(
             FileResponseTarget(baseDir.resolve("out/resp.txt").normalize(), append = false),
-            spec?.responseTarget
+            spec?.responseTarget,
         )
     }
 }

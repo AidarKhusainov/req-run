@@ -9,7 +9,9 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.project.DumbAware
 
-class ReqRunEditorPopupGroup : DefaultActionGroup(), DumbAware {
+class ReqRunEditorPopupGroup :
+    DefaultActionGroup(),
+    DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
     override fun update(e: AnActionEvent) {
@@ -23,12 +25,13 @@ class ReqRunEditorPopupGroup : DefaultActionGroup(), DumbAware {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val manager = ActionManager.getInstance()
-        val actions = listOfNotNull(
-            manager.getAction("com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction"),
-            manager.getAction("com.github.aidarkhusainov.reqrun.actions.RunHttpRequestsGroupAction"),
-            manager.getAction("com.github.aidarkhusainov.reqrun.actions.CopyCurlAction"),
-            manager.getAction("com.github.aidarkhusainov.reqrun.actions.PasteCurlAction"),
-        )
+        val actions =
+            listOfNotNull(
+                manager.getAction("com.github.aidarkhusainov.reqrun.actions.RunHttpRequestAction"),
+                manager.getAction("com.github.aidarkhusainov.reqrun.actions.RunHttpRequestsGroupAction"),
+                manager.getAction("com.github.aidarkhusainov.reqrun.actions.CopyCurlAction"),
+                manager.getAction("com.github.aidarkhusainov.reqrun.actions.PasteCurlAction"),
+            )
         if (actions.isEmpty()) return emptyArray()
         return arrayOf(Separator.getInstance(), *actions.toTypedArray())
     }

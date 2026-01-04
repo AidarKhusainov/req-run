@@ -2,6 +2,7 @@ package com.github.aidarkhusainov.reqrun.services
 
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
@@ -13,11 +14,18 @@ class ReqRunServiceContributorTest : BasePlatformTestCase() {
 
     fun testDescriptorIsCachedAndEvicted() {
         val service = project.getService(ReqRunExecutionService::class.java)
-        val exec = service.addExecution(
-            request = HttpRequestSpec("GET", "https://example.com", emptyMap(), null),
-            response = HttpResponsePayload("HTTP/1.1 200 OK", emptyMap(), "ok", 1),
-            error = null
-        )
+        val exec =
+            service.addExecution(
+                request =
+                    HttpRequestSpec(
+                        method = "GET",
+                        url = "https://example.com",
+                        headers = emptyMap<String, String>(),
+                        body = null as RequestBodySpec?,
+                    ),
+                response = HttpResponsePayload("HTTP/1.1 200 OK", emptyMap<String, List<String>>(), "ok", 1),
+                error = null,
+            )
         val contributor = ReqRunServiceContributor()
 
         val first = contributor.getServiceDescriptor(project, exec)
@@ -33,12 +41,19 @@ class ReqRunServiceContributorTest : BasePlatformTestCase() {
         val file = myFixture.configureByText("test.http", "GET https://example.com").virtualFile
         val source = ReqRunRequestSource(file, 0)
         val service = project.getService(ReqRunExecutionService::class.java)
-        val exec = service.addExecution(
-            request = HttpRequestSpec("GET", "https://example.com", emptyMap(), null),
-            response = null,
-            error = "boom",
-            source = source
-        )
+        val exec =
+            service.addExecution(
+                request =
+                    HttpRequestSpec(
+                        method = "GET",
+                        url = "https://example.com",
+                        headers = emptyMap<String, String>(),
+                        body = null as RequestBodySpec?,
+                    ),
+                response = null,
+                error = "boom",
+                source = source,
+            )
         val contributor = ReqRunServiceContributor()
         val descriptor = contributor.getServiceDescriptor(project, exec)
 

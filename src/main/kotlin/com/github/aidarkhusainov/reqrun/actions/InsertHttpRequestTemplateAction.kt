@@ -8,7 +8,10 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.DumbAware
 
-class InsertHttpRequestTemplateAction(private val method: String) : AnAction(method), DumbAware {
+class InsertHttpRequestTemplateAction(
+    private val method: String,
+) : AnAction(method),
+    DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
     override fun update(e: AnActionEvent) {
@@ -23,11 +26,12 @@ class InsertHttpRequestTemplateAction(private val method: String) : AnAction(met
         val template = buildTemplate(method)
         val document = editor.document
         val insertionOffset = findInsertionOffset(document)
-        val insertText = if (insertionOffset < document.textLength) {
-            template.trimEnd() + "\n\n###\n\n"
-        } else {
-            template.trimEnd() + "\n\n"
-        }
+        val insertText =
+            if (insertionOffset < document.textLength) {
+                template.trimEnd() + "\n\n###\n\n"
+            } else {
+                template.trimEnd() + "\n\n"
+            }
         WriteCommandAction.runWriteCommandAction(project) {
             document.insertString(insertionOffset, insertText)
             editor.caretModel.moveToOffset(insertionOffset + method.length + 1)
@@ -57,12 +61,13 @@ class InsertHttpRequestTemplateAction(private val method: String) : AnAction(met
         val lineCount = document.lineCount
         var lastPreludeLine = -1
         for (line in 0 until lineCount) {
-            val lineText = document.getText(
-                com.intellij.openapi.util.TextRange(
-                    document.getLineStartOffset(line),
-                    document.getLineEndOffset(line)
+            val lineText =
+                document.getText(
+                    com.intellij.openapi.util.TextRange(
+                        document.getLineStartOffset(line),
+                        document.getLineEndOffset(line),
+                    ),
                 )
-            )
             val trimmed = lineText.trim()
             if (trimmed.isEmpty() || isVariableDefinition(trimmed)) {
                 lastPreludeLine = line
@@ -77,7 +82,5 @@ class InsertHttpRequestTemplateAction(private val method: String) : AnAction(met
         }
     }
 
-    private fun isVariableDefinition(line: String): Boolean {
-        return line.startsWith("@") && line.contains("=")
-    }
+    private fun isVariableDefinition(line: String): Boolean = line.startsWith("@") && line.contains("=")
 }

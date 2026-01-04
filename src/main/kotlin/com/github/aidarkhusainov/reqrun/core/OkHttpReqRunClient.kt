@@ -5,16 +5,15 @@ import com.github.aidarkhusainov.reqrun.model.CompositeBody
 import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
 import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
 import com.github.aidarkhusainov.reqrun.model.TextBody
-import com.intellij.openapi.progress.ProcessCanceledException
-import com.intellij.openapi.progress.ProgressIndicator
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.progress.ProgressIndicator
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -31,13 +30,14 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class OkHttpReqRunClient(
-    private val client: OkHttpClient
+    private val client: OkHttpClient,
 ) : ReqRunHttpClient {
     private data class JsonFormatResult(
         val formatted: String?,
-        val error: String?
+        val error: String?,
     )
 
+    @Suppress("LongMethod", "NestedBlockDepth")
     override fun execute(
         request: HttpRequestSpec,
         indicator: ProgressIndicator?,
@@ -46,9 +46,11 @@ class OkHttpReqRunClient(
         val startedAt = System.nanoTime()
         val deadline = startedAt + requestTimeout.toNanos()
         val body = buildRequestBody(request)
-        val builder = Request.Builder()
-            .url(request.url)
-            .method(request.method, body)
+        val builder =
+            Request
+                .Builder()
+                .url(request.url)
+                .method(request.method, body)
         request.headers.forEach { (name, value) ->
             builder.header(name, value)
         }
@@ -124,15 +126,23 @@ class OkHttpReqRunClient(
 
     private fun enqueue(call: Call): CompletableFuture<Response> {
         val future = CompletableFuture<Response>()
-        call.enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                future.completeExceptionally(e)
-            }
+        call.enqueue(
+            object : Callback {
+                override fun onFailure(
+                    call: Call,
+                    e: IOException,
+                ) {
+                    future.completeExceptionally(e)
+                }
 
-            override fun onResponse(call: Call, response: Response) {
-                future.complete(response)
-            }
-        })
+                override fun onResponse(
+                    call: Call,
+                    response: Response,
+                ) {
+                    future.complete(response)
+                }
+            },
+        )
         return future
     }
 
@@ -145,7 +155,10 @@ class OkHttpReqRunClient(
         }
     }
 
-    private fun compositeToRequestBody(body: CompositeBody, mediaType: okhttp3.MediaType?): RequestBody {
+    private fun compositeToRequestBody(
+        body: CompositeBody,
+        mediaType: okhttp3.MediaType?,
+    ): RequestBody {
         val parts = body.parts
         val singleFile = parts.singleOrNull() as? BodyPart.File
         if (singleFile != null) {
@@ -163,22 +176,28 @@ class OkHttpReqRunClient(
         }
     }
 
-    private fun saveResponseBody(response: Response, path: java.nio.file.Path, append: Boolean) {
+    @Suppress("SpreadOperator")
+    private fun saveResponseBody(
+        response: Response,
+        path: java.nio.file.Path,
+        append: Boolean,
+    ) {
         val parent = path.parent
         if (parent != null) {
             Files.createDirectories(parent)
         }
-        val options = if (append) {
-            arrayOf(
-                java.nio.file.StandardOpenOption.CREATE,
-                java.nio.file.StandardOpenOption.APPEND
-            )
-        } else {
-            arrayOf(
-                java.nio.file.StandardOpenOption.CREATE,
-                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
-            )
-        }
+        val options =
+            if (append) {
+                arrayOf(
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.APPEND,
+                )
+            } else {
+                arrayOf(
+                    java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.TRUNCATE_EXISTING,
+                )
+            }
         Files.newOutputStream(path, *options).use { output ->
             val input = response.body?.byteStream()
             if (input == null) return
@@ -188,10 +207,11 @@ class OkHttpReqRunClient(
 
     private class CompositeRequestBody(
         private val parts: List<BodyPart>,
-        private val mediaType: okhttp3.MediaType?
+        private val mediaType: okhttp3.MediaType?,
     ) : RequestBody() {
         override fun contentType(): okhttp3.MediaType? = mediaType
 
+        @Suppress("NestedBlockDepth")
         override fun writeTo(sink: BufferedSink) {
             for (part in parts) {
                 when (part) {
@@ -217,28 +237,33 @@ class OkHttpReqRunClient(
         }
 
     // Minimal reason map for common codes; rest left empty to avoid misleading text.
-    private fun reasonPhrase(code: Int): String = when (code) {
-        200 -> "OK"
-        201 -> "Created"
-        202 -> "Accepted"
-        204 -> "No Content"
-        301 -> "Moved Permanently"
-        302 -> "Found"
-        304 -> "Not Modified"
-        400 -> "Bad Request"
-        401 -> "Unauthorized"
-        403 -> "Forbidden"
-        404 -> "Not Found"
-        409 -> "Conflict"
-        422 -> "Unprocessable Entity"
-        429 -> "Too Many Requests"
-        500 -> "Internal Server Error"
-        502 -> "Bad Gateway"
-        503 -> "Service Unavailable"
-        else -> ""
-    }
+    private fun reasonPhrase(code: Int): String =
+        when (code) {
+            200 -> "OK"
+            201 -> "Created"
+            202 -> "Accepted"
+            204 -> "No Content"
+            301 -> "Moved Permanently"
+            302 -> "Found"
+            304 -> "Not Modified"
+            400 -> "Bad Request"
+            401 -> "Unauthorized"
+            403 -> "Forbidden"
+            404 -> "Not Found"
+            409 -> "Conflict"
+            422 -> "Unprocessable Entity"
+            429 -> "Too Many Requests"
+            500 -> "Internal Server Error"
+            502 -> "Bad Gateway"
+            503 -> "Service Unavailable"
+            else -> ""
+        }
 
-    private fun formatJsonBody(body: String, contentType: String?): JsonFormatResult {
+    @Suppress("ReturnCount")
+    private fun formatJsonBody(
+        body: String,
+        contentType: String?,
+    ): JsonFormatResult {
         if (body.isBlank()) return JsonFormatResult(null, null)
         if (!isJsonContentType(contentType) && !looksLikeJson(body)) return JsonFormatResult(null, null)
         return try {
@@ -261,7 +286,11 @@ class OkHttpReqRunClient(
         return trimmed.startsWith("{") || trimmed.startsWith("[")
     }
 
-    private fun formatHtmlBody(body: String, contentType: String?): String? {
+    @Suppress("ReturnCount")
+    private fun formatHtmlBody(
+        body: String,
+        contentType: String?,
+    ): String? {
         if (body.isBlank()) return null
         if (!isHtmlContentType(contentType) && !looksLikeHtml(body)) return null
         return try {
@@ -271,7 +300,11 @@ class OkHttpReqRunClient(
         }
     }
 
-    private fun formatXmlBody(body: String, contentType: String?): String? {
+    @Suppress("ReturnCount")
+    private fun formatXmlBody(
+        body: String,
+        contentType: String?,
+    ): String? {
         if (body.isBlank()) return null
         if (!isXmlContentType(contentType) && !looksLikeXml(body)) return null
         return try {
@@ -305,7 +338,10 @@ class OkHttpReqRunClient(
         return trimmed.startsWith("<?xml") || trimmed.startsWith("<")
     }
 
-    private fun formatMarkup(body: String, isHtml: Boolean): String {
+    private fun formatMarkup(
+        body: String,
+        isHtml: Boolean,
+    ): String {
         val withBreaks = body.replace("><", ">\n<")
         val lines = withBreaks.split('\n')
         val sb = StringBuilder(withBreaks.length + 64)
@@ -331,10 +367,23 @@ class OkHttpReqRunClient(
 
     private fun isHtmlVoidTag(line: String): Boolean {
         val name = extractTagName(line) ?: return false
-        return name in setOf(
-            "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
-            "meta", "param", "source", "track", "wbr"
-        )
+        return name in
+            setOf(
+                "area",
+                "base",
+                "br",
+                "col",
+                "embed",
+                "hr",
+                "img",
+                "input",
+                "link",
+                "meta",
+                "param",
+                "source",
+                "track",
+                "wbr",
+            )
     }
 
     private fun extractTagName(line: String): String? {

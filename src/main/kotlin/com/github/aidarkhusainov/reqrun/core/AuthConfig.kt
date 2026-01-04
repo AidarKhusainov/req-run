@@ -1,13 +1,13 @@
 package com.github.aidarkhusainov.reqrun.core
 
 enum class AuthType {
-    STATIC
+    STATIC,
 }
 
 enum class AuthScheme {
     BEARER,
     BASIC,
-    API_KEY
+    API_KEY,
 }
 
 data class AuthConfig(

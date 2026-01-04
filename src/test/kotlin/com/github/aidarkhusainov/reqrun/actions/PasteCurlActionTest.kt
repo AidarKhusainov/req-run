@@ -64,7 +64,9 @@ class PasteCurlActionTest : BasePlatformTestCase() {
         myFixture.configureByText("test.http", "before\nafter")
         val action = PasteCurlAction()
         CopyPasteManager.getInstance().setContents(StringSelection(curl))
-        val insertOffset = myFixture.editor.document.text.indexOf("after")
+        val insertOffset =
+            myFixture.editor.document.text
+                .indexOf("after")
         myFixture.editor.caretModel.moveToOffset(insertOffset)
 
         clearReqRunNotifications(project)

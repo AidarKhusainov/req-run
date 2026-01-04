@@ -31,19 +31,21 @@ class InsertHttpRequestTemplateActionTest : BasePlatformTestCase() {
 
     fun testFindInsertionOffsetSkipsVariablePrelude() {
         val action = InsertHttpRequestTemplateAction("GET")
-        val method = InsertHttpRequestTemplateAction::class.java.getDeclaredMethod(
-            "findInsertionOffset",
-            com.intellij.openapi.editor.Document::class.java
-        )
+        val method =
+            InsertHttpRequestTemplateAction::class.java.getDeclaredMethod(
+                "findInsertionOffset",
+                com.intellij.openapi.editor.Document::class.java,
+            )
         method.isAccessible = true
 
-        val text = """
+        val text =
+            """
             @token = abc
 
             @baseUrl = https://example.com
 
             GET https://example.com
-        """.trimIndent()
+            """.trimIndent()
         val document = EditorFactory.getInstance().createDocument(text)
 
         val offset = method.invoke(action, document) as Int

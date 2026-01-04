@@ -85,9 +85,9 @@ class RunHttpRequestsGroupActionTest : BasePlatformTestCase() {
         myFixture.configureByText(
             "test.http",
             """
-                GET https://example.com
-                Authorization: Bearer {{${'$'}auth.token("bearer")}}
-            """.trimIndent()
+            GET https://example.com
+            Authorization: Bearer {{${'$'}auth.token("bearer")}}
+            """.trimIndent(),
         )
         val action = RunHttpRequestsGroupAction()
         val event = createActionEvent(project, myFixture.editor, myFixture.file.virtualFile)

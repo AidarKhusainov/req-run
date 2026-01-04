@@ -20,7 +20,7 @@ import javax.swing.JComponent
 
 class EnvSelectorAction(
     private val project: Project,
-    private var file: VirtualFile
+    private var file: VirtualFile,
 ) : ComboBoxAction() {
     private val envService = project.getService(ReqRunEnvironmentService::class.java)
 
@@ -33,10 +33,14 @@ class EnvSelectorAction(
         e.presentation.description = envService.describeEnvPaths(file)
     }
 
-    override fun createPopupActionGroup(button: JComponent, context: DataContext): DefaultActionGroup {
-        val names = ReadAction.compute<List<String>, RuntimeException> {
-            envService.getEnvironmentNames(file)
-        }
+    override fun createPopupActionGroup(
+        button: JComponent,
+        context: DataContext,
+    ): DefaultActionGroup {
+        val names =
+            ReadAction.compute<List<String>, RuntimeException> {
+                envService.getEnvironmentNames(file)
+            }
         val group = DefaultActionGroup()
         group.add(envToggleAction(NO_ENVIRONMENT, null))
         for (name in names) {
@@ -54,7 +58,10 @@ class EnvSelectorAction(
         private const val OPEN_PRIVATE_ENV = "Open http-client.private.env.json"
     }
 
-    private fun openEnvAction(text: String, isPrivate: Boolean): AnAction =
+    private fun openEnvAction(
+        text: String,
+        isPrivate: Boolean,
+    ): AnAction =
         object : AnAction(text) {
             override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
@@ -66,14 +73,19 @@ class EnvSelectorAction(
             }
         }
 
-    private fun envToggleAction(text: String, envName: String?): ToggleAction =
+    private fun envToggleAction(
+        text: String,
+        envName: String?,
+    ): ToggleAction =
         object : ToggleAction(text) {
             override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
 
-            override fun isSelected(e: AnActionEvent): Boolean =
-                envService.getSelectedEnvironment() == envName
+            override fun isSelected(e: AnActionEvent): Boolean = envService.getSelectedEnvironment() == envName
 
-            override fun setSelected(e: AnActionEvent, state: Boolean) {
+            override fun setSelected(
+                e: AnActionEvent,
+                state: Boolean,
+            ) {
                 if (!state) return
                 envService.setSelectedEnvironment(envName)
             }

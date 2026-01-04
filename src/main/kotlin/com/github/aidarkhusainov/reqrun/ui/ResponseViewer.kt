@@ -39,12 +39,12 @@ private data class FoldSection(
     val start: Int,
     val end: Int,
     val placeholder: String,
-    val defaultExpanded: Boolean = false
+    val defaultExpanded: Boolean = false,
 )
 
 class ResponseViewer(
     private val project: Project,
-    private val execution: ReqRunExecution
+    private val execution: ReqRunExecution,
 ) {
     companion object {
         private const val SOFT_WRAP_MAX_LENGTH = 20_000
@@ -59,14 +59,15 @@ class ResponseViewer(
 
     init {
         val combined = buildCombinedText()
-        combinedField = ReadOnlyEditorField(
-            project,
-            combined.text,
-            PlainTextFileType.INSTANCE,
-            combined.folds,
-            foldState,
-            viewSettings.state.showLineNumbers
-        )
+        combinedField =
+            ReadOnlyEditorField(
+                project,
+                combined.text,
+                PlainTextFileType.INSTANCE,
+                combined.folds,
+                foldState,
+                viewSettings.state.showLineNumbers,
+            )
         installPopup(combinedField) { combinedField.text }
         scrollPane = JBScrollPane(combinedField)
         component = buildContainer()
@@ -111,15 +112,18 @@ class ResponseViewer(
     }
 
     private fun buildContainer(): JComponent {
-        val group = DefaultActionGroup(
-            ResponseViewSettingsActionGroup(this, viewSettings),
-            ToggleSoftWrapsAction(this),
-            ScrollToTopAction(this),
-            ScrollToEndAction(this),
-            CopyResponseBodyAction(this),
-        )
-        val toolbar = ActionManager.getInstance()
-            .createActionToolbar("ReqRunResponseViewer.Toolbar", group, false)
+        val group =
+            DefaultActionGroup(
+                ResponseViewSettingsActionGroup(this, viewSettings),
+                ToggleSoftWrapsAction(this),
+                ScrollToTopAction(this),
+                ScrollToEndAction(this),
+                CopyResponseBodyAction(this),
+            )
+        val toolbar =
+            ActionManager
+                .getInstance()
+                .createActionToolbar("ReqRunResponseViewer.Toolbar", group, false)
         toolbar.targetComponent = combinedField
         toolbar.component.isOpaque = false
         toolbar.component.background = UIUtil.getPanelBackground()
@@ -132,8 +136,10 @@ class ResponseViewer(
         }
     }
 
-    private fun statusText(response: HttpResponsePayload?, error: String?): String =
-        response?.statusLine ?: (error ?: "No response")
+    private fun statusText(
+        response: HttpResponsePayload?,
+        error: String?,
+    ): String = response?.statusLine ?: (error ?: "No response")
 
     private fun headersText(response: HttpResponsePayload?): String =
         response
@@ -146,39 +152,53 @@ class ResponseViewer(
 
     private data class Combined(
         val text: String,
-        val folds: List<FoldSection>
+        val folds: List<FoldSection>,
     )
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun buildCombinedText(): Combined {
         val response = execution.response
         val error = execution.error
         val responseHeaders = normalizeText(headersText(response))
-        val requestHeadersText = normalizeText(
-            execution.request.headers.entries
-                .joinToString("\n") { (k, v) -> "$k: $v" }
-        )
+        val requestHeadersText =
+            normalizeText(
+                execution.request.headers.entries
+                    .joinToString("\n") { (k, v) -> "$k: $v" },
+            )
         val rawBody = response?.body.orEmpty()
         val displayBody = renderBody(response, error)
         val normalizedBody = normalizeText(displayBody)
-        val requestBody = execution.request.body?.preview?.takeIf { it.isNotBlank() } ?: ""
+        val requestBody =
+            execution.request.body
+                ?.preview
+                ?.takeIf { it.isNotBlank() } ?: ""
         val normalizedRequestBody = normalizeText(requestBody)
         val status = statusText(response, error)
         val bytesSource = if (response != null) rawBody else displayBody
         val bodyBytes = bytesSource.toByteArray(StandardCharsets.UTF_8).size
         val code = response?.statusLine?.split(" ")?.getOrNull(1)
-        val reason = response?.statusLine?.split(" ", limit = 3)?.getOrNull(2).orEmpty()
-        val savedInfo = response?.savedBodyPath?.let { path ->
-            val append = if (response.savedBodyAppend) " (append)" else ""
-            "Saved to: $path$append"
-        }
-        val meta = if (response != null && code != null) {
-            val reasonPart = if (reason.isNotBlank()) " ($reason)" else ""
-            val base = "Response code: $code$reasonPart; Time: ${response.durationMillis}ms; Content length: $bodyBytes bytes ($bodyBytes B)"
-            if (savedInfo != null) "$base; $savedInfo" else base
-        } else {
-            val base = "No response; Content length: $bodyBytes bytes ($bodyBytes B)"
-            if (savedInfo != null) "$base; $savedInfo" else base
-        }
+        val reason =
+            response
+                ?.statusLine
+                ?.split(" ", limit = 3)
+                ?.getOrNull(2)
+                .orEmpty()
+        val savedInfo =
+            response?.savedBodyPath?.let { path ->
+                val append = if (response.savedBodyAppend) " (append)" else ""
+                "Saved to: $path$append"
+            }
+        val meta =
+            if (response != null && code != null) {
+                val reasonPart = if (reason.isNotBlank()) " ($reason)" else ""
+                val base =
+                    "Response code: $code$reasonPart; Time: ${response.durationMillis}ms; " +
+                        "Content length: $bodyBytes bytes ($bodyBytes B)"
+                if (savedInfo != null) "$base; $savedInfo" else base
+            } else {
+                val base = "No response; Content length: $bodyBytes bytes ($bodyBytes B)"
+                if (savedInfo != null) "$base; $savedInfo" else base
+            }
         val folds = mutableListOf<FoldSection>()
         val sb = StringBuilder()
         if (viewSettings.state.showRequestMethod) {
@@ -193,7 +213,9 @@ class ResponseViewer(
                 FoldSection(
                     reqStart,
                     reqEnd,
-                    "Request headers (${requestHeadersText.count { it == '\n' } + 1} lines)"))
+                    "Request headers (${requestHeadersText.count { it == '\n' } + 1} lines)",
+                ),
+            )
         }
         if (normalizedRequestBody.isNotBlank()) {
             if (requestHeadersText.isNotBlank()) {
@@ -218,8 +240,8 @@ class ResponseViewer(
                     headersStart,
                     headersEnd,
                     "Headers (${responseHeaders.count { it == '\n' } + 1} lines)",
-                    defaultExpanded = !foldHeaders
-                )
+                    defaultExpanded = !foldHeaders,
+                ),
             )
             sb.append("\n\n")
         } else {
@@ -235,20 +257,29 @@ class ResponseViewer(
         return Combined(sb.toString(), folds)
     }
 
-    private fun renderBody(response: HttpResponsePayload?, error: String?): String {
-        if (response == null) return error ?: ""
-        response.savedBodyPath?.let { path ->
-            val append = if (response.savedBodyAppend) " (append)" else ""
-            return "Saved response body to $path$append"
+    private fun renderBody(
+        response: HttpResponsePayload?,
+        error: String?,
+    ): String {
+        if (response == null) {
+            return error ?: ""
         }
+        val savedMessage =
+            response.savedBodyPath?.let { path ->
+                val append = if (response.savedBodyAppend) " (append)" else ""
+                "Saved response body to $path$append"
+            }
         val rawBody = response.body
-        return when (resolveViewMode(response)) {
-            JSON -> renderJsonBody(response, rawBody)
-            XML -> response.formattedXml?.takeIf { it.isNotEmpty() } ?: rawBody
-            HTML -> response.formattedHtml?.takeIf { it.isNotEmpty() } ?: rawBody
-            TEXT -> rawBody
-            AUTO -> rawBody
-        }
+        val bodyText =
+            savedMessage
+                ?: when (resolveViewMode(response)) {
+                    JSON -> renderJsonBody(response, rawBody)
+                    XML -> response.formattedXml?.takeIf { it.isNotEmpty() } ?: rawBody
+                    HTML -> response.formattedHtml?.takeIf { it.isNotEmpty() } ?: rawBody
+                    TEXT -> rawBody
+                    AUTO -> rawBody
+                }
+        return bodyText
     }
 
     private fun responseBodyForCopy(): String {
@@ -264,7 +295,10 @@ class ResponseViewer(
 
     private fun normalizeText(text: String): String = text.replace("\r\n", "\n")
 
-    private fun renderJsonBody(response: HttpResponsePayload, rawBody: String): String {
+    private fun renderJsonBody(
+        response: HttpResponsePayload,
+        rawBody: String,
+    ): String {
         val jsonError = response.jsonFormatError?.takeIf { it.isNotBlank() }
         if (jsonError != null) {
             return buildString {
@@ -277,20 +311,20 @@ class ResponseViewer(
         return response.formattedBody?.takeIf { it.isNotEmpty() } ?: rawBody
     }
 
-    private fun resolveViewMode(response: HttpResponsePayload): ResponseViewMode {
-        return when (viewMode) {
+    private fun resolveViewMode(response: HttpResponsePayload): ResponseViewMode =
+        when (viewMode) {
             AUTO -> detectAutoMode(response)
             else -> viewMode
         }
-    }
 
     private fun detectAutoMode(response: HttpResponsePayload): ResponseViewMode {
-        val contentType = response.headers.entries
-            .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
-            ?.value
-            ?.firstOrNull()
-            ?.lowercase()
-            .orEmpty()
+        val contentType =
+            response.headers.entries
+                .firstOrNull { it.key.equals("Content-Type", ignoreCase = true) }
+                ?.value
+                ?.firstOrNull()
+                ?.lowercase()
+                .orEmpty()
         return when {
             contentType.contains("application/json") || contentType.contains("+json") -> JSON
             contentType.contains("application/xml") || contentType.contains("text/xml") || contentType.contains("+xml") -> XML
@@ -306,7 +340,7 @@ class ResponseViewer(
         fileType: FileType,
         folds: List<FoldSection> = emptyList(),
         private val foldState: MutableMap<Int, Boolean> = mutableMapOf(),
-        showLineNumbers: Boolean
+        showLineNumbers: Boolean,
     ) : EditorTextField(null, project, fileType, false, false) {
         private val normalizedLength: Int
         private var softWrapsEnabled: Boolean
@@ -366,7 +400,11 @@ class ResponseViewer(
             editor.component.repaint()
         }
 
-        fun setContent(text: String, fileType: FileType, sections: List<FoldSection>) {
+        fun setContent(
+            text: String,
+            fileType: FileType,
+            sections: List<FoldSection>,
+        ) {
             val normalized = text.replace("\r\n", "\n")
             currentFolds = sections
             val doc = EditorFactory.getInstance().createDocument(normalized)
@@ -383,7 +421,10 @@ class ResponseViewer(
             super.removeNotify()
         }
 
-        private fun applyFolds(editor: EditorEx, sections: List<FoldSection>) {
+        private fun applyFolds(
+            editor: EditorEx,
+            sections: List<FoldSection>,
+        ) {
             ApplicationManager.getApplication().runReadAction {
                 editor.foldingModel.runBatchFoldingOperation {
                     editor.foldingModel.allFoldRegions.forEach { editor.foldingModel.removeFoldRegion(it) }
@@ -400,13 +441,16 @@ class ResponseViewer(
         }
     }
 
-    private fun installPopup(field: EditorTextField, textSupplier: () -> String) {
+    private fun installPopup(
+        field: EditorTextField,
+        textSupplier: () -> String,
+    ) {
         val group = DefaultActionGroup(CompareWithClipboardAction(textSupplier))
         PopupHandler.installPopupMenu(field, group, ActionPlaces.EDITOR_POPUP)
     }
 
     private inner class CompareWithClipboardAction(
-        private val textSupplier: () -> String
+        private val textSupplier: () -> String,
     ) : DumbAwareAction("Compare with Clipboard") {
         override fun actionPerformed(e: AnActionEvent) {
             val clipboardText = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor)
@@ -416,13 +460,14 @@ class ResponseViewer(
             }
             val responseText = textSupplier()
             val factory = DiffContentFactory.getInstance()
-            val request = SimpleDiffRequest(
-                "Compare Response with Clipboard",
-                factory.create(project, responseText),
-                factory.create(project, clipboardText),
-                "Response",
-                "Clipboard"
-            )
+            val request =
+                SimpleDiffRequest(
+                    "Compare Response with Clipboard",
+                    factory.create(project, responseText),
+                    factory.create(project, clipboardText),
+                    "Response",
+                    "Clipboard",
+                )
             DiffManager.getInstance().showDiff(project, request)
         }
     }
