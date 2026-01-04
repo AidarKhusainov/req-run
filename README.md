@@ -90,6 +90,64 @@ https://github.com/AidarKhusainov/req-run
 
 ---
 
+## Screenshots
+
+<details open>
+<summary>Editor toolbar and gutter actions</summary>
+<p align="center">
+  <img src="docs/screenshot/editor-toolbar-gutter.png" alt="Editor toolbar and gutter actions">
+</p>
+</details>
+
+<details>
+<summary>Response viewer with history</summary>
+<p align="center">
+  <img src="docs/screenshot/response-viewer-history.png" alt="Response viewer with history">
+</p>
+</details>
+
+<details>
+<summary>ReqRun settings</summary>
+<p align="center">
+  <img src="docs/screenshot/settings-reqrun.png" alt="ReqRun settings">
+</p>
+</details>
+
+<details>
+<summary>History context menu (re-run, clear)</summary>
+<p align="center">
+  <img src="docs/screenshot/history-context-menu.png" alt="History context menu">
+</p>
+</details>
+
+<details>
+<summary>Templates and insert menu</summary>
+<p align="center">
+  <img src="docs/screenshot/toolbar-templates-menu.png" alt="Templates and insert menu">
+</p>
+</details>
+
+<details>
+<summary>Environment file example</summary>
+<p align="center">
+  <img src="docs/screenshot/env-file-example.png" alt="Environment file example">
+</p>
+</details>
+
+<details>
+<summary>Editor context actions</summary>
+<p align="center">
+  <img src="docs/screenshot/editor-context-actions.png" alt="Editor context actions">
+</p>
+</details>
+
+<details>
+<summary>Run selected files</summary>
+<p align="center">
+  <img src="docs/screenshot/run-selected-files.png" alt="Run selected files">
+</p>
+</details>
+
 ## Actions
 
 - **Run HTTP Request** — run the request block at the caret (`Ctrl+Alt+R`)
