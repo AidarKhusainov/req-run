@@ -11,6 +11,7 @@ import com.intellij.execution.services.ServiceViewManager
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.navigation.ItemPresentation
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -35,6 +36,7 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
         )
 
         private val caches = WeakHashMap<Project, ProjectCache>()
+        private val toolbarActions: DefaultActionGroup = DefaultActionGroup(createRerunAction())
         private val popupActions: DefaultActionGroup =
             DefaultActionGroup(createRerunAction(), createClearHistoryAction())
 
@@ -50,6 +52,8 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
 
         private fun createRerunAction(): AnAction =
             object : DumbAwareAction("Re-run Request", "Execute this request again", AllIcons.Actions.Rerun) {
+                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
                 override fun update(e: AnActionEvent) {
                     e.presentation.isEnabled = selectedExecution(e) != null
                 }
@@ -100,6 +104,8 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
 
         private fun createClearHistoryAction(): AnAction =
             object : DumbAwareAction("Clear History", "Remove all request executions", AllIcons.Actions.GC) {
+                override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+
                 override fun update(e: AnActionEvent) {
                     val project = e.project ?: return
                     val hasItems = project.getService(ReqRunExecutionService::class.java).list().isNotEmpty()
@@ -171,7 +177,7 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
         val cache = cacheFor(project)
         val viewer = cache.viewers.computeIfAbsent(service.id) { ResponseViewer(project, service) }
         return cache.descriptors.computeIfAbsent(service.id) {
-            ExecutionDescriptor(project, service, viewer, popupActions) {
+            ExecutionDescriptor(project, service, viewer, popupActions, toolbarActions) {
                 cache.viewers.remove(service.id)
                 cache.descriptors.remove(service.id)
             }
@@ -198,6 +204,7 @@ private class ExecutionDescriptor(
     private val execution: ReqRunExecution,
     private val viewer: ResponseViewer,
     private val popupActions: DefaultActionGroup,
+    private val toolbarActions: DefaultActionGroup,
     private val removeViewer: () -> Unit,
 ) : ServiceViewDescriptor {
     private val historySettings = ApplicationManager.getApplication().getService(ReqRunHistorySettings::class.java)
@@ -216,7 +223,7 @@ private class ExecutionDescriptor(
 
     override fun isVisible(): Boolean = true
 
-    override fun getToolbarActions(): com.intellij.openapi.actionSystem.ActionGroup? = null
+    override fun getToolbarActions(): com.intellij.openapi.actionSystem.ActionGroup? = toolbarActions
 
     override fun getPopupActions(): com.intellij.openapi.actionSystem.ActionGroup = popupActions
 
