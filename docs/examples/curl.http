@@ -1,0 +1,10 @@
+# cURL import/export workflow
+# Copy this cURL command, then use "Paste cURL as HTTP" in the editor:
+# curl --http2 -X POST https://httpbin.org/post -H 'Content-Type: application/json' --data '{"ok":true}'
+
+###
+POST https://httpbin.org/post HTTP/2
+Accept: application/json
+Content-Type: application/json
+
+{"ok": true}

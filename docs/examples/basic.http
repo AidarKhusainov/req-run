@@ -1,0 +1,16 @@
+# Basic GET and POST with headers and JSON body
+
+###
+GET https://httpbin.org/get
+Accept: application/json
+X-Request-Id: demo-1
+
+###
+POST https://httpbin.org/post
+Accept: application/json
+Content-Type: application/json
+
+{
+  "message": "Hello from ReqRun",
+  "count": 3
+}

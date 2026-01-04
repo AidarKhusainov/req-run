@@ -1,0 +1,31 @@
+# Static auth helpers with a public login endpoint
+# 1) Run the login request and copy the token from the response.
+# 2) Paste it into http-client.private.env.json under the active environment.
+# 3) Run the second request using {{$auth.header("bearer")}}.
+#
+# Example env file:
+# {
+#   "local": {
+#     "token": "paste-token-here",
+#     "Security": {
+#       "Auth": {
+#         "bearer": { "Type": "Static", "Scheme": "Bearer", "Token": "{{token}}" }
+#       }
+#     }
+#   }
+# }
+
+###
+POST https://fakestoreapi.com/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "name",
+  "password": "pass"
+}
+
+###
+GET https://fakestoreapi.com/users/1
+Accept: application/json
+{{$auth.header("bearer")}}

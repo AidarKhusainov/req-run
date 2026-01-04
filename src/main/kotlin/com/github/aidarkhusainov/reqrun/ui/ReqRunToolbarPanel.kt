@@ -49,7 +49,7 @@ class ReqRunToolbarPanel(
         val toolbarHeight = toolbar.component.preferredSize.height
         val examplesLink =
             ActionLink("Examples") {
-                BrowserUtil.browse("https://github.com/AidarKhusainov/req-run/blob/main/examples.http")
+                BrowserUtil.browse("https://github.com/AidarKhusainov/req-run/tree/main/docs/examples")
             }
         examplesLink.font = toolbar.component.font
         examplesLink.isOpaque = false

@@ -18,237 +18,84 @@
 [![License](https://img.shields.io/badge/License-MIT%20-6B4E2E.svg)](LICENSE)
 
 <!-- Plugin description -->
-**ReqRun** is a minimal HTTP client for IntelliJ IDEA Community Edition.
+ReqRun is a minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests from the editor.
 
-Run `.http` requests directly from the editor — fast, readable, and without Ultimate.
-
-## Features
-
-- Run request blocks with gutter markers or `Ctrl+Alt+R`
-- Run all requests from selection, file, or folder
-- Inline toolbar with templates, import/export, run-all, and environment selector
-- Environment variables from `http-client.env.json` and `http-client.private.env.json`
+- Run request blocks with gutter icons or `Ctrl+Alt+R`
+- Run selections, entire files, or folders of requests
+- Inline toolbar for templates, environments, and cURL import/export
+- Environments via `http-client.env.json` and `http-client.private.env.json`
 - File variables (`@name = value`) and built-in variables (`{{$timestamp}}`, `{{$uuid}}`, `{{$randomInt}}`)
-- Static auth configs in env files (see `docs/auth.md`)
-- Warnings for unresolved variables before execution
-- Full response viewer: status, headers, body, and quick compare
-- Response view settings: view as JSON/XML/HTML/Text, line numbers, header folding, and soft wraps
-- Response viewer tools: scroll to top/end and copy response body
-- Service tool window with history and one-click re-run
-- File upload with `< path` and response save with `> path`
-- Convert requests to cURL or paste cURL as `.http`
-- Line comments with `#` and request separators with `###`
-
-## Request Format
+- Static auth configs under `Security.Auth` with `{{$auth.token(...)}}` and `{{$auth.header(...)}}`
+- Response viewer with history in the service tool window
 
 ```http
-POST https://httpbin.org/post
-Content-Type: application/json
-
-{
-  "work": "yes"
-}
-```
-
-Place the caret inside a request block and press `Ctrl+Alt+R`.
-
-You can specify the HTTP version in the request line (default is HTTP/1.1):
-
-```http
-GET https://example.com HTTP/2
-```
-
-### Files
-
-Upload a file (multipart):
-
-```http
-POST https://httpbin.org/post
-Content-Type: multipart/form-data; boundary=WebAppBoundary
+GET https://httpbin.org/get
 Accept: application/json
-
---WebAppBoundary
-Content-Disposition: form-data; name="file"; filename="note.txt"
-
-< ./note.txt
---WebAppBoundary--
 ```
-
-Save a response to a file:
-
-```http
-GET https://httpbin.org/image/png
-Accept: image/png
-> ./downloads/image.png
-```
-
-## Feedback
-
-Suggestions and bug reports:  
-https://github.com/AidarKhusainov/req-run
 <!-- Plugin description end -->
 
----
+A minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests directly from the editor.
 
-## Screenshots
+## Why ReqRun
 
-<details open>
-<summary>Editor toolbar and gutter actions</summary>
-<p align="center">
-  <img src="docs/screenshot/editor-toolbar-gutter.png" alt="Editor toolbar and gutter actions">
-</p>
-</details>
+- Works in IntelliJ IDEA Community Edition without Ultimate APIs
+- Keeps requests in plain text files you can version-control
+- Fast request execution with clear response viewer and history
+- Simple environments and variable resolution with predictable precedence
+- cURL import/export for interoperability
 
-<details>
-<summary>Response viewer with history</summary>
-<p align="center">
-  <img src="docs/screenshot/response-viewer-history.png" alt="Response viewer with history">
-</p>
-</details>
-
-<details>
-<summary>ReqRun settings</summary>
-<p align="center">
-  <img src="docs/screenshot/settings-reqrun.png" alt="ReqRun settings">
-</p>
-</details>
-
-<details>
-<summary>History context menu (re-run, clear)</summary>
-<p align="center">
-  <img src="docs/screenshot/history-context-menu.png" alt="History context menu">
-</p>
-</details>
-
-<details>
-<summary>Templates and insert menu</summary>
-<p align="center">
-  <img src="docs/screenshot/toolbar-templates-menu.png" alt="Templates and insert menu">
-</p>
-</details>
-
-<details>
-<summary>Environment file example</summary>
-<p align="center">
-  <img src="docs/screenshot/env-file-example.png" alt="Environment file example">
-</p>
-</details>
-
-<details>
-<summary>Editor context actions</summary>
-<p align="center">
-  <img src="docs/screenshot/editor-context-actions.png" alt="Editor context actions">
-</p>
-</details>
-
-<details>
-<summary>Run selected files</summary>
-<p align="center">
-  <img src="docs/screenshot/run-selected-files.png" alt="Run selected files">
-</p>
-</details>
-
-## Actions
-
-- **Run HTTP Request** — run the request block at the caret (`Ctrl+Alt+R`)
-- **Run Selected Requests** — run all requests from selection, file, or folder
-- **Run All Requests (Toolbar)** — execute all requests in the current file
-- **Convert to cURL and Copy** — copy request as a cURL command
-- **Paste cURL as HTTP** — convert cURL to `.http` (supports `--http1.1`, `--http2`, `--http2-prior-knowledge`)
-- **New Request Templates** — insert GET/POST/POST (File)/PUT/PATCH/DELETE templates
-- **Add Environment Variable** — add variable to shared or private env file
-- **Add Auth Configuration** — add static auth template to shared or private env file
-
-## Toolbar
-
-When you open a `.http` file, ReqRun shows an inline toolbar above the editor:
-
-- **New Request** — insert request templates and env variables
-- **Export / Import** — copy as cURL or paste from cURL
-- **Run All Requests** — execute every request in the current file
-- **Run With** — select environment or open env files
-- **Examples** — open curated examples
-
-## Response Viewer
-
-Response results open in the Service tool window and include:
-
-- View As modes for JSON/XML/HTML/Text (Auto by Content-Type)
-- Soft wraps and line numbers toggles
-- Header folding for non-empty responses
-- Quick actions: scroll to top/end, copy response body
-
-## Variables
-
-### File variables
+## Quick example
 
 ```http
-@baseUrl = https://httpbin.org
-@token = demo
+GET https://httpbin.org/get
+Accept: application/json
 ```
 
-Use them in requests as `{{baseUrl}}` and `{{token}}`.
+Place the caret inside the request block and press `Ctrl+Alt+R`.
 
-### Built-in variables
+## Highlights
 
-- `{{$timestamp}}` — Unix timestamp (seconds)
-- `{{$uuid}}` — random UUID
-- `{{$randomInt}}` — random integer in range 0..1000
+- Request blocks separated by `###`
+- Line comments with `#`
+- Run request at caret, selection, file, or folder
+- Gutter run icons for request blocks
+- Inline toolbar with templates, environment selector, and run-all
+- Environment discovery with shared/private merge rules
+- File variables and built-in variables
+- Static auth configs with helper placeholders
+- Unresolved variable warnings before execution
+- Response viewer with JSON/XML/HTML/Text view modes
+- Response toolbar actions: soft wraps, scroll, copy body
+- Header folding and line numbers in the response viewer
+- Service tool window history with re-run and clear actions
+- Save response to file with `> / >>` and upload with `<`
+- Copy as cURL and paste cURL as HTTP
 
-## Environments
+## Documentation
 
-ReqRun loads environment variables from:
-
-- `http-client.env.json` (shared, committed)
-- `http-client.private.env.json` (private, recommended for secrets)
-
-Private variables override shared ones on key conflicts.
-
-Environment discovery scans upward from the current file to the project root.
-Custom paths can be configured in:
-
-`Settings → Tools → ReqRun`
-
-Also available there:
-- Toggle short URLs in request history (hide host).
-
-Example `http-client.env.json`:
-
-```json
-{
-  "local": {
-    "baseUrl": "https://httpbin.org",
-    "token": "demo"
-  },
-  "stage": {
-    "baseUrl": "https://stage.example.com"
-  }
-}
-```
-
-Select the active environment from the toolbar.
-
-## Static Auth
-
-ReqRun supports static auth configs defined under `Security.Auth` in env files and referenced via `{{$auth.token("id")}}` or `{{$auth.header("id")}}`.
-Full auth documentation: `docs/auth.md`.
+- `docs/index.md` - start here
+- `docs/quickstart.md` - first request in 5 minutes
+- `docs/request-format.md` - syntax and separators
+- `docs/variables.md` - file, environment, and built-in variables
+- `docs/environments.md` - env files and discovery
+- `docs/auth.md` - static auth configs
+- `docs/response-viewer.md` - response viewer reference
+- `docs/curl-import-export.md` - cURL workflow
 
 ## Installation
 
 ### From Marketplace
 
-`Settings → Plugins → Marketplace → Search "ReqRun" → Install`
+`Settings | Plugins | Marketplace | Search "ReqRun" | Install`
 
 ### From Disk
 
-1. Download plugin ZIP from Marketplace or GitHub releases
-2. `Settings → Plugins → ⚙ → Install plugin from disk...`
+1) Download the plugin ZIP from Marketplace or GitHub Releases
+2) `Settings | Plugins | Install plugin from disk...`
 
-## Releases
+## Project
 
-Release notes and artifacts:  
-https://github.com/AidarKhusainov/req-run/releases
-
-## License
-
-MIT. See `LICENSE`.
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `RELEASING.md`
+- Issues: https://github.com/AidarKhusainov/req-run/issues

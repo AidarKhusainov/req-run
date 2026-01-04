@@ -1,0 +1,10 @@
+# Response viewer features (view modes, copy, fold headers)
+# Run each request and use View As (Auto/JSON/HTML) in the response viewer.
+
+###
+GET https://httpbin.org/json
+Accept: application/json
+
+###
+GET https://httpbin.org/html
+Accept: text/html

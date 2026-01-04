@@ -1,0 +1,18 @@
+# File variables, placeholders, and built-in variables
+@baseUrl = https://httpbin.org
+@userId = 42
+
+###
+GET {{baseUrl}}/get?user={{userId}}&ts={{$timestamp}}
+Accept: application/json
+X-Request-Id: {{$uuid}}
+
+###
+POST {{baseUrl}}/post
+Accept: application/json
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "rand": "{{$randomInt}}"
+}

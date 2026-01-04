@@ -1,0 +1,17 @@
+# Environment variables from http-client.env.json
+# Example env file:
+# {
+#   "local": {
+#     "baseUrl": "https://httpbin.org",
+#     "token": "demo"
+#   },
+#   "stage": {
+#     "baseUrl": "https://stage.example.com",
+#     "token": "stage-token"
+#   }
+# }
+
+###
+GET {{baseUrl}}/get
+Accept: application/json
+Authorization: Bearer {{token}}
