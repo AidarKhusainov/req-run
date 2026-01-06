@@ -23,8 +23,8 @@ ReqRun ships via Git tags. A tag triggers a GitHub Release and then an automatic
 3) Create and push a version tag:
 
 ```bash
-git tag v2.1.1
-git push origin v2.1.1
+git tag 2.1.1
+git push origin 2.1.1
 ```
 
 ## What happens in CI
@@ -37,13 +37,13 @@ git push origin v2.1.1
 
 ## Notes
 
-- Plugin version is derived from the Git tag (e.g., `v2.1.1` -> `2.1.1`).
+- Plugin version is derived from the Git tag (e.g., `2.1.1`).
 - Tags must match the SemVer pattern `vX.Y.Z`.
 - If a tag points to the wrong commit, delete and recreate it:
 
 ```bash
-git tag -d v2.1.1
-git push origin :refs/tags/v2.1.1
-git tag v2.1.1
-git push origin v2.1.1
+git tag -d 2.1.1
+git push origin :refs/tags/2.1.1
+git tag 2.1.1
+git push origin 2.1.1
 ```
