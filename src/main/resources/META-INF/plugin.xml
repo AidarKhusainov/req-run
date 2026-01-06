@@ -10,14 +10,22 @@
           Run requests from plain <code>.http</code> files — fast, readable, shareable, and version-controlled.
         </p>
 
-        <p><b>Highlights</b></p>
+        <p><b>Key features</b></p>
         <ul>
           <li>Run request blocks with gutter markers or <code>Ctrl+Alt+R</code></li>
           <li>Run requests from selection, file, or folder</li>
-          <li>Inline toolbar: templates, import/export (cURL), run-all, environment selector</li>
+          <li>Inline toolbar: templates, cURL import/export, run-all, environment selector</li>
+          <li>Response viewer with status/headers/body, view modes, and quick actions</li>
+          <li>Service tool window history with re-run and optional URL shortening</li>
+        </ul>
+
+        <p><b>Variables and environments</b></p>
+        <ul>
+          <li>File variables: <code>@name = value</code></li>
+          <li>Placeholders: <code>{{var}}</code></li>
+          <li>Built-ins: <code>{{$timestamp}}</code>, <code>{{$uuid}}</code>, <code>{{$randomInt}}</code></li>
           <li>Environments: <code>http-client.env.json</code> + <code>http-client.private.env.json</code> (private overrides shared)</li>
-          <li>Variables: <code>@name = value</code>, <code>{{var}}</code>, built-ins <code>{{$timestamp}}</code>, <code>{{$uuid}}</code>, <code>{{$randomInt}}</code></li>
-          <li>Response viewer (status / headers / body) + history tool window</li>
+          <li>Static auth configs in env files with <code>{{$auth.token("id")}}</code> and <code>{{$auth.header("id")}}</code></li>
         </ul>
 
         <p><b>Request example</b></p>
@@ -33,11 +41,20 @@
           <li><code>#</code> starts a line comment (ignored by parser and runner)</li>
           <li>A blank line (or a comment line) separates headers and body</li>
           <li>Use <code>###</code> on its own line to separate request blocks</li>
+          <li>Use <code>&gt;</code> or <code>&gt;&gt;</code> to save responses; <code>&lt;</code> to upload files</li>
+        </ul>
+
+        <p><b>Docs</b></p>
+        <ul>
+          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/quickstart.md">Quickstart</a></li>
+          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/request-format.md">Request format</a></li>
+          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/environments.md">Environments</a></li>
+          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/response-viewer.md">Response viewer</a></li>
         </ul>
 
         <p>
           Feedback and bug reports:
-          <a href="https://github.com/AidarKhusainov/req-run">github.com/AidarKhusainov/req-run</a>
+          <a href="https://github.com/AidarKhusainov/req-run/issues">GitHub Issues</a>
         </p>
     ]]></description>
 

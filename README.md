@@ -34,6 +34,72 @@ Accept: application/json
 
 A minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests directly from the editor.
 
+## Screenshots
+
+<details open>
+<summary>Editor toolbar and gutter actions</summary>
+
+<div align="center">
+  <img src="docs/screenshot/editor-toolbar-gutter.png" alt="Editor toolbar and gutter actions">
+</div>
+</details>
+
+<details>
+<summary>Response viewer with history</summary>
+
+<div align="center">
+  <img src="docs/screenshot/response-viewer-history.png" alt="Response viewer with history">
+</div>
+</details>
+
+<details>
+<summary>ReqRun settings</summary>
+
+<div align="center">
+  <img src="docs/screenshot/settings-reqrun.png" alt="ReqRun settings">
+</div>
+</details>
+
+<details>
+<summary>History context menu (re-run, clear)</summary>
+
+<div align="center">
+  <img src="docs/screenshot/history-context-menu.png" alt="History context menu">
+</div>
+</details>
+
+<details>
+<summary>Templates and insert menu</summary>
+
+<div align="center">
+  <img src="docs/screenshot/toolbar-templates-menu.png" alt="Templates and insert menu">
+</div>
+</details>
+
+<details>
+<summary>Environment file example</summary>
+
+<div align="center">
+  <img src="docs/screenshot/env-file-example.png" alt="Environment file example">
+</div>
+</details>
+
+<details>
+<summary>Editor context actions</summary>
+
+<div align="center">
+  <img src="docs/screenshot/editor-context-actions.png" alt="Editor context actions">
+</div>
+</details>
+
+<details>
+<summary>Run selected files</summary>
+
+<div align="center">
+  <img src="docs/screenshot/run-selected-files.png" alt="Run selected files">
+</div>
+</details>
+
 ## Why ReqRun
 
 - Works in IntelliJ IDEA Community Edition without Ultimate APIs
