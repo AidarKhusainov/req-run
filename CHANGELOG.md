@@ -4,19 +4,26 @@
 
 ## [Unreleased]
 ### Added
-- RELEASING.md with a tag-based release flow and CI expectations.
-- UI tests as a required CI gate for releases.
-- Response view settings (View As, line numbers, header folding) and toolbar actions (soft wraps, scroll, copy body).
-- File upload via `< path` and response save via `> / >> path`.
-- New POST (File) request template in “Add to HTTP Client…”.
-- Setting to shorten request history URLs (hide host).
 
 ### Changed
-- CI workflows consolidated via reusable setup action and wrapper validation.
-- Release process now creates GitHub releases on tags and publishes artifacts automatically.
-- Marketplace publishing runs after a successful GitHub release.
-- Plugin version is derived from the Git tag in CI.
-- Env file picker updated to non-deprecated IntelliJ APIs.
+
+### Fixed
+
+## [2.1.9] - 2026-01-06
+### Added
+- Response viewer settings (View As, line numbers, header folding) and toolbar actions (soft wraps, scroll, copy body).
+- File upload via `< path` and response save via `> / >> path`.
+- New POST (File) request template in “Add to HTTP Client…”.
+- HTTP version support and OkHttp-based transport.
+- Setting to shorten request history URLs (hide host).
+- Re-run action in the service view toolbar.
+
+### Changed
+- Request separators allow inline titles after `###`.
+- Documentation refreshed with screenshots and fixed links.
+
+### Fixed
+- Action update thread warnings for service view actions.
 
 ## [2.1.0] - 2025-12-26
 ### Added
@@ -56,7 +63,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.1.1...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.1.9...HEAD
+[2.1.9]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.9
 [2.1.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.1
 [2.1.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.0
 [2.0.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.0.0

@@ -38,7 +38,7 @@ git push origin 2.1.1
 ## Notes
 
 - Plugin version is derived from the Git tag (e.g., `2.1.1`).
-- Tags must match the SemVer pattern `vX.Y.Z`.
+- Tags must match the SemVer pattern `X.Y.Z`.
 - If a tag points to the wrong commit, delete and recreate it:
 
 ```bash
