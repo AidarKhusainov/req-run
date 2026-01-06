@@ -71,10 +71,3 @@ Accept: image/png
 
 - The save directive can appear after headers or after the body.
 - Once `> / >>` is encountered, the rest of the block is not treated as body.
-
-## Related
-
-- `variables.md`
-- `environments.md`
-- `response-viewer.md`
-- `examples/basic.http`

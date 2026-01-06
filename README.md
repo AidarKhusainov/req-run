@@ -13,8 +13,6 @@
 
 [![Release](https://img.shields.io/github/v/release/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/releases)
 [![Last Commit](https://img.shields.io/github/last-commit/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/commits)
-[![Stars](https://img.shields.io/github/stars/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/stargazers)
-[![Contributors](https://img.shields.io/github/contributors/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/graphs/contributors)
 [![License](https://img.shields.io/badge/License-MIT%20-6B4E2E.svg)](LICENSE)
 
 <!-- Plugin description -->
@@ -73,14 +71,14 @@ Place the caret inside the request block and press `Ctrl+Alt+R`.
 
 ## Documentation
 
-- `docs/index.md` - start here
-- `docs/quickstart.md` - first request in 5 minutes
-- `docs/request-format.md` - syntax and separators
-- `docs/variables.md` - file, environment, and built-in variables
-- `docs/environments.md` - env files and discovery
-- `docs/auth.md` - static auth configs
-- `docs/response-viewer.md` - response viewer reference
-- `docs/curl-import-export.md` - cURL workflow
+- [Docs index](docs/index.md) - start here
+- [Quickstart](docs/quickstart.md) - first request in 5 minutes
+- [Request format](docs/request-format.md) - syntax and separators
+- [Variables](docs/variables.md) - file, environment, and built-in variables
+- [Environments](docs/environments.md) - env files and discovery
+- [Static auth](docs/auth.md) - static auth configs
+- [Response viewer](docs/response-viewer.md) - response viewer reference
+- [cURL import/export](docs/curl-import-export.md) - cURL workflow
 
 ## Installation
 
@@ -95,7 +93,7 @@ Place the caret inside the request block and press `Ctrl+Alt+R`.
 
 ## Project
 
-- `CHANGELOG.md`
-- `CONTRIBUTING.md`
-- `RELEASING.md`
-- Issues: https://github.com/AidarKhusainov/req-run/issues
+- [CHANGELOG.md](CHANGELOG.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [RELEASING.md](RELEASING.md)
+- [GitHub Issues](https://github.com/AidarKhusainov/req-run/issues)

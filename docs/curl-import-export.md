@@ -39,9 +39,3 @@ Content-Type: application/json
 
 {"ok":true}
 ```
-
-## Related
-
-- `request-format.md`
-- `toolbar-and-actions.md`
-- `examples/curl.http`

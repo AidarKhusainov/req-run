@@ -36,10 +36,3 @@
 
 - ReqRun writes to the IDE log (`idea.log`).
 - Open it via `Help | Show Log in Explorer/Finder`.
-
-## Related
-
-- `environments.md`
-- `auth.md`
-- `variables.md`
-- `curl-import-export.md`

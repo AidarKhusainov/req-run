@@ -29,16 +29,8 @@ Results appear in the **service tool window** under ReqRun. Select the latest en
 
 ## 5) Next steps
 
-- Try more requests in `examples/basic.http`
-- Learn the syntax in `request-format.md`
-- Add variables in `variables.md`
-- Configure environments in `environments.md`
-- Set up static auth in `auth.md`
-
-## Related
-
-- `request-format.md`
-- `variables.md`
-- `environments.md`
-- `auth.md`
-- `examples/basic.http`
+- Try more requests in [examples/basic.http](examples/basic.http)
+- Learn the syntax in [request-format.md](request-format.md)
+- Add variables in [variables.md](variables.md)
+- Configure environments in [environments.md](environments.md)
+- Set up static auth in [auth.md](auth.md)

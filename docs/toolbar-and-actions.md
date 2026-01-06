@@ -39,10 +39,3 @@ Right-click in a `.http` file:
 ## Project view context menu
 
 - `Run HTTP Requests (Group)` for selected files/folders
-
-## Related
-
-- `request-format.md`
-- `environments.md`
-- `curl-import-export.md`
-- `examples/basic.http`
