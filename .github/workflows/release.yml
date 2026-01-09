@@ -41,7 +41,7 @@ jobs:
 
       # Fetch sources to access local actions
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
