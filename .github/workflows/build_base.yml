@@ -176,6 +176,6 @@ jobs:
 
       - name: Qodana Scan
         if: ${{ env.QODANA_TOKEN != '' }}
-        uses: JetBrains/qodana-action@v2025.2
+        uses: JetBrains/qodana-action@v2025.3
         with:
           cache-default-branch-only: true
