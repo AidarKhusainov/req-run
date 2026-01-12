@@ -12,7 +12,7 @@ kover = "0.9.3"
 qodana = "2025.2.2"
 detekt = "1.23.8"
 ktlint = "14.0.1"
-dependencyCheck = "12.1.9"
+dependencyCheck = "12.2.0"
 forbiddenApis = "3.10"
 
 [libraries]
