@@ -15,9 +15,11 @@
 [![Last Commit](https://img.shields.io/github/last-commit/AidarKhusainov/req-run.svg)](https://github.com/AidarKhusainov/req-run/commits)
 [![License](https://img.shields.io/badge/License-MIT%20-6B4E2E.svg)](LICENSE)
 
-<!-- Plugin description -->
-ReqRun is a minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests from the editor.
+## Overview
 
+ReqRun is a minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests directly from the editor.
+
+### Key features
 - Run request blocks with gutter icons or `Ctrl+Alt+R`
 - Run selections, entire files, or folders of requests
 - Inline toolbar for templates, environments, and cURL import/export
@@ -26,9 +28,6 @@ ReqRun is a minimal HTTP client for IntelliJ IDEA Community Edition that runs `.
 - Per-request options via `# @reqrun.*` (proxy, timeouts, retries, cookie jar, TLS)
 - Static auth configs under `Security.Auth` with `{{$auth.token(...)}}` and `{{$auth.header(...)}}`
 - Response viewer with history in the service tool window
-<!-- Plugin description end -->
-
-A minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests directly from the editor.
 
 ## Screenshots
 

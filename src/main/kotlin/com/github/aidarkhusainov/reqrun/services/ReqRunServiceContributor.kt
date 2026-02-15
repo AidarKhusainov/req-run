@@ -23,6 +23,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindowId
 import com.intellij.pom.Navigatable
 import java.util.UUID
 import java.util.WeakHashMap
@@ -163,6 +164,7 @@ class ReqRunServiceContributor : ServiceViewContributor<ReqRunExecution> {
             "Request Run",
             ReqRunIcons.Api,
             null,
+            ToolWindowId.SERVICES,
         )
 
     override fun getServices(project: Project): List<ReqRunExecution> =
@@ -189,12 +191,13 @@ internal open class SimpleDescriptor(
     private val text: String,
     private val icon: javax.swing.Icon?,
     private val content: javax.swing.JComponent?,
+    private val id: String,
 ) : ServiceViewDescriptor {
     override fun getPresentation(): ItemPresentation = PresentationData(text, null, icon, null)
 
     override fun getContentComponent(): javax.swing.JComponent? = content
 
-    override fun getId(): String = text
+    override fun getId(): String = id
 
     override fun isVisible(): Boolean = true
 }

@@ -4,59 +4,65 @@
     <vendor email="khusainov19978@gmail.com">Aidar Khusainov</vendor>
 
     <description><![CDATA[
-        <p><b>ReqRun</b> is a minimal HTTP client for IntelliJ IDEA Community Edition.</p>
-
-        <p>
-          Run requests from plain <code>.http</code> files — fast, readable, shareable, and version-controlled.
-        </p>
-
-        <p><b>Key features</b></p>
+        <html lang="en">
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width initial-scale=1'>
+            <title>ReqRun</title></head>
+        <body>
+        <p><b>ReqRun</b> is a minimal HTTP client for IntelliJ IDEA Community Edition that runs <code>.http</code> requests directly from the editor.</p>
+        <p><a href='https://github.com/AidarKhusainov/req-run'>GitHub</a> | <a
+            href='https://plugins.jetbrains.com/plugin/29471-reqrun'>Marketplace</a> | <a
+            href='https://github.com/AidarKhusainov/req-run/issues'>Issues</a></p>
+        <h2>Key Features</h2>
         <ul>
-          <li>Run request blocks with gutter markers or <code>Ctrl+Alt+R</code></li>
-          <li>Run requests from selection, file, or folder</li>
-          <li>Inline toolbar: templates, cURL import/export, run-all, environment selector</li>
-          <li>Response viewer with status/headers/body, view modes, and quick actions</li>
-          <li>Service tool window history with re-run and optional URL shortening</li>
+            <li>Run request blocks with gutter icons or <code>Ctrl+Alt+R</code></li>
+            <li>Run selections, entire files, or folders of requests</li>
+            <li>Inline toolbar for templates, environments, and cURL import/export</li>
+            <li>Variables via <code>@name = value</code> and placeholders <code>{{var}}</code></li>
+            <li>Built-ins: <code>{{$timestamp}}</code>, <code>{{$uuid}}</code>, <code>{{$randomInt}}</code></li>
+            <li>Response viewer with history in the service tool window</li>
         </ul>
 
-        <p><b>Variables and environments</b></p>
+        <h2>Install</h2>
         <ul>
-          <li>File variables: <code>@name = value</code></li>
-          <li>Placeholders: <code>{{var}}</code></li>
-          <li>Built-ins: <code>{{$timestamp}}</code>, <code>{{$uuid}}</code>, <code>{{$randomInt}}</code></li>
-          <li>Environments: <code>http-client.env.json</code> + <code>http-client.private.env.json</code> (private overrides shared)</li>
-          <li>Static auth configs in env files with <code>{{$auth.token("id")}}</code> and <code>{{$auth.header("id")}}</code></li>
+            <li>IDE: <kbd>Settings</kbd> &gt; <kbd>Plugins</kbd> &gt; search for <b>ReqRun</b> &gt; <kbd>Install</kbd> > <kbd>Restart the IDE</kbd></li>
+            <li>Manual: download from Marketplace and install from disk</li>
         </ul>
 
-        <p><b>Request example</b></p>
-        <p>
-          <code>POST https://httpbin.org/post</code><br/>
-          <code>@token = demo</code><br/>
-          <code>Content-Type: application/json</code><br/><br/>
-          <code>{"ok": true, "token": "{{token}}", "requestId": "{{$uuid}}"}</code>
-        </p>
-
-        <p><b>Notes</b></p>
+        <h2>Usage</h2>
         <ul>
-          <li><code>#</code> starts a line comment (ignored by parser and runner)</li>
-          <li>A blank line (or a comment line) separates headers and body</li>
-          <li>Use <code>###</code> on its own line to separate request blocks</li>
-          <li>Use <code>&gt;</code> or <code>&gt;&gt;</code> to save responses; <code>&lt;</code> to upload files</li>
+            <li>Place the caret inside a request block and press <code>Ctrl+Alt+R</code></li>
+            <li>Use <code>###</code> on its own line to separate request blocks</li>
+            <li>Use <code>#</code> for line comments</li>
         </ul>
 
-        <p><b>Docs</b></p>
+        <h3>Request Example</h3>
+        <pre><code>POST https://httpbin.org/post
+        @token = demo
+        Content-Type: application/json
+
+        {"ok": true, "token": "{{token}}", "requestId": "{{$uuid}}"}</code></pre>
+
+        <h2>Docs</h2>
         <ul>
-          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/quickstart.md">Quickstart</a></li>
-          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/request-format.md">Request format</a></li>
-          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/environments.md">Environments</a></li>
-          <li><a href="https://github.com/AidarKhusainov/req-run/blob/main/docs/response-viewer.md">Response viewer</a></li>
+            <li><a href='https://github.com/AidarKhusainov/req-run/blob/main/docs/quickstart.md'>Quickstart</a></li>
+            <li><a href='https://github.com/AidarKhusainov/req-run/blob/main/docs/request-format.md'>Request format</a></li>
+            <li><a href='https://github.com/AidarKhusainov/req-run/blob/main/docs/environments.md'>Environments</a></li>
+            <li><a href='https://github.com/AidarKhusainov/req-run/blob/main/docs/response-viewer.md'>Response viewer</a></li>
         </ul>
 
-        <p>
-          Feedback and bug reports:
-          <a href="https://github.com/AidarKhusainov/req-run/issues">GitHub Issues</a>
-        </p>
-    ]]></description>
+        <h2>Screenshots</h2>
+        <p><img
+            src='https://raw.githubusercontent.com/AidarKhusainov/req-run/main/docs/screenshot/editor-toolbar-gutter.png'
+            alt='Editor toolbar and gutter actions'></p>
+        <p><img
+            src='https://raw.githubusercontent.com/AidarKhusainov/req-run/main/docs/screenshot/response-viewer-history.png'
+            alt='Response viewer with history'></p>
+        </body>
+        </html>
+        ]]>
+    </description>
 
     <depends>com.intellij.modules.platform</depends>
 
