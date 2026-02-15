@@ -1,13 +1,7 @@
 package com.github.aidarkhusainov.reqrun.core
 
-import com.github.aidarkhusainov.reqrun.model.BodyPart
-import com.github.aidarkhusainov.reqrun.model.CompositeBody
-import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
-import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
-import com.github.aidarkhusainov.reqrun.model.TextBody
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import com.github.aidarkhusainov.reqrun.model.*
+import org.junit.Assert.*
 import org.junit.Test
 import java.net.http.HttpClient
 import java.nio.file.Path
@@ -147,6 +141,221 @@ class CurlConverterTest {
         assertEquals("POST", spec?.method)
         assertEquals("https://example.com/a b", spec?.url)
         assertEquals("a=1&b=2", spec?.body?.preview)
+    }
+
+    @Test
+    fun `fromCurl supports line continuations with headers`() {
+        val curl =
+            "curl https://example.com \\\n" +
+                    "  --header 'Accept: application/json' \\\n" +
+                    "  --header 'X-Test: v'"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com", spec?.url)
+        assertEquals("application/json", spec?.headers?.get("Accept"))
+        assertEquals("v", spec?.headers?.get("X-Test"))
+    }
+
+    @Test
+    fun `fromCurl parses data file reference`() {
+        val curl = "curl --data-binary @payload.bin https://example.com/upload"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("POST", spec?.method)
+        assertEquals("< payload.bin", spec?.body?.preview)
+    }
+
+    @Test
+    fun `fromCurl parses header flag variants`() {
+        val curl = "curl -HAccept: application/json --header=User-Agent: test https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("application/json", spec?.headers?.get("Accept"))
+        assertEquals("test", spec?.headers?.get("User-Agent"))
+    }
+
+    @Test
+    fun `fromCurl ignores location and compressed flags`() {
+        val curl = "curl -L --compressed https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com", spec?.url)
+    }
+
+    @Test
+    fun `fromCurl applies get flag to query`() {
+        val curl = "curl -G --data 'a=1&b=2' https://example.com/path"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("https://example.com/path?a=1&b=2", spec?.url)
+        assertEquals(null, spec?.body)
+    }
+
+    @Test
+    fun `fromCurl maps output flag to response target`() {
+        val curl = "curl -o out.txt https://example.com/file"
+
+        val spec = CurlConverter.fromCurlDetailed(curl).spec
+
+        assertEquals("out.txt", spec?.responseTarget?.path?.toString())
+        assertEquals(
+            "GET https://example.com/file\n\n> out.txt",
+            CurlConverter.toHttp(spec!!),
+        )
+    }
+
+    @Test
+    fun `fromCurl maps remote name to response target`() {
+        val curl = "curl -O https://example.com/files/report.txt"
+
+        val spec = CurlConverter.fromCurlDetailed(curl).spec
+
+        assertEquals("report.txt", spec?.responseTarget?.path?.toString())
+    }
+
+    @Test
+    fun `fromCurl maps agent referer and cookie headers`() {
+        val curl = "curl -A 'ua' -e 'https://ref.example' -b 'a=1' https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("ua", spec?.headers?.get("User-Agent"))
+        assertEquals("https://ref.example", spec?.headers?.get("Referer"))
+        assertEquals("a=1", spec?.headers?.get("Cookie"))
+    }
+
+    @Test
+    fun `fromCurl parses timeouts and retry settings`() {
+        val curl =
+            "curl --connect-timeout 2 --max-time 5 --retry 3 --retry-delay 0.5 --retry-max-time 10 https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals(2000L, spec?.options?.connectTimeoutMillis)
+        assertEquals(5000L, spec?.options?.maxTimeMillis)
+        assertEquals(3, spec?.options?.retryCount)
+        assertEquals(500L, spec?.options?.retryDelayMillis)
+        assertEquals(10000L, spec?.options?.retryMaxTimeMillis)
+    }
+
+    @Test
+    fun `fromCurl parses tls settings`() {
+        val curl = "curl --cacert ca.pem --cert client.p12:pass --key key.pem:secret https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        val tls = spec?.options?.tls
+        assertEquals("ca.pem", tls?.caCertPath)
+        assertEquals("client.p12", tls?.clientCertPath)
+        assertEquals("pass", tls?.clientCertPassword)
+        assertEquals("key.pem", tls?.clientKeyPath)
+        assertEquals("secret", tls?.clientKeyPassword)
+    }
+
+    @Test
+    fun `fromCurl parses cookie jar`() {
+        val curl = "curl -c cookies.txt https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("cookies.txt", spec?.options?.cookieJarPath)
+    }
+
+    @Test
+    fun `toHttp includes reqrun options directives`() {
+        val curl = "curl --connect-timeout 1 --max-time 2 -x http://proxy.local https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertTrue(CurlConverter.toHttp(spec!!).startsWith("# @reqrun.proxy http://proxy.local"))
+    }
+
+    @Test
+    fun `fromCurl reads config file`() {
+        val curl = "curl -K config.txt https://example.com"
+
+        val result =
+            CurlConverter.fromCurlDetailed(curl) { _ ->
+                "--header 'X-Test: v'"
+            }
+
+        assertEquals("v", result.spec?.headers?.get("X-Test"))
+    }
+
+    @Test
+    fun `fromCurl warns on unsupported proxy`() {
+        val curl = "curl -x http://proxy.local https://example.com"
+
+        val result = CurlConverter.fromCurlDetailed(curl)
+
+        assertEquals("https://example.com", result.spec?.url)
+        assertEquals("http://proxy.local", result.spec?.options?.proxyUrl)
+        assertEquals(true, result.warnings.isEmpty())
+    }
+
+    @Test
+    fun `fromCurl adds basic auth header`() {
+        val curl = "curl -u user:pass https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("GET", spec?.method)
+        assertEquals("Basic dXNlcjpwYXNz", spec?.headers?.get("Authorization"))
+    }
+
+    @Test
+    fun `fromCurl sets head method`() {
+        val curl = "curl -I https://example.com"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("HEAD", spec?.method)
+    }
+
+    @Test
+    fun `fromCurl builds multipart body from form`() {
+        val curl = "curl -F 'note=hi' -F 'file=@payload.bin' https://example.com/upload"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        assertEquals("POST", spec?.method)
+        assertEquals("multipart/form-data; boundary=ReqRunBoundary", spec?.headers?.get("Content-Type"))
+        val body = spec?.body?.preview ?: ""
+        assertTrue(body.contains("Content-Disposition: form-data; name=\"note\""))
+        assertTrue(body.contains("hi"))
+        assertTrue(body.contains("Content-Disposition: form-data; name=\"file\"; filename=\"payload.bin\""))
+        assertTrue(body.contains("< payload.bin"))
+        assertTrue(body.contains("--ReqRunBoundary--"))
+    }
+
+    @Test
+    fun `fromCurl supports form options`() {
+        val curl =
+            "curl -F 'file=@payload.bin;type=application/octet-stream;filename=custom.bin' https://example.com/upload"
+
+        val spec = CurlConverter.fromCurl(curl)
+
+        val body = spec?.body?.preview ?: ""
+        assertTrue(body.contains("Content-Disposition: form-data; name=\"file\"; filename=\"custom.bin\""))
+        assertTrue(body.contains("Content-Type: application/octet-stream"))
+    }
+
+    @Test
+    fun `fromCurlDetailed reports header error but returns spec`() {
+        val curl = "curl https://example.com -H BadHeader"
+
+        val result = CurlConverter.fromCurlDetailed(curl)
+
+        assertEquals("https://example.com", result.spec?.url)
+        assertEquals("Invalid header format: 'BadHeader'.", result.warnings.firstOrNull()?.message)
     }
 
     @Test

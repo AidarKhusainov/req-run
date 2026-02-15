@@ -9,7 +9,7 @@
 
 - [quickstart.md](quickstart.md) - step-by-step setup and first run
 - [features.md](features.md) - full feature list with links to reference pages
-- [request-format.md](request-format.md) - request syntax, separators, and body rules
+- [request-format.md](request-format.md) - request syntax, separators, body rules, and options
 - [variables.md](variables.md) - file variables, placeholders, and built-in variables
 - [environments.md](environments.md) - env files, merge rules, discovery, and settings
 - [auth.md](auth.md) - static auth configs and helper placeholders
@@ -26,3 +26,4 @@
 - [examples/auth.http](examples/auth.http) - static auth helper usage
 - [examples/curl.http](examples/curl.http) - cURL import/export workflow
 - [examples/response.http](examples/response.http) - response viewer behaviors
+- [examples/options.http](examples/options.http) - ReqRun per-request options

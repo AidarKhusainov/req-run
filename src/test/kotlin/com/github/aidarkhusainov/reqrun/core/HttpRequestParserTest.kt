@@ -36,6 +36,23 @@ class HttpRequestParserTest {
     }
 
     @Test
+    fun `parse reqrun option directives`() {
+        val raw =
+            """
+            # @reqrun.proxy http://proxy.local
+            # @reqrun.connect-timeout 1
+            # @reqrun.cookie-jar cookies.txt
+            GET https://example.com
+            """.trimIndent()
+
+        val spec = HttpRequestParser.parse(raw)
+
+        assertEquals("http://proxy.local", spec?.options?.proxyUrl)
+        assertEquals(1000L, spec?.options?.connectTimeoutMillis)
+        assertEquals("cookies.txt", spec?.options?.cookieJarPath)
+    }
+
+    @Test
     fun `parse headers and body`() {
         val raw =
             """

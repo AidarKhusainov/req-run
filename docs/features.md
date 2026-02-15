@@ -10,6 +10,11 @@ This page lists every user-facing capability currently supported by ReqRun, grou
 - Requests are cancellable via the background progress indicator during execution. See [toolbar-and-actions.md](toolbar-and-actions.md).
 - Request blocks are separated by `###` and comments use `#`. See [request-format.md](request-format.md).
 
+## Request options
+
+- Per-request options via `# @reqrun.*` directives (proxy, timeouts, retries, cookie jar, TLS). See [request-format.md](request-format.md).
+- cURL import maps related flags into `# @reqrun.*` directives. See [curl-import-export.md](curl-import-export.md).
+
 ## Editor UX
 
 - Gutter run icons appear next to request blocks. See [toolbar-and-actions.md](toolbar-and-actions.md).
@@ -62,6 +67,8 @@ This page lists every user-facing capability currently supported by ReqRun, grou
 - Copy the current request as a cURL command. See [curl-import-export.md](curl-import-export.md).
 - Paste a cURL command and convert it to `.http`. See [curl-import-export.md](curl-import-export.md).
 - cURL HTTP version flags are mapped to request line versions. See [curl-import-export.md](curl-import-export.md).
+- cURL output flags (`-o`, `-O`) map to response save directives (`> path`). See [curl-import-export.md](curl-import-export.md).
+- cURL config files (`-K`, `--config`) are supported. See [curl-import-export.md](curl-import-export.md).
 
 ## Settings
 

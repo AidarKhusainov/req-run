@@ -10,13 +10,14 @@ data class HttpRequestSpec(
     val body: RequestBodySpec?,
     val version: HttpClient.Version? = null,
     val responseTarget: ResponseTarget? = null,
+    val options: RequestOptions = RequestOptions(),
 ) {
     constructor(
         method: String,
         url: String,
         headers: Map<String, String>,
         body: String?,
-    ) : this(method, url, headers, body?.let { TextBody(it) }, null, null)
+    ) : this(method, url, headers, body?.let { TextBody(it) }, null, null, RequestOptions())
 
     constructor(
         method: String,
@@ -24,15 +25,36 @@ data class HttpRequestSpec(
         headers: Map<String, String>,
         body: String?,
         version: HttpClient.Version? = null,
-    ) : this(method, url, headers, body?.let { TextBody(it) }, version, null)
+    ) : this(method, url, headers, body?.let { TextBody(it) }, version, null, RequestOptions())
 
     constructor(
         method: String,
         url: String,
         headers: Map<String, String>,
         body: RequestBodySpec?,
-    ) : this(method, url, headers, body, null, null)
+    ) : this(method, url, headers, body, null, null, RequestOptions())
 }
+
+data class RequestOptions(
+    val proxyUrl: String? = null,
+    val proxyUser: String? = null,
+    val connectTimeoutMillis: Long? = null,
+    val maxTimeMillis: Long? = null,
+    val retryCount: Int? = null,
+    val retryDelayMillis: Long? = null,
+    val retryMaxTimeMillis: Long? = null,
+    val cookieJarPath: String? = null,
+    val tls: TlsOptions? = null,
+    val unixSocketPath: String? = null,
+)
+
+data class TlsOptions(
+    val caCertPath: String? = null,
+    val clientCertPath: String? = null,
+    val clientKeyPath: String? = null,
+    val clientCertPassword: String? = null,
+    val clientKeyPassword: String? = null,
+)
 
 sealed interface RequestBodySpec {
     val preview: String

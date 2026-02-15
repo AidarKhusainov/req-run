@@ -56,7 +56,29 @@ class PasteCurlActionTest : BasePlatformTestCase() {
         val notifications = collectReqRunNotifications(project)
         assertEquals(1, notifications.size)
         assertEquals(NotificationType.ERROR, notifications.single().type)
-        assertEquals("Cannot parse cURL command.", notifications.single().content)
+        assertEquals(
+            "Cannot parse cURL command: Not a cURL command. (line 1, column 1).",
+            notifications.single().content,
+        )
+    }
+
+    fun testWarnsAndInsertsOnPartialParse() {
+        val curlText = "curl https://example.com -H 'BadHeader'"
+        myFixture.configureByText("test.http", "")
+        val action = PasteCurlAction()
+        CopyPasteManager.getInstance().setContents(StringSelection(curlText))
+
+        clearReqRunNotifications(project)
+        action.actionPerformed(createActionEvent(project, myFixture.editor, myFixture.file.virtualFile))
+
+        assertEquals("GET https://example.com", myFixture.editor.document.text)
+        val notifications = collectReqRunNotifications(project)
+        assertEquals(1, notifications.size)
+        assertEquals(NotificationType.WARNING, notifications.single().type)
+        assertEquals(
+            "Inserted HTTP request with warnings: Invalid header format: 'BadHeader'. (line 1, column 29).",
+            notifications.single().content,
+        )
     }
 
     fun testInsertsAtCaretWhenNoSelection() {

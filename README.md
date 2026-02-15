@@ -23,13 +23,9 @@ ReqRun is a minimal HTTP client for IntelliJ IDEA Community Edition that runs `.
 - Inline toolbar for templates, environments, and cURL import/export
 - Environments via `http-client.env.json` and `http-client.private.env.json`
 - File variables (`@name = value`) and built-in variables (`{{$timestamp}}`, `{{$uuid}}`, `{{$randomInt}}`)
+- Per-request options via `# @reqrun.*` (proxy, timeouts, retries, cookie jar, TLS)
 - Static auth configs under `Security.Auth` with `{{$auth.token(...)}}` and `{{$auth.header(...)}}`
 - Response viewer with history in the service tool window
-
-```http
-GET https://httpbin.org/get
-Accept: application/json
-```
 <!-- Plugin description end -->
 
 A minimal HTTP client for IntelliJ IDEA Community Edition that runs `.http` requests directly from the editor.
@@ -133,7 +129,7 @@ Place the caret inside the request block and press `Ctrl+Alt+R`.
 - Header folding and line numbers in the response viewer
 - Service tool window history with re-run and clear actions
 - Save response to file with `> / >>` and upload with `<`
-- Copy as cURL and paste cURL as HTTP
+- Copy as cURL and paste cURL as HTTP (including output and proxy/timeout options)
 
 ## Documentation
 

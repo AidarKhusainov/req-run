@@ -1,0 +1,16 @@
+# ReqRun per-request options
+# Adjust paths and credentials for your environment.
+
+GET https://httpbin.org/get
+# @reqrun.proxy http://proxy.local:3128
+# @reqrun.proxy-user user:pass
+# @reqrun.connect-timeout 2.5
+# @reqrun.max-time 30
+# @reqrun.retry 2
+# @reqrun.retry-delay 0.5
+# @reqrun.retry-max-time 10
+# @reqrun.cookie-jar ./cookies.txt
+# @reqrun.cacert ./ca.pem
+# @reqrun.cert ./client.p12:secret
+# If the cert is not .p12/.pfx, also provide a key:
+# @reqrun.key ./client.key

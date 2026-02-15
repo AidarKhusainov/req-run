@@ -1,6 +1,9 @@
 # cURL import/export workflow
 # Copy this cURL command, then use "Paste cURL as HTTP" in the editor:
 # curl --http2 -X POST https://httpbin.org/post -H 'Content-Type: application/json' --data '{"ok":true}'
+#
+# Copy this command to see ReqRun options and output mapping:
+# curl -o out.json --connect-timeout 1 --max-time 5 -x http://proxy.local https://httpbin.org/get
 
 ###
 POST https://httpbin.org/post HTTP/2
@@ -8,3 +11,11 @@ Accept: application/json
 Content-Type: application/json
 
 {"ok": true}
+
+###
+GET https://httpbin.org/get
+# @reqrun.proxy http://proxy.local
+# @reqrun.connect-timeout 1
+# @reqrun.max-time 5
+
+> out.json
