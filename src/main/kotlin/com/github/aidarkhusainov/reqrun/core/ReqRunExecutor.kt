@@ -33,8 +33,8 @@ class ReqRunExecutor(
 ) : Disposable {
     private val log = logger<ReqRunExecutor>()
 
-    private val requestTimeout = Duration.ofSeconds(60)
-    private val connectTimeout = Duration.ofSeconds(10)
+    private val requestTimeout = Duration.ofSeconds(500)
+    private val connectTimeout = Duration.ofSeconds(60)
     private val httpExecutor =
         ThreadPoolExecutor(
             0,

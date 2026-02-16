@@ -9,6 +9,21 @@
 
 ### Fixed
 
+## [2.2.0] - 2026-02-16
+### Added
+- Dedicated UI test source set and `uiTests` Gradle task based on IntelliJ Remote Robot.
+- End-to-end UI test coverage for toolbar actions, response viewer flows, environment/settings behavior, and cURL workflows.
+- Reusable UI test fixtures and project test data for environment files and HTTP scenarios.
+
+### Changed
+- Expanded ReqRun per-request options support and cURL import/export behavior.
+- Increased default request and connect timeouts for HTTP execution.
+- Updated environment file loading to prefer unsaved in-memory document content before filesystem fallback.
+- Reorganized README overview and removed plugin description markers.
+
+### Fixed
+- Stabilized UI test IDE setup with isolated config/system/plugins directories.
+
 ## [2.1.9] - 2026-01-06
 ### Added
 - Response viewer settings (View As, line numbers, header folding) and toolbar actions (soft wraps, scroll, copy body).
@@ -63,7 +78,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.1.9...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.0
 [2.1.9]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.9
 [2.1.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.1
 [2.1.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.0

@@ -10,7 +10,6 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
@@ -223,21 +222,14 @@ class ReqRunEnvironmentService(
     }
 
     private fun readText(path: Path): String? {
-        val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path)
-        val documentText =
-            if (vFile != null) {
-                ReadAction.compute<String?, RuntimeException> {
-                    val document = FileDocumentManager.getInstance().getDocument(vFile)
-                    if (document != null && FileDocumentManager.getInstance().isDocumentUnsaved(document)) {
-                        document.text
-                    } else {
-                        null
-                    }
-                }
-            } else {
-                null
+        val vFile = LocalFileSystem.getInstance().findFileByNioFile(path)
+        if (vFile != null) {
+            val fileDocumentManager = FileDocumentManager.getInstance()
+            val cachedDocument = fileDocumentManager.getCachedDocument(vFile)
+            if (cachedDocument != null && fileDocumentManager.isDocumentUnsaved(cachedDocument)) {
+                return cachedDocument.text
             }
-        if (documentText != null) return documentText
+        }
         return try {
             Files.readString(path, StandardCharsets.UTF_8)
         } catch (_: Throwable) {

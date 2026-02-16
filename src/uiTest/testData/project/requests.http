@@ -1,0 +1,22 @@
+### Echo request
+# comment line
+@userId = 42
+@note = hello
+GET {{baseUrl}}/echo?user={{userId}}&time={{$timestamp}}
+X-Env: {{envName}}
+X-User: {{userId}}
+X-Note: {{note}}
+{{$auth.header("primary")}}
+
+### Post text
+POST {{baseUrl}}/text
+Content-Type: text/plain
+X-Req-Id: {{$uuid}}
+
+hello world
+
+### Format request
+GET {{baseUrl}}/{{format}}
+
+### Error request
+GET {{baseUrl}}/{{errorPath}}

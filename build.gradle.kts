@@ -32,12 +32,27 @@ repositories {
     }
 }
 
+val uiTest by sourceSets.creating {
+    kotlin.srcDir("src/uiTest/kotlin")
+    resources.srcDir("src/uiTest/resources")
+    resources.srcDir("src/uiTest/testData")
+    compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    runtimeClasspath += output + compileClasspath
+}
+
+configurations[uiTest.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[uiTest.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+
 // Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/version_catalogs.html
 dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.opentest4j)
     testImplementation(libs.okhttp.mockwebserver)
     implementation(libs.okhttp)
+    add(uiTest.implementationConfigurationName, libs.junit)
+    add(uiTest.implementationConfigurationName, libs.okhttp.mockwebserver)
+    add(uiTest.implementationConfigurationName, libs.remote.robot)
+    add(uiTest.implementationConfigurationName, libs.remote.robot.fixtures)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -224,15 +239,27 @@ intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
             task {
+                dependsOn("prepareUiTestProject")
                 jvmArgumentProviders +=
                     CommandLineArgumentProvider {
+                        val uiTestDir = layout.buildDirectory.dir("uiTest").get().asFile
+                        val configPath = uiTestDir.resolve("config").absolutePath
+                        val systemPath = uiTestDir.resolve("system").absolutePath
+                        val pluginsPath = uiTestDir.resolve("plugins").absolutePath
                         listOf(
                             "-Drobot-server.port=8082",
                             "-Dide.mac.message.dialogs.as.sheets=false",
                             "-Djb.privacy.policy.text=<!--999.999-->",
                             "-Djb.consents.confirmation.enabled=false",
+                            "-Dide.trust.all.projects=true",
+                            "-Dide.use.native.file.chooser=false",
+                            "-Didea.config.path=$configPath",
+                            "-Didea.system.path=$systemPath",
+                            "-Didea.plugins.path=$pluginsPath",
                         )
                     }
+                val uiTestProjectDir = layout.buildDirectory.dir("uiTest/project").get().asFile
+                args(uiTestProjectDir.absolutePath)
             }
 
             plugins {
@@ -240,4 +267,23 @@ intellijPlatformTesting {
             }
         }
     }
+}
+
+val uiTestProjectDir = layout.buildDirectory.dir("uiTest/project")
+
+tasks.register<Sync>("prepareUiTestProject") {
+    from("src/uiTest/testData/project")
+    into(uiTestProjectDir)
+}
+
+tasks.register<Test>("uiTests") {
+    description = "Runs UI tests via Remote Robot."
+    group = "verification"
+    testClassesDirs = uiTest.output.classesDirs
+    classpath = uiTest.runtimeClasspath
+    shouldRunAfter("test")
+    dependsOn("prepareUiTestProject")
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    systemProperty("robot-server.port", "8082")
+    systemProperty("ui.test.project.path", uiTestProjectDir.get().asFile.absolutePath)
 }
