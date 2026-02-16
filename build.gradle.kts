@@ -242,7 +242,11 @@ intellijPlatformTesting {
                 dependsOn("prepareUiTestProject")
                 jvmArgumentProviders +=
                     CommandLineArgumentProvider {
-                        val uiTestDir = layout.buildDirectory.dir("uiTest").get().asFile
+                        val uiTestDir =
+                            layout.buildDirectory
+                                .dir("uiTest")
+                                .get()
+                                .asFile
                         val configPath = uiTestDir.resolve("config").absolutePath
                         val systemPath = uiTestDir.resolve("system").absolutePath
                         val pluginsPath = uiTestDir.resolve("plugins").absolutePath
@@ -258,7 +262,11 @@ intellijPlatformTesting {
                             "-Didea.plugins.path=$pluginsPath",
                         )
                     }
-                val uiTestProjectDir = layout.buildDirectory.dir("uiTest/project").get().asFile
+                val uiTestProjectDir =
+                    layout.buildDirectory
+                        .dir("uiTest/project")
+                        .get()
+                        .asFile
                 args(uiTestProjectDir.absolutePath)
             }
 

@@ -1,7 +1,14 @@
 package com.github.aidarkhusainov.reqrun.core
 
-import com.github.aidarkhusainov.reqrun.model.*
-import org.junit.Assert.*
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
+import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
+import com.github.aidarkhusainov.reqrun.model.TextBody
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.http.HttpClient
 import java.nio.file.Path
@@ -147,8 +154,8 @@ class CurlConverterTest {
     fun `fromCurl supports line continuations with headers`() {
         val curl =
             "curl https://example.com \\\n" +
-                    "  --header 'Accept: application/json' \\\n" +
-                    "  --header 'X-Test: v'"
+                "  --header 'Accept: application/json' \\\n" +
+                "  --header 'X-Test: v'"
 
         val spec = CurlConverter.fromCurl(curl)
 

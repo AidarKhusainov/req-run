@@ -1,6 +1,14 @@
 package com.github.aidarkhusainov.reqrun.core
 
-import com.github.aidarkhusainov.reqrun.model.*
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
+import com.github.aidarkhusainov.reqrun.model.FileResponseTarget
+import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
+import com.github.aidarkhusainov.reqrun.model.RequestOptions
+import com.github.aidarkhusainov.reqrun.model.ResponseTarget
+import com.github.aidarkhusainov.reqrun.model.TextBody
+import com.github.aidarkhusainov.reqrun.model.TlsOptions
 import java.net.http.HttpClient
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
@@ -335,8 +343,7 @@ object HttpRequestParser {
             val first = trimmed.first()
             val last = trimmed.last()
             val isQuoted =
-                (first == '"' && last == '"') ||
-                        (first == '\'' && last == '\'')
+                (first == '"' && last == '"') || (first == '\'' && last == '\'')
             if (isQuoted) {
                 return trimmed.substring(1, trimmed.length - 1).trim()
             }

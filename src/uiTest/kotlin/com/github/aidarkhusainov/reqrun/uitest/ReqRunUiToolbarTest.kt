@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
 class ReqRunUiToolbarTest : ReqRunUiTestBase() {
-
     @Test
     fun testEnvSelectorAndOpenEnvFiles() {
         robot.openEnvSelector()

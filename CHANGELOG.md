@@ -9,6 +9,17 @@
 
 ### Fixed
 
+## [2.2.1] - 2026-02-16
+### Added
+
+### Changed
+- Applied Kotlin formatting updates across Gradle script, main code, tests, and UI tests to satisfy ktlint checks.
+- Replaced wildcard imports with explicit imports in core and test modules.
+- Refreshed Detekt baseline to reflect the current code structure and rule signatures.
+
+### Fixed
+- Resolved ktlint violations in `PasteCurlAction` around multiline expression formatting.
+
 ## [2.2.0] - 2026-02-16
 ### Added
 - Dedicated UI test source set and `uiTests` Gradle task based on IntelliJ Remote Robot.
@@ -78,7 +89,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.0...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.1...HEAD
+[2.2.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.1
 [2.2.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.0
 [2.1.9]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.9
 [2.1.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.1

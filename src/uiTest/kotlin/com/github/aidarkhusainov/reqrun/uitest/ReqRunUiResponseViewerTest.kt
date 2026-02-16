@@ -4,7 +4,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReqRunUiResponseViewerTest : ReqRunUiTestBase() {
-
     @Test
     fun testViewAsModesCopyBody() {
         robot.selectLines(18, 20)

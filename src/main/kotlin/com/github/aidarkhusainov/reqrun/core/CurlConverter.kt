@@ -1,6 +1,14 @@
 package com.github.aidarkhusainov.reqrun.core
 
-import com.github.aidarkhusainov.reqrun.model.*
+import com.github.aidarkhusainov.reqrun.model.BodyPart
+import com.github.aidarkhusainov.reqrun.model.CompositeBody
+import com.github.aidarkhusainov.reqrun.model.FileResponseTarget
+import com.github.aidarkhusainov.reqrun.model.HttpRequestSpec
+import com.github.aidarkhusainov.reqrun.model.RequestBodySpec
+import com.github.aidarkhusainov.reqrun.model.RequestOptions
+import com.github.aidarkhusainov.reqrun.model.ResponseTarget
+import com.github.aidarkhusainov.reqrun.model.TextBody
+import com.github.aidarkhusainov.reqrun.model.TlsOptions
 import kotlin.math.roundToLong
 
 object CurlConverter {
@@ -125,7 +133,10 @@ object CurlConverter {
         var unixSocketPath: String? = null
         val loadedConfigs = mutableSetOf<String>()
 
-        fun warn(message: String, offset: Int) {
+        fun warn(
+            message: String,
+            offset: Int,
+        ) {
             warnings += CurlParseWarning(message, offset)
         }
 
@@ -234,11 +245,11 @@ object CurlConverter {
                 }
 
                 token == "-d" ||
-                        token == "--data" ||
-                        token == "--data-raw" ||
-                        token == "--data-binary" ||
-                        token == "--data-urlencode" ||
-                        token == "--data-ascii" -> {
+                    token == "--data" ||
+                    token == "--data-raw" ||
+                    token == "--data-binary" ||
+                    token == "--data-urlencode" ||
+                    token == "--data-ascii" -> {
                     val data = tokens.getOrNull(i + 1)
                     if (data == null) {
                         warn("Expected data value after $token.", tokenStart)
@@ -269,9 +280,9 @@ object CurlConverter {
                 }
 
                 token.startsWith("--data-raw=") ||
-                        token.startsWith("--data-binary=") ||
-                        token.startsWith("--data-urlencode=") ||
-                        token.startsWith("--data-ascii=") -> {
+                    token.startsWith("--data-binary=") ||
+                    token.startsWith("--data-urlencode=") ||
+                    token.startsWith("--data-ascii=") -> {
                     bodyParts += toBodyValue(token.substringAfter("="))
                     if (!methodExplicit) {
                         method = "POST"
@@ -680,8 +691,8 @@ object CurlConverter {
                 }
 
                 token.startsWith("--retry=") ||
-                        token.startsWith("--retry-delay=") ||
-                        token.startsWith("--retry-max-time=") -> {
+                    token.startsWith("--retry-delay=") ||
+                    token.startsWith("--retry-max-time=") -> {
                     val value = token.substringAfter("=")
                     when {
                         token.startsWith("--retry=") -> {
@@ -937,7 +948,10 @@ object CurlConverter {
         }
 
     private fun basicAuthHeader(creds: String): String {
-        val encoded = java.util.Base64.getEncoder().encodeToString(creds.toByteArray())
+        val encoded =
+            java.util.Base64
+                .getEncoder()
+                .encodeToString(creds.toByteArray())
         return "Basic $encoded"
     }
 
@@ -986,7 +1000,11 @@ object CurlConverter {
                 else -> null
             } ?: return null
         return try {
-            FileResponseTarget(java.nio.file.Path.of(path), append = false)
+            FileResponseTarget(
+                java.nio.file.Path
+                    .of(path),
+                append = false,
+            )
         } catch (_: Exception) {
             warnings += CurlParseWarning("Invalid output path: '$path'.", 0)
             null
@@ -1021,13 +1039,14 @@ object CurlConverter {
             val currentQuery = uri.rawQuery
             val combined = if (currentQuery.isNullOrBlank()) query else "$currentQuery&$query"
             val rebuilt =
-                java.net.URI(
-                    uri.scheme,
-                    uri.authority,
-                    uri.path,
-                    combined,
-                    uri.fragment,
-                ).toString()
+                java.net
+                    .URI(
+                        uri.scheme,
+                        uri.authority,
+                        uri.path,
+                        combined,
+                        uri.fragment,
+                    ).toString()
             rebuilt to if (hasFiles) "Cannot apply file uploads with --get." else null
         } catch (_: Exception) {
             val separator = if (url.contains("?")) "&" else "?"
@@ -1051,11 +1070,17 @@ object CurlConverter {
         options.cookieJarPath?.let { lines += "# @reqrun.cookie-jar $it" }
         options.tls?.caCertPath?.let { lines += "# @reqrun.cacert $it" }
         options.tls?.clientCertPath?.let { path ->
-            val suffix = options.tls.clientCertPassword?.let { ":$it" }.orEmpty()
+            val suffix =
+                options.tls.clientCertPassword
+                    ?.let { ":$it" }
+                    .orEmpty()
             lines += "# @reqrun.cert $path$suffix"
         }
         options.tls?.clientKeyPath?.let { path ->
-            val suffix = options.tls.clientKeyPassword?.let { ":$it" }.orEmpty()
+            val suffix =
+                options.tls.clientKeyPassword
+                    ?.let { ":$it" }
+                    .orEmpty()
             lines += "# @reqrun.key $path$suffix"
         }
         options.unixSocketPath?.let { lines += "# @reqrun.unix-socket $it" }
@@ -1085,7 +1110,8 @@ object CurlConverter {
 
     private fun tokenizeConfig(content: String): List<Token> {
         val lines =
-            content.lineSequence()
+            content
+                .lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() && !it.startsWith("#") }
                 .map { line ->
@@ -1124,7 +1150,7 @@ object CurlConverter {
                 isFile = true,
                 filePath = path,
                 filename = inferredName,
-                contentType = contentType
+                contentType = contentType,
             )
         } else {
             FormPart(
@@ -1133,7 +1159,7 @@ object CurlConverter {
                 isFile = false,
                 filePath = null,
                 filename = filename,
-                contentType = contentType
+                contentType = contentType,
             )
         }
     }

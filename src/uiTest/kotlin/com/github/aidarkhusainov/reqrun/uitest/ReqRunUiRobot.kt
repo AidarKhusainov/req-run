@@ -118,7 +118,10 @@ class ReqRunUiRobot(
         )
     }
 
-    fun selectLines(from: Int, to: Int) {
+    fun selectLines(
+        from: Int,
+        to: Int,
+    ) {
         focusTextEditor()
         val startLine = (from - 1).coerceAtLeast(0)
         val endLine = (to - 1).coerceAtLeast(startLine)
@@ -195,7 +198,10 @@ class ReqRunUiRobot(
         actionMenuItem(scope).click()
     }
 
-    fun setSettingsField(label: String, value: String) {
+    fun setSettingsField(
+        label: String,
+        value: String,
+    ) {
         val field =
             remoteRobot.find<ComponentFixture>(
                 byXpath("//div[@text='$label']/following::div[contains(@class,'TextFieldWithBrowseButton')][1]"),
@@ -313,21 +319,23 @@ class ReqRunUiRobot(
     }
 
     fun isShortenHistoryUrlsEnabled(): Boolean =
-        remoteRobot.runJs(
-            """
-            const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
-            const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
-            const app = Packages.com.intellij.openapi.application.ApplicationManager.getApplication();
-            const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
-            if (!plugin) throw "ReqRun plugin descriptor not found";
-            const loader = plugin.getPluginClassLoader();
-            const settingsClass = loader.loadClass("com.github.aidarkhusainov.reqrun.settings.ReqRunHistorySettings");
-            const service = app.getService(settingsClass);
-            if (!service) throw "ReqRunHistorySettings service not found";
-            service.getState().getShortenHistoryUrls();
-            """.trimIndent(),
-            true,
-        ).toString().toBoolean()
+        remoteRobot
+            .runJs(
+                """
+                const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
+                const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
+                const app = Packages.com.intellij.openapi.application.ApplicationManager.getApplication();
+                const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
+                if (!plugin) throw "ReqRun plugin descriptor not found";
+                const loader = plugin.getPluginClassLoader();
+                const settingsClass = loader.loadClass("com.github.aidarkhusainov.reqrun.settings.ReqRunHistorySettings");
+                const service = app.getService(settingsClass);
+                if (!service) throw "ReqRunHistorySettings service not found";
+                service.getState().getShortenHistoryUrls();
+                """.trimIndent(),
+                true,
+            ).toString()
+            .toBoolean()
 
     fun setProjectEnvPaths(
         sharedPath: String?,
@@ -361,52 +369,55 @@ class ReqRunUiRobot(
 
     fun environmentNamesForCurrentFile(): List<String> {
         val raw =
-            remoteRobot.runJs(
-                """
-                const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
-                const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
-                const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
-                const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
-                const project = ProjectManager.getInstance().getOpenProjects()[0];
-                if (!project) throw "No open project";
-                const file = FileEditorManager.getInstance(project).getSelectedFiles()[0] || null;
-                const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
-                if (!plugin) throw "ReqRun plugin descriptor not found";
-                const loader = plugin.getPluginClassLoader();
-                const envClass = loader.loadClass("com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService");
-                const envService = project.getService(envClass);
-                if (!envService) throw "ReqRunEnvironmentService not found";
-                const names = envService.getEnvironmentNames(file);
-                let out = "";
-                for (let i = 0; i < names.size(); i++) {
-                    if (i > 0) out += "\n";
-                    out += names.get(i);
-                }
-                out;
-                """.trimIndent(),
-                true,
-            ).toString()
+            remoteRobot
+                .runJs(
+                    """
+                    const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
+                    const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
+                    const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
+                    const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
+                    const project = ProjectManager.getInstance().getOpenProjects()[0];
+                    if (!project) throw "No open project";
+                    const file = FileEditorManager.getInstance(project).getSelectedFiles()[0] || null;
+                    const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
+                    if (!plugin) throw "ReqRun plugin descriptor not found";
+                    const loader = plugin.getPluginClassLoader();
+                    const envClass = loader.loadClass("com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService");
+                    const envService = project.getService(envClass);
+                    if (!envService) throw "ReqRunEnvironmentService not found";
+                    const names = envService.getEnvironmentNames(file);
+                    let out = "";
+                    for (let i = 0; i < names.size(); i++) {
+                        if (i > 0) out += "\n";
+                        out += names.get(i);
+                    }
+                    out;
+                    """.trimIndent(),
+                    true,
+                ).toString()
         return raw.lines().map { it.trim() }.filter { it.isNotEmpty() }
     }
 
     fun executionCount(): Int =
-        remoteRobot.runJs(
-            """
-            const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
-            const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
-            const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
-            const project = ProjectManager.getInstance().getOpenProjects()[0];
-            if (!project) throw "No open project";
-            const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
-            if (!plugin) throw "ReqRun plugin descriptor not found";
-            const loader = plugin.getPluginClassLoader();
-            const execClass = loader.loadClass("com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService");
-            const execService = project.getService(execClass);
-            if (!execService) throw "ReqRunExecutionService not found";
-            execService.list().size();
-            """.trimIndent(),
-            true,
-        ).toString().toIntOrNull() ?: 0
+        remoteRobot
+            .runJs(
+                """
+                const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
+                const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
+                const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
+                const project = ProjectManager.getInstance().getOpenProjects()[0];
+                if (!project) throw "No open project";
+                const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
+                if (!plugin) throw "ReqRun plugin descriptor not found";
+                const loader = plugin.getPluginClassLoader();
+                const execClass = loader.loadClass("com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService");
+                const execService = project.getService(execClass);
+                if (!execService) throw "ReqRunExecutionService not found";
+                execService.list().size();
+                """.trimIndent(),
+                true,
+            ).toString()
+            .toIntOrNull() ?: 0
 
     fun clearExecutionHistory() {
         remoteRobot.runJs(
@@ -513,22 +524,23 @@ class ReqRunUiRobot(
     }
 
     fun responseViewSettingsSnapshot(): String =
-        remoteRobot.runJs(
-            """
-            const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
-            const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
-            const app = Packages.com.intellij.openapi.application.ApplicationManager.getApplication();
-            const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
-            if (!plugin) throw "ReqRun plugin descriptor not found";
-            const loader = plugin.getPluginClassLoader();
-            const settingsClass = loader.loadClass("com.github.aidarkhusainov.reqrun.settings.ReqRunResponseViewSettings");
-            const service = app.getService(settingsClass);
-            if (!service) throw "ReqRunResponseViewSettings service not found";
-            const state = service.getState();
-            state.getShowLineNumbers() + "|" + state.getShowRequestMethod() + "|" + state.getFoldHeadersByDefault();
-            """.trimIndent(),
-            true,
-        ).toString()
+        remoteRobot
+            .runJs(
+                """
+                const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
+                const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
+                const app = Packages.com.intellij.openapi.application.ApplicationManager.getApplication();
+                const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
+                if (!plugin) throw "ReqRun plugin descriptor not found";
+                const loader = plugin.getPluginClassLoader();
+                const settingsClass = loader.loadClass("com.github.aidarkhusainov.reqrun.settings.ReqRunResponseViewSettings");
+                const service = app.getService(settingsClass);
+                if (!service) throw "ReqRunResponseViewSettings service not found";
+                const state = service.getState();
+                state.getShowLineNumbers() + "|" + state.getShowRequestMethod() + "|" + state.getFoldHeadersByDefault();
+                """.trimIndent(),
+                true,
+            ).toString()
 
     fun openSharedEnvFile() {
         openEnvFileFromService(isPrivate = false)
@@ -658,15 +670,15 @@ class ReqRunUiRobot(
             exists(byXpath("//div[contains(@class,'ActionButton') and contains(@text,'Environment')]")) ||
             exists(byXpath("//div[@text='Examples']"))
 
-    fun hasGutterRunIcon(): Boolean =
-        exists(byXpath("//div[contains(@class,'Gutter') and contains(@tooltip,'Run')]"))
+    fun hasGutterRunIcon(): Boolean = exists(byXpath("//div[contains(@class,'Gutter') and contains(@tooltip,'Run')]"))
 
     fun hasTextInUi(text: String): Boolean =
         exists(
             byXpath(
                 "//*[(@text='$text' or contains(@text,'$text') or @accessiblename='$text' or contains(@accessiblename,'$text'))]",
             ),
-        ) || hasEnvironmentNamed(text)
+        ) ||
+            hasEnvironmentNamed(text)
 
     fun hasMenuItem(text: String): Boolean =
         findActionMenuItem(text) != null ||
@@ -676,8 +688,7 @@ class ReqRunUiRobot(
                 ),
             )
 
-    fun hasActionButtonTooltip(tooltip: String): Boolean =
-        exists(byXpath("//div[contains(@class,'ActionButton') and @tooltip='$tooltip']"))
+    fun hasActionButtonTooltip(tooltip: String): Boolean = exists(byXpath("//div[contains(@class,'ActionButton') and @tooltip='$tooltip']"))
 
     fun isMenuItemChecked(text: String): Boolean =
         exists(byXpath("//div[contains(@class,'ActionMenuItem') and @text='$text' and @selected='true']")) ||
@@ -689,7 +700,10 @@ class ReqRunUiRobot(
         }
     }
 
-    fun waitForNoNotification(text: String, timeout: Duration = Duration.ofSeconds(4)) {
+    fun waitForNoNotification(
+        text: String,
+        timeout: Duration = Duration.ofSeconds(4),
+    ) {
         waitFor("No notification containing '$text'", timeout = timeout) {
             !exists(byXpath("//*[contains(@text,'$text')]"))
         }
@@ -700,34 +714,37 @@ class ReqRunUiRobot(
             byXpath(
                 "//div[(contains(@class,'EditorTab') or contains(@class,'TabLabel') or contains(@class,'SingleHeightLabel')) and @text='$title']",
             ),
-        ) || exists(byXpath("//div[@text='$title']")) || isFileOpened(title)
+        ) ||
+            exists(byXpath("//div[@text='$title']")) ||
+            isFileOpened(title)
 
     fun editorContains(text: String): Boolean {
         val escaped = text.replace("\\", "\\\\").replace("'", "\\'")
         return try {
-            remoteRobot.runJs(
-                """
-                const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
-                const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
-                const project = ProjectManager.getInstance().getOpenProjects()[0];
-                let hasText = false;
-                if (project) {
-                    const editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                    if (editor) {
-                        hasText = editor.getDocument().getText().contains('$escaped');
+            remoteRobot
+                .runJs(
+                    """
+                    const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
+                    const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
+                    const project = ProjectManager.getInstance().getOpenProjects()[0];
+                    let hasText = false;
+                    if (project) {
+                        const editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        if (editor) {
+                            hasText = editor.getDocument().getText().contains('$escaped');
+                        }
                     }
-                }
-                hasText;
-                """.trimIndent(),
-                true,
-            ).toString().toBoolean()
+                    hasText;
+                    """.trimIndent(),
+                    true,
+                ).toString()
+                .toBoolean()
         } catch (_: Throwable) {
             false
         }
     }
 
-    fun findTreeNode(text: String): Boolean =
-        exists(byXpath("//div[contains(@class,'SimpleColoredComponent') and @text='$text']"))
+    fun findTreeNode(text: String): Boolean = exists(byXpath("//div[contains(@class,'SimpleColoredComponent') and @text='$text']"))
 
     fun focusIde() {
         if (isIdeFrameVisible()) {
@@ -831,14 +848,11 @@ class ReqRunUiRobot(
         )
     }
 
-    private fun ideFrame(): ComponentFixture =
-        remoteRobot.find(byXpath("//div[@class='IdeFrameImpl']"), timeout)
+    private fun ideFrame(): ComponentFixture = remoteRobot.find(byXpath("//div[@class='IdeFrameImpl']"), timeout)
 
-    private fun isIdeFrameVisible(): Boolean =
-        exists(byXpath("//div[@class='IdeFrameImpl']"))
+    private fun isIdeFrameVisible(): Boolean = exists(byXpath("//div[@class='IdeFrameImpl']"))
 
-    private fun isWelcomeFrameVisible(): Boolean =
-        exists(byXpath("//div[@class='FlatWelcomeFrame']"))
+    private fun isWelcomeFrameVisible(): Boolean = exists(byXpath("//div[@class='FlatWelcomeFrame']"))
 
     private fun actionButtonByTooltip(tooltip: String): ComponentFixture =
         findActionButtonByTooltipOrText(tooltip)
@@ -912,29 +926,30 @@ class ReqRunUiRobot(
         ) ?: findOptional(byXpath("//div[@text='$text']"))
 
     private fun latestExecutionValue(valueScript: String): String =
-        remoteRobot.runJs(
-            """
-            const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
-            const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
-            const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
-            const project = ProjectManager.getInstance().getOpenProjects()[0];
-            if (!project) throw "No open project";
-            const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
-            if (!plugin) throw "ReqRun plugin descriptor not found";
-            const loader = plugin.getPluginClassLoader();
-            const execClass = loader.loadClass("com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService");
-            const execService = project.getService(execClass);
-            if (!execService) throw "ReqRunExecutionService not found";
-            const list = execService.list();
-            if (list.isEmpty()) {
-                "";
-            } else {
-                const last = list.get(list.size() - 1);
-                $valueScript
-            }
-            """.trimIndent(),
-            true,
-        ).toString()
+        remoteRobot
+            .runJs(
+                """
+                const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
+                const PluginManagerCore = Packages.com.intellij.ide.plugins.PluginManagerCore;
+                const PluginId = Packages.com.intellij.openapi.extensions.PluginId;
+                const project = ProjectManager.getInstance().getOpenProjects()[0];
+                if (!project) throw "No open project";
+                const plugin = PluginManagerCore.getPlugin(PluginId.getId("com.github.aidarkhusainov.reqrun"));
+                if (!plugin) throw "ReqRun plugin descriptor not found";
+                const loader = plugin.getPluginClassLoader();
+                const execClass = loader.loadClass("com.github.aidarkhusainov.reqrun.services.ReqRunExecutionService");
+                const execService = project.getService(execClass);
+                if (!execService) throw "ReqRunExecutionService not found";
+                const list = execService.list();
+                if (list.isEmpty()) {
+                    "";
+                } else {
+                    const last = list.get(list.size() - 1);
+                    $valueScript
+                }
+                """.trimIndent(),
+                true,
+            ).toString()
 
     private fun hasEnvironmentNamed(name: String): Boolean {
         val envFiles =
@@ -985,26 +1000,28 @@ class ReqRunUiRobot(
     private fun isFileOpened(fileName: String): Boolean {
         val escapedFileName = fileName.replace("\\", "\\\\").replace("'", "\\'")
         return try {
-            remoteRobot.runJs(
-                """
-                const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
-                const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
-                const project = ProjectManager.getInstance().getOpenProjects()[0];
-                let opened = false;
-                if (project) {
-                    const files = FileEditorManager.getInstance(project).getOpenFiles();
-                    for (let i = 0; i < files.length; i++) {
-                        const file = files[i];
-                        if (file && file.getName && file.getName() === '$escapedFileName') {
-                            opened = true;
-                            break;
+            remoteRobot
+                .runJs(
+                    """
+                    const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
+                    const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
+                    const project = ProjectManager.getInstance().getOpenProjects()[0];
+                    let opened = false;
+                    if (project) {
+                        const files = FileEditorManager.getInstance(project).getOpenFiles();
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            if (file && file.getName && file.getName() === '$escapedFileName') {
+                                opened = true;
+                                break;
+                            }
                         }
                     }
-                }
-                opened;
-                """.trimIndent(),
-                true,
-            ).toString().toBoolean()
+                    opened;
+                    """.trimIndent(),
+                    true,
+                ).toString()
+                .toBoolean()
         } catch (_: Throwable) {
             false
         }

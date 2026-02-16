@@ -18,11 +18,12 @@ fun waitFor(
         }
         Thread.sleep(interval.toMillis())
     }
-    val message = buildString {
-        append("Timed out waiting for: ").append(description)
-        if (lastError != null) {
-            append(". Last error: ").append(lastError!!.message)
+    val message =
+        buildString {
+            append("Timed out waiting for: ").append(description)
+            if (lastError != null) {
+                append(". Last error: ").append(lastError!!.message)
+            }
         }
-    }
     throw AssertionError(message, lastError)
 }

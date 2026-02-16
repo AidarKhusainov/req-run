@@ -132,7 +132,9 @@ class PasteCurlAction :
     }
 
     private fun containsConfigFlag(source: String): Boolean =
-        Regex("(^|\\s)(-K|--config)(\\s|=)").containsMatchIn(source)
+        Regex("(^|\\s)(-K|--config)(\\s|=)").containsMatchIn(
+            source,
+        )
 
     private fun readConfigFile(
         pathText: String,

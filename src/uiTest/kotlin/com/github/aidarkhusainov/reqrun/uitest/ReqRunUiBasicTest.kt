@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReqRunUiBasicTest : ReqRunUiTestBase() {
-
     @Test
     fun testToolbarAndGutterVisibility() {
         waitFor("ReqRun toolbar visible") { robot.hasReqRunToolbar() }

@@ -13,9 +13,22 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.util.net.ssl.CertificateManager
-import okhttp3.*
-import java.net.*
+import okhttp3.Cookie
+import okhttp3.CookieJar
+import okhttp3.Credentials
+import okhttp3.Dispatcher
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.Route
 import java.net.Authenticator
+import java.net.InetSocketAddress
+import java.net.PasswordAuthentication
+import java.net.Proxy
+import java.net.ProxySelector
+import java.net.URI
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.KeyStore
@@ -25,7 +38,11 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import javax.net.ssl.*
+import javax.net.ssl.KeyManager
+import javax.net.ssl.KeyManagerFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 @Service(Service.Level.PROJECT)
 class ReqRunExecutor(
@@ -285,8 +302,8 @@ class ReqRunExecutor(
                 for (cookie in cookies) {
                     this.cookies.removeIf {
                         it.name == cookie.name &&
-                                it.domain == cookie.domain &&
-                                it.path == cookie.path
+                            it.domain == cookie.domain &&
+                            it.path == cookie.path
                     }
                     this.cookies += cookie
                 }
@@ -311,7 +328,8 @@ class ReqRunExecutor(
                     val includeSubdomains = if (cookie.hostOnly) "FALSE" else "TRUE"
                     val secure = if (cookie.secure) "TRUE" else "FALSE"
                     val expires = if (cookie.persistent) cookie.expiresAt / 1000 else 0
-                    sb.append(cookie.domain)
+                    sb
+                        .append(cookie.domain)
                         .append('\t')
                         .append(includeSubdomains)
                         .append('\t')
@@ -477,7 +495,9 @@ class ReqRunExecutor(
         if (!Files.isRegularFile(path)) {
             throw IllegalArgumentException("Certificate file not found: $path")
         }
-        val factory = java.security.cert.CertificateFactory.getInstance("X.509")
+        val factory =
+            java.security.cert.CertificateFactory
+                .getInstance("X.509")
         Files.newInputStream(path).use { input ->
             return factory.generateCertificates(input).toList()
         }
@@ -498,7 +518,10 @@ class ReqRunExecutor(
 
                 else -> throw IllegalArgumentException("Unsupported private key format.")
             }
-        val keyBytes = java.util.Base64.getMimeDecoder().decode(pem)
+        val keyBytes =
+            java.util.Base64
+                .getMimeDecoder()
+                .decode(pem)
         val spec = java.security.spec.PKCS8EncodedKeySpec(keyBytes)
         val algorithms = listOf("RSA", "EC", "DSA")
         for (algorithm in algorithms) {

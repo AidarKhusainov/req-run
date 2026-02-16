@@ -8,7 +8,8 @@ import java.nio.file.StandardCopyOption
 
 object UiTestProject {
     private val templateRoot =
-        Paths.get(System.getProperty("user.dir"))
+        Paths
+            .get(System.getProperty("user.dir"))
             .resolve("src")
             .resolve("uiTest")
             .resolve("testData")

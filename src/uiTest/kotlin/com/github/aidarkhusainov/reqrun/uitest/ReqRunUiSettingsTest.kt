@@ -9,7 +9,6 @@ import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
 class ReqRunUiSettingsTest : ReqRunUiTestBase() {
-
     @Test
     fun testSettingsOverridesAndShortenHistoryUrls() {
         UiTestProject.writeAltEnv(baseUrl, altFormat = "json", altError = "error500")
