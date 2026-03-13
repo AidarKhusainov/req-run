@@ -5,13 +5,14 @@ import com.github.aidarkhusainov.reqrun.model.HttpResponsePayload
 import com.github.aidarkhusainov.reqrun.model.RequestOptions
 import com.github.aidarkhusainov.reqrun.model.TlsOptions
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.util.Computable
 import com.intellij.util.net.ssl.CertificateManager
 import okhttp3.Cookie
 import okhttp3.CookieJar
@@ -126,9 +127,11 @@ class ReqRunExecutor(
     private fun getClient(request: HttpRequestSpec): ReqRunHttpClient {
         clientOverride?.let { return it }
         val sdkHome =
-            ReadAction.compute<String?, RuntimeException> {
-                if (project.isDisposed) null else ProjectRootManager.getInstance(project).projectSdk?.homePath
-            }
+            ApplicationManager.getApplication().runReadAction(
+                Computable {
+                    if (project.isDisposed) null else ProjectRootManager.getInstance(project).projectSdk?.homePath
+                },
+            )
         synchronized(this) {
             if (sdkHome != cachedSdkHome) {
                 cachedClients.values.forEach { it.close() }

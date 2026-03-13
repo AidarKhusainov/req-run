@@ -10,9 +10,10 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.ex.ComboBoxAction
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -38,9 +39,11 @@ class EnvSelectorAction(
         context: DataContext,
     ): DefaultActionGroup {
         val names =
-            ReadAction.compute<List<String>, RuntimeException> {
-                envService.getEnvironmentNames(file)
-            }
+            ApplicationManager.getApplication().runReadAction(
+                Computable {
+                    envService.getEnvironmentNames(file)
+                },
+            )
         val group = DefaultActionGroup()
         group.add(envToggleAction(NO_ENVIRONMENT, null))
         for (name in names) {

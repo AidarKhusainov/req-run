@@ -17,13 +17,13 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import java.nio.file.Path
@@ -81,9 +81,11 @@ class RunHttpRequestsGroupAction :
                         when {
                             editorBlocks != null -> editorBlocks
                             files != null ->
-                                ReadAction.compute<List<Block>, Throwable> {
-                                    blocksFromFiles(files, indicator)
-                                }
+                                ApplicationManager.getApplication().runReadAction(
+                                    Computable {
+                                        blocksFromFiles(files, indicator)
+                                    },
+                                )
                             else -> emptyList()
                         }
 

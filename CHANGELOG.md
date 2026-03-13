@@ -17,6 +17,7 @@
 
 ### Fixed
 - Stopped nightly CI from depending on Qodana Cloud token validity by running the community linter locally in GitHub Actions.
+- Replaced deprecated `ReadAction.compute(ThrowableComputable)` usages flagged by JetBrains Marketplace with non-deprecated read actions.
 
 ## [2.2.1] - 2026-02-16
 ### Added
