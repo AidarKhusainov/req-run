@@ -39,10 +39,10 @@
 
         <h3>Request Example</h3>
         <pre><code>POST https://httpbin.org/post
-        @token = demo
-        Content-Type: application/json
+@token = demo
+Content-Type: application/json
 
-        {"ok": true, "token": "{{token}}", "requestId": "{{$uuid}}"}</code></pre>
+{"ok": true, "token": "{{token}}", "requestId": "{{$uuid}}"}</code></pre>
 
         <h2>Docs</h2>
         <ul>
