@@ -150,9 +150,6 @@ jobs:
       contents: write
       checks: write
       pull-requests: write
-    env:
-      QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
-      QODANA_ENDPOINT: "https://qodana.cloud"
     steps:
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
@@ -170,12 +167,8 @@ jobs:
         with:
           plugin-version: ${{ inputs.pluginVersion }}
 
-      - name: Qodana skipped
-        if: ${{ env.QODANA_TOKEN == '' }}
-        run: echo "QODANA_TOKEN is not set; skipping Qodana scan."
-
       - name: Qodana Scan
-        if: ${{ env.QODANA_TOKEN != '' }}
         uses: JetBrains/qodana-action@v2025.2
         with:
           cache-default-branch-only: true
+          upload-result: true

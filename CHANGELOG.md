@@ -9,6 +9,15 @@
 
 ### Fixed
 
+## [2.2.2] - 2026-03-13
+### Added
+
+### Changed
+- Updated the Qodana linter image to `2025.2` to match the GitHub Action CLI version used in CI.
+
+### Fixed
+- Stopped nightly CI from depending on Qodana Cloud token validity by running the community linter locally in GitHub Actions.
+
 ## [2.2.1] - 2026-02-16
 ### Added
 
@@ -89,7 +98,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.1...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.2...HEAD
+[2.2.2]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.2
 [2.2.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.1
 [2.2.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.0
 [2.1.9]: https://github.com/AidarKhusainov/req-run/releases/tag/2.1.9
