@@ -9,6 +9,14 @@
 
 ### Fixed
 
+## [2.2.3] - 2026-03-26
+### Added
+
+### Changed
+- Removed the embedded HTTP request example from the Marketplace plugin description and kept the documentation links as the primary entry point.
+
+### Fixed
+
 ## [2.2.2] - 2026-03-13
 ### Added
 
@@ -99,7 +107,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.2...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.3...HEAD
+[2.2.3]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.3
 [2.2.2]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.2
 [2.2.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.1
 [2.2.0]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.0

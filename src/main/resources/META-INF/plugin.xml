@@ -30,20 +30,6 @@
             <li>Manual: download from Marketplace and install from disk</li>
         </ul>
 
-        <h2>Usage</h2>
-        <ul>
-            <li>Place the caret inside a request block and press <code>Ctrl+Alt+R</code></li>
-            <li>Use <code>###</code> on its own line to separate request blocks</li>
-            <li>Use <code>#</code> for line comments</li>
-        </ul>
-
-        <h3>Request Example</h3>
-        <pre><code>POST https://httpbin.org/post
-@token = demo
-Content-Type: application/json
-
-{"ok": true, "token": "{{token}}", "requestId": "{{$uuid}}"}</code></pre>
-
         <h2>Docs</h2>
         <ul>
             <li><a href='https://github.com/AidarKhusainov/req-run/blob/main/docs/quickstart.md'>Quickstart</a></li>
