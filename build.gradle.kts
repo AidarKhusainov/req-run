@@ -168,11 +168,13 @@ ktlint {
 }
 
 dependencyCheck {
-    val nvdApiKeyProvider = providers.environmentVariable("NVD_API_KEY")
-    val hasNvdApiKey = nvdApiKeyProvider.isPresent
+    val nvdApiKey = providers.environmentVariable("NVD_API_KEY").orNull?.trim().orEmpty()
+    val hasNvdApiKey = nvdApiKey.isNotEmpty()
+
     failBuildOnCVSS = 7.0f
     autoUpdate = hasNvdApiKey
     skip = !hasNvdApiKey
+    scanConfigurations = listOf("runtimeClasspath")
     suppressionFiles.set(
         listOf(
             layout.projectDirectory
@@ -187,7 +189,10 @@ dependencyCheck {
             .get()
             .asFile
     nvd {
-        apiKey = nvdApiKeyProvider.orNull
+        apiKey = nvdApiKey.takeIf { it.isNotEmpty() }
+    }
+    analyzers {
+        assemblyEnabled = false
     }
 }
 
