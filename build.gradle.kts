@@ -168,7 +168,12 @@ ktlint {
 }
 
 dependencyCheck {
-    val nvdApiKey = providers.environmentVariable("NVD_API_KEY").orNull?.trim().orEmpty()
+    val nvdApiKey =
+        providers
+            .environmentVariable("NVD_API_KEY")
+            .orNull
+            ?.trim()
+            .orEmpty()
     val hasNvdApiKey = nvdApiKey.isNotEmpty()
 
     failBuildOnCVSS = 7.0f
