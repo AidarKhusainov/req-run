@@ -9,6 +9,18 @@
 
 ### Fixed
 
+## [2.2.4] - 2026-05-04
+### Added
+
+### Changed
+- Limited OWASP Dependency-Check to runtime dependencies to avoid scanning build and test tooling artifacts that are not shipped with the plugin.
+- Disabled the .NET Assembly Analyzer in Dependency-Check because this plugin does not ship .NET assemblies.
+
+### Fixed
+- Fixed nightly Dependency-Check configuration so an empty `NVD_API_KEY` is not treated as a configured API key.
+- Added an explicit CI failure when Dependency-Check is enabled without a non-empty `NVD_API_KEY` secret.
+- Ensured build reports are uploaded even when checks fail, making Dependency-Check reports available for failed nightly runs.
+
 ## [2.2.3] - 2026-03-26
 ### Added
 
@@ -107,7 +119,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.3...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.4...HEAD
+[2.2.4]: https://github.com/AidarKhusainov/req-run/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.3
 [2.2.2]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.2
 [2.2.1]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.1
