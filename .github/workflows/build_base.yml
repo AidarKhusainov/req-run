@@ -78,12 +78,18 @@ jobs:
       - name: Run checks
         run: ./gradlew --no-daemon clean ktlintCheck forbiddenApisMain detekt test buildPlugin
 
+      - name: Validate NVD API key
+        if: ${{ inputs.runDependencyCheck && env.NVD_API_KEY == '' }}
+        run: |
+          echo "::error::NVD_API_KEY is required when runDependencyCheck is enabled. Add the repository secret or disable runDependencyCheck for this workflow."
+          exit 1
+
       - name: Dependency Check
         if: ${{ inputs.runDependencyCheck }}
         run: ./gradlew --no-daemon --no-configuration-cache dependencyCheckAnalyze
 
       - name: Upload reports
-        if: ${{ inputs.uploadArtifacts }}
+        if: ${{ always() && inputs.uploadArtifacts }}
         uses: actions/upload-artifact@v5
         with:
           name: reports
