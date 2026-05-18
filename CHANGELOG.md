@@ -9,6 +9,14 @@
 
 ### Fixed
 
+## [2.2.5] - 2026-05-18
+### Added
+
+### Changed
+
+### Fixed
+- Fixed the nightly workflow so missing `NVD_API_KEY` skips OWASP Dependency-Check with a notice instead of failing the whole run.
+
 ## [2.2.4] - 2026-05-04
 ### Added
 
@@ -119,7 +127,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.4...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.5...HEAD
+[2.2.5]: https://github.com/AidarKhusainov/req-run/compare/2.2.4...2.2.5
 [2.2.4]: https://github.com/AidarKhusainov/req-run/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.3
 [2.2.2]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.2
