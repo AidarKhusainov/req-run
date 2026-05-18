@@ -78,14 +78,13 @@ jobs:
       - name: Run checks
         run: ./gradlew --no-daemon clean ktlintCheck forbiddenApisMain detekt test buildPlugin
 
-      - name: Validate NVD API key
+      - name: Report skipped Dependency Check
         if: ${{ inputs.runDependencyCheck && env.NVD_API_KEY == '' }}
         run: |
-          echo "::error::NVD_API_KEY is required when runDependencyCheck is enabled. Add the repository secret or disable runDependencyCheck for this workflow."
-          exit 1
+          echo "::notice::NVD_API_KEY is not configured; skipping OWASP Dependency-Check. Add the repository secret to enable nightly vulnerability scanning."
 
       - name: Dependency Check
-        if: ${{ inputs.runDependencyCheck }}
+        if: ${{ inputs.runDependencyCheck && env.NVD_API_KEY != '' }}
         run: ./gradlew --no-daemon --no-configuration-cache dependencyCheckAnalyze
 
       - name: Upload reports
