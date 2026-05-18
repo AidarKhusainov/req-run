@@ -151,10 +151,6 @@ jobs:
     needs: [ validate_wrapper ]
     if: ${{ inputs.runQodana }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      checks: write
-      pull-requests: write
     steps:
       - name: Free disk space
         uses: jlumbroso/free-disk-space@v1.3.1
