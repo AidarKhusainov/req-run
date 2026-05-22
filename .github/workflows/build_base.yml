@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v5
 
@@ -68,7 +68,7 @@ jobs:
           large-packages: false
 
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-env
@@ -121,7 +121,7 @@ jobs:
           large-packages: false
 
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup Environment
         uses: ./.github/actions/setup-env
@@ -159,7 +159,7 @@ jobs:
           large-packages: false
 
       - name: Fetch Sources
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
