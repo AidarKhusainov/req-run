@@ -1,15 +1,15 @@
 package com.github.aidarkhusainov.reqrun.actions
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService
 import com.github.aidarkhusainov.reqrun.testutil.createActionEvent
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.testFramework.PlatformTestUtil
-import java.nio.file.Path
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import java.nio.file.Path
 
 class AddAuthConfigActionTest : BasePlatformTestCase() {
     fun testAddAuthConfigCreatesSecurityAuth() {
