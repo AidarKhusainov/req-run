@@ -2,6 +2,13 @@ package com.github.aidarkhusainov.reqrun.actions
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.github.aidarkhusainov.reqrun.services.ReqRunEnvironmentService
+import com.github.aidarkhusainov.reqrun.testutil.createActionEvent
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.testFramework.PlatformTestUtil
+import java.nio.file.Path
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
 class AddEnvVariableActionTest : BasePlatformTestCase() {
@@ -24,6 +31,27 @@ class AddEnvVariableActionTest : BasePlatformTestCase() {
         val env = json.getAsJsonObject("local")
         assertNotNull(env)
         assertEquals("value", env.get("newVar").asString)
+    }
+
+    fun testActionUpdatesDocumentAndNavigatesToNewVariable() {
+        val requestFile = myFixture.configureByText("request.http", "GET https://example.com").virtualFile
+        val environmentService = project.getService(ReqRunEnvironmentService::class.java)
+        environmentService.setSelectedEnvironment(null)
+
+        AddEnvVariableAction(false).actionPerformed(createActionEvent(project, myFixture.editor, requestFile))
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+        val envFile = LocalFileSystem.getInstance().findFileByNioFile(Path.of(project.basePath!!, "http-client.env.json"))
+        assertNotNull(envFile)
+        val document = FileDocumentManager.getInstance().getDocument(envFile!!)!!
+        val environment = JsonParser.parseString(document.text).asJsonObject.getAsJsonObject("local")
+        assertEquals("value", environment.get("newVar").asString)
+
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        assertNotNull(editor)
+        assertSame(document, editor!!.document)
+        assertEquals(document.text.indexOf("\"newVar\"") + 1, editor.caretModel.offset)
+        assertEquals("local", environmentService.getSelectedEnvironment())
     }
 
     fun testNextKeySkipsExistingNames() {

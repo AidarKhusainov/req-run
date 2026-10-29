@@ -8,8 +8,9 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
@@ -28,22 +29,20 @@ class AddEnvVariableAction(
         val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path) ?: return
         VfsUtil.markDirtyAndRefresh(false, false, false, vFile)
 
-        val editors = FileEditorManager.getInstance(project).openFile(vFile, true)
-        val textEditor = editors.filterIsInstance<TextEditor>().firstOrNull() ?: return
-        val document = textEditor.editor.document
+        val document = FileDocumentManager.getInstance().getDocument(vFile) ?: return
+        val envName = envService.getSelectedEnvironment() ?: "local"
+        val updated = addVariable(document.text, envName)
 
         WriteCommandAction.runWriteCommandAction(project) {
-            val envName = envService.getSelectedEnvironment() ?: "local"
             if (envService.getSelectedEnvironment() == null) {
                 envService.setSelectedEnvironment(envName)
             }
-            val updated = addVariable(document.text, envName)
             document.setText(updated.text)
-            val caretOffset = updated.caretOffset.coerceAtMost(document.textLength)
-            textEditor.editor.caretModel.moveToOffset(caretOffset)
-            textEditor.editor.scrollingModel.scrollToCaret(com.intellij.openapi.editor.ScrollType.MAKE_VISIBLE)
-            textEditor.editor.contentComponent.requestFocusInWindow()
         }
+
+        OpenFileDescriptor(project, vFile, updated.caretOffset.coerceAtMost(document.textLength))
+            .apply { scrollType = ScrollType.MAKE_VISIBLE }
+            .navigate(true)
     }
 
     private data class UpdateResult(
