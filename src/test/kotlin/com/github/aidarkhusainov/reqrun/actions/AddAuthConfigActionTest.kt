@@ -45,15 +45,13 @@ class AddAuthConfigActionTest : BasePlatformTestCase() {
         AddAuthConfigAction(false).actionPerformed(createActionEvent(project, myFixture.editor, requestFile))
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
 
-        val envFile = LocalFileSystem.getInstance().findFileByNioFile(Path.of(project.basePath!!, "http-client.env.json"))
+        val envPath = Path.of(project.basePath!!, "http-client.env.json")
+        val envFile = LocalFileSystem.getInstance().findFileByNioFile(envPath)
         assertNotNull(envFile)
         val document = FileDocumentManager.getInstance().getDocument(envFile!!)!!
-        val auth =
-            JsonParser.parseString(document.text).asJsonObject
-                .getAsJsonObject("local")
-                .getAsJsonObject("Security")
-                .getAsJsonObject("Auth")
-                .getAsJsonObject("auth")
+        val environment = JsonParser.parseString(document.text).asJsonObject.getAsJsonObject("local")
+        val security = environment.getAsJsonObject("Security")
+        val auth = security.getAsJsonObject("Auth").getAsJsonObject("auth")
         assertEquals("Static", auth.get("Type").asString)
 
         val editor = FileEditorManager.getInstance(project).selectedTextEditor

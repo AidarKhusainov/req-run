@@ -41,10 +41,12 @@ class AddEnvVariableActionTest : BasePlatformTestCase() {
         AddEnvVariableAction(false).actionPerformed(createActionEvent(project, myFixture.editor, requestFile))
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
 
-        val envFile = LocalFileSystem.getInstance().findFileByNioFile(Path.of(project.basePath!!, "http-client.env.json"))
+        val envPath = Path.of(project.basePath!!, "http-client.env.json")
+        val envFile = LocalFileSystem.getInstance().findFileByNioFile(envPath)
         assertNotNull(envFile)
         val document = FileDocumentManager.getInstance().getDocument(envFile!!)!!
-        val environment = JsonParser.parseString(document.text).asJsonObject.getAsJsonObject("local")
+        val root = JsonParser.parseString(document.text).asJsonObject
+        val environment = root.getAsJsonObject("local")
         assertEquals("value", environment.get("newVar").asString)
 
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
