@@ -9,6 +9,14 @@
 
 ### Fixed
 
+## [2.2.6] - 2026-10-29
+### Changed
+- Cropped eight README screenshots to emphasize plugin features and improve readability without modifying their contents.
+
+### Fixed
+- Replaced deprecated `FileEditorManager.openFile(VirtualFile, boolean)` calls with `OpenFileDescriptor` navigation while preserving environment file editing and caret positioning.
+- Added regression coverage for environment variable and authentication configuration editor actions.
+
 ## [2.2.5] - 2026-10-29
 ### Added
 - Enabled JetBrains Marketplace exception and UI freeze reporting with diagnostic attachments.
@@ -128,7 +136,8 @@
 - Response viewer with headers, body, and diff.
 - Service tool window with request history and re-run action.
 
-[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.5...HEAD
+[Unreleased]: https://github.com/AidarKhusainov/req-run/compare/2.2.6...HEAD
+[2.2.6]: https://github.com/AidarKhusainov/req-run/compare/2.2.5...2.2.6
 [2.2.5]: https://github.com/AidarKhusainov/req-run/compare/2.2.4...2.2.5
 [2.2.4]: https://github.com/AidarKhusainov/req-run/compare/2.2.3...2.2.4
 [2.2.3]: https://github.com/AidarKhusainov/req-run/releases/tag/2.2.3
