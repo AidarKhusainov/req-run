@@ -41,7 +41,7 @@ class AddAuthConfigAction(
         }
 
         OpenFileDescriptor(project, vFile, updated.caretOffset.coerceAtMost(document.textLength))
-            .apply { scrollType = ScrollType.MAKE_VISIBLE }
+            .apply { setScrollType(ScrollType.MAKE_VISIBLE) }
             .navigate(true)
     }
 
