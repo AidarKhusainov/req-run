@@ -63,13 +63,13 @@ class ReqRunUiRobot(
             """
             const ProjectManager = Packages.com.intellij.openapi.project.ProjectManager;
             const LocalFileSystem = Packages.com.intellij.openapi.vfs.LocalFileSystem;
-            const FileEditorManager = Packages.com.intellij.openapi.fileEditor.FileEditorManager;
+            const OpenFileDescriptor = Packages.com.intellij.openapi.fileEditor.OpenFileDescriptor;
             const project = ProjectManager.getInstance().getOpenProjects()[0];
             if (!project) throw "No open project";
             const path = project.getBasePath() + "/$escapedFileName";
             const file = LocalFileSystem.getInstance().refreshAndFindFileByPath(path);
             if (!file) throw "Cannot find file: " + path;
-            FileEditorManager.getInstance(project).openFile(file, true);
+            new OpenFileDescriptor(project, file).navigate(true);
             """.trimIndent(),
             true,
         )

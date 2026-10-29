@@ -11,7 +11,7 @@ import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.ex.ComboBoxAction
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -72,7 +72,7 @@ class EnvSelectorAction(
                 val path = envService.ensureEnvFile(file, isPrivate) ?: return
                 val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(path) ?: return
                 VfsUtil.markDirtyAndRefresh(false, false, false, vFile)
-                FileEditorManager.getInstance(project).openFile(vFile, true)
+                OpenFileDescriptor(project, vFile).navigate(true)
             }
         }
 
