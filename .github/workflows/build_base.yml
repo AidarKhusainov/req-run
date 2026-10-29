@@ -169,7 +169,7 @@ jobs:
           plugin-version: ${{ inputs.pluginVersion }}
 
       - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2025.2
+        uses: JetBrains/qodana-action@v2026.2
         with:
           cache-default-branch-only: true
           upload-result: true
