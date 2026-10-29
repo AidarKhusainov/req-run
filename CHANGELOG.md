@@ -9,8 +9,9 @@
 
 ### Fixed
 
-## [2.2.5] - 2026-05-18
+## [2.2.5] - 2026-10-29
 ### Added
+- Enabled JetBrains Marketplace exception and UI freeze reporting with diagnostic attachments.
 
 ### Changed
 
